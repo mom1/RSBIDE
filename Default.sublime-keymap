@@ -3,5 +3,10 @@
         "keys": ["alt+g"],
         "command": "go_to_definition",
         "args": {}
+    },
+    {
+        "keys": ["alt+s"],
+        "command": "print_sign_to_panel",
+        "args": {}
     }
 ]

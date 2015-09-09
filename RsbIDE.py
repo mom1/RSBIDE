@@ -127,6 +127,7 @@ class RSBIDE:
         bfile = basename(norm_path_string(file))
         if bfile.lower() not in [x.lower() for x in already_im]:
                 LInFile.append(bfile)
+                already_im.append(bfile)
         for file_im in LInFile:
             if file_im not in self.filesimport.keys():
                 continue
@@ -421,13 +422,22 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         if ST3:
             from RSBIDE.RsbIde_print_panel import print_to_panel
         view = self.window.active_view()
+        sel = view.sel()[0]
+        if sel.begin() == sel.end():
+            sel = view.expand_by_class(
+                sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
         symbol = get_result(view)
         if len(symbol) == 0:
-            print_to_panel(view,"")
+            print_to_panel(view, view.substr(sel) + " not found in index")
             return
-        file = os.path.join(sublime.expand_variables("$folder", sublime.active_window().extract_variables()), normpath(symbol[0][1]))
+        file = os.path.join(sublime.expand_variables(
+                "$folder", sublime.active_window().extract_variables()),
+                 normpath(symbol[0][1]))
         nline = symbol[0][2][0]
-        lines = [line.rstrip('\r\n') for i, line in enumerate(codecs.open(file, encoding='cp1251', errors='replace')) if i >= nline-1 and i <= nline + 9]
+        lines = [line.rstrip('\r\n')
+                 for i, line in enumerate(
+                 codecs.open(file, encoding='cp1251', errors='replace'))
+                 if i >= nline-1 and i <= nline + 9]
         print_to_panel(view, "\n".join(lines))
 
 
@@ -435,7 +445,8 @@ def get_result(view):
     sel = view.sel()[0]
     window = sublime.active_window()
     if sel.begin() == sel.end():
-        sel = view.expand_by_class(sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
+        sel = view.expand_by_class(
+            sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
 
     word = view.substr(sel)
     for file, data in RSBIDE.files.items():
@@ -447,7 +458,6 @@ def get_result(view):
                 break
 
     result = window.lookup_symbol_in_index(word)
-
     im_result = []
     if len(result) > 1:
         for item in result:
@@ -483,7 +493,6 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 
         self.window.show_quick_panel(["%s (%s)" % (r[1], r[2][0]) for r in self.result], self.open_file, 0, 0, lambda x: self.open_file(x, True))
 
-    
     def open_file(self, idx, transient=False):
             flags = sublime.ENCODED_POSITION
 

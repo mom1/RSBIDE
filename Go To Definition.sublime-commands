@@ -1,10 +1,10 @@
 [
-	{
-		"caption": "Go To Definition",
-		"command": "go_to_definition"
-	},
     {
-    "caption": "Print Sign To Panel",
-    "command": "print_sign_to_panel"
+        "caption": "Go To Definition",
+        "command": "go_to_definition"
+    },
+    {
+        "caption": "Print Sign To Panel",
+        "command": "print_sign_to_panel"
     }
 ]
