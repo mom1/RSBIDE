@@ -15,7 +15,9 @@ Features
 * **Go to declaration and back again**
     * Go To Definition  `macro(...)` according environment (import files) default key [alt+g]
     * go to the declaration of the currently selected functions via alt+g, ctrl + left click
-    * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor.
+    * Print Signature macro To Panel ["alt+s"]
+        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/GotoPanel.jpg)
+    * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **DllRegister RS-Balance 3 from project folder**
     * Folder context menu "DllRegister RS-Balance 3"
     * Disable if not folder RS-Balance 3
