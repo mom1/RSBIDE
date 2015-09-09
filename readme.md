@@ -25,7 +25,7 @@ Features
 * **Launch RS-Balance 3**
     * quickly open the Client with your Reg configuration
     * to Run Client use Ctrl + B, F7 or search for it in the command palette.
-    * use Ctrl + Shift + B to choise:
+    * use Ctrl + Shift + B to choice:
         - DebugClient (RSInit.exe -client -rsldebug)
         - DebugClient - Server console (RPCserv.exe -c -cfg RPCServ.exe.rsconfig)
         - DebugClient - Client NO rsldebug (RSInit.exe -client)
