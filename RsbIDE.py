@@ -414,6 +414,49 @@ class Pref():
         RSBIDECollectorThread().start()
 
 
+class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
+    """Show declare func in panel"""
+    def run(self):
+        ST3 = int(sublime.version()) > 3000
+        if ST3:
+            from RSBIDE.RsbIde_print_panel import print_to_panel
+        view = self.window.active_view()
+        symbol = get_result(view)
+        if len(symbol) == 0:
+            print_to_panel(view,"")
+            return
+        file = os.path.join(sublime.expand_variables("$folder", sublime.active_window().extract_variables()), normpath(symbol[0][1]))
+        nline = symbol[0][2][0]
+        lines = [line.rstrip('\r\n') for i, line in enumerate(codecs.open(file, encoding='cp1251', errors='replace')) if i >= nline-1 and i <= nline + 9]
+        print_to_panel(view, "\n".join(lines))
+
+
+def get_result(view):
+    sel = view.sel()[0]
+    window = sublime.active_window()
+    if sel.begin() == sel.end():
+        sel = view.expand_by_class(sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
+
+    word = view.substr(sel)
+    for file, data in RSBIDE.files.items():
+        if basename(file).lower() not in list(map(str.lower, already_im)):
+            continue
+        for func in data:
+            if func[RSBIDE.NAME].lower() == word.lower():
+                word = func[RSBIDE.NAME]
+                break
+
+    result = window.lookup_symbol_in_index(word)
+
+    im_result = []
+    if len(result) > 1:
+        for item in result:
+            if basename(norm_path_string(item[0])) in already_im:
+                 im_result.insert(already_im.index(basename(norm_path_string(item[0]))), item)
+        result = im_result
+    return result
+
+
 class GoToDefinitionCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
@@ -422,27 +465,7 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
         self.old_view = self.window.active_view()
         self.current_file_location = view.sel()[0].end()
 
-        sel = view.sel()[0]
-        if sel.begin() == sel.end():
-            sel = view.expand_by_class(sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
-
-        word = view.substr(sel)
-        for file, data in RSBIDE.files.items():
-            if basename(file).lower() not in list(map(str.lower, already_im)):
-                continue
-            for func in data:
-                if func[RSBIDE.NAME].lower() == word.lower():
-                    word = func[RSBIDE.NAME]
-                    break
-
-        self.result = self.window.lookup_symbol_in_index(word)
-
-        im_result = []
-        if len(self.result) > 1:
-            for item in self.result:
-                if basename(norm_path_string(item[0])) in already_im:
-                     im_result.insert(already_im.index(basename(norm_path_string(item[0]))), item)
-            self.result = im_result
+        self.result = get_result(view)
 
         if len(self.result) == 1:
             self.open_file(0)
@@ -460,6 +483,7 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 
         self.window.show_quick_panel(["%s (%s)" % (r[1], r[2][0]) for r in self.result], self.open_file, 0, 0, lambda x: self.open_file(x, True))
 
+    
     def open_file(self, idx, transient=False):
             flags = sublime.ENCODED_POSITION
 
