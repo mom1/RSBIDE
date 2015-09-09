@@ -1,0 +1,9 @@
+<snippet>
+    <content><![CDATA[
+if (${1:true}) 
+   ${0:$TM_SELECTED_TEXT}
+end;]]></content>
+    <tabTrigger>if</tabTrigger>
+    <scope>source.mac</scope>
+    <description>if</description>
+</snippet>

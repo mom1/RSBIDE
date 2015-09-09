@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[Run("$0");]]></content>
+    <tabTrigger>Run</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

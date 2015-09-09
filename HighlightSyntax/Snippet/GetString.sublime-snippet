@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[GetString ( ${1:id} , ${2:prompt}, ${3:len} , ${4:hide});]]></content>
+    <tabTrigger>GetString</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

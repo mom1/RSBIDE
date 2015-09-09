@@ -1,0 +1,10 @@
+<snippet>
+    <content><![CDATA[
+with (${1:obj})
+   //expression
+   $0
+end;]]></content>
+    <tabTrigger>with</tabTrigger>
+    <scope>source.mac</scope>
+    <description>with</description>
+</snippet>

@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[debugbreak;]]></content>
+    <tabTrigger>debugbreak</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

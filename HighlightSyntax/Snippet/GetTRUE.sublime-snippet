@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[GetTRUE ( ${1:id} , ${2:prompt});]]></content>
+    <tabTrigger>GetTRUE</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

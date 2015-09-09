@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[GetDate ( ${1:id} , ${2:prompt}, ${3:hide});]]></content>
+    <tabTrigger>GetDate</tabTrigger>
+    <scope>source.mac</scope>
+    <description>GetDate ( id [, prompt [, hide] ] )</description>
+</snippet>

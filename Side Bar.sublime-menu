@@ -1,0 +1,5 @@
+[
+     { "caption": "-" }
+    ,{ "caption": "DllRegister RS-Balance 3", "command": "rsb_reg" }
+    ,{ "caption": "-", "id": "end" }
+]

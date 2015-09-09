@@ -1,0 +1,11 @@
+<snippet>
+    <content><![CDATA[
+class T${1:${TM_FILENAME/(.*?)(\..+)/$1/}} (${3:ParametrClass})       
+//Оставь коммент для класса
+    InitT$1 ($3);
+    ${0:$TM_SELECTED_TEXT}
+END;
+]]></content>
+    <tabTrigger>class</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[WeakRef (${0:obj});]]></content>
+    <tabTrigger>WeakRef</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

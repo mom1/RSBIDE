@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[GetTime ( ${1:id} , ${2:prompt});]]></content>
+    <tabTrigger>GetTime</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

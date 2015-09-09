@@ -1,0 +1,15 @@
+<snippet>
+    <content><![CDATA[
+/***********************************************************
+FILE         :     $TM_FILENAME
+COPYRIGHT    :     R-Style Software Lab. 2013
+DESCRIPTION  :     Macro 
+PROGRAMMED BY:     
+CREATION DATE:     
+Update       :
+************************************************************/
+cpwin;
+]]></content>
+    <tabTrigger>title</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[MakeValue(${1:controlVal}, ${0:ValIfNull})]]></content>
+    <tabTrigger>MakeVal</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

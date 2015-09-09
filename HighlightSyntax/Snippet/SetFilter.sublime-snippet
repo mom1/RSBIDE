@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[SetFilter", "\"$0\"", true]]></content>
+    <tabTrigger>SetFilter</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

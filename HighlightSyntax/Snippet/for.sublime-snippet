@@ -1,0 +1,10 @@
+<snippet>
+    <content><![CDATA[
+for (${1:val}, ${2:1}, ${3:100})
+    //list instruction
+    ${0:$TM_SELECTED_TEXT}
+end;]]></content>
+    <tabTrigger>for</tabTrigger>
+    <scope>source.mac</scope>
+    <description>For</description>
+</snippet>

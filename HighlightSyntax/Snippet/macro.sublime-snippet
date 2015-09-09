@@ -1,0 +1,10 @@
+<snippet>
+    <content><![CDATA[
+macro ${1:NameMacro} (${2:Param})
+   //Comment macro
+   ${0:$TM_SELECTED_TEXT}
+End;
+]]></content>
+    <tabTrigger>macro</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

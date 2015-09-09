@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[Asize (${0:aa} ${1:, 10});]]></content>
+    <tabTrigger>Asize</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

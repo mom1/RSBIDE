@@ -1,0 +1,5 @@
+<snippet>
+    <content><![CDATA[LastDayMonth($0)]]></content>
+    <tabTrigger>LastDayMonth</tabTrigger>
+    <scope>source.mac</scope>
+</snippet>

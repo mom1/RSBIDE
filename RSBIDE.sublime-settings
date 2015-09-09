@@ -1,0 +1,42 @@
+{
+    "always_on_auto_completions":
+    ["Run(\"$0\")",
+    "Value",
+    "import",
+    "CONST",
+    "var",
+    "break;",
+    "continue;",
+    "this",
+    "Destructor",
+    "MsgBox",
+    "String",
+    "Integer",
+    "Object",
+    "Variant",
+    "Numeric",
+    "Decimal", 
+    "Money",
+    "Double",
+    "Bool",
+    "Date",
+    "Time",
+    "Dttm",
+    "ProcRef",
+    "MethodRef",
+    "return"
+    ],
+    "forget_deleted_files": false,
+    "excluded_files_or_folders":
+    [
+        "DBFiles",
+        "Help",
+        "Html",
+        "Lbr",
+        "template",
+        "test",
+        "upgrader",
+        "Web",
+        "script"
+    ]
+}

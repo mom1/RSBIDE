@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[GetDouble ( ${1:id} , ${2:prompt}, ${3:len} , ${4:hide}, ${5:pos});]]></content>
+    <tabTrigger>GetDouble</tabTrigger>
+    <scope>source.mac</scope>
+    <description>Получение значения типа Double </description>        
+</snippet>
