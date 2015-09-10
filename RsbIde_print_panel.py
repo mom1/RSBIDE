@@ -19,7 +19,6 @@ output_view = None
 # ! (TODO): fire show_helper_panel
 def print_to_panel(view, text, b_overwrite=True, bLog=False):
     global b_helper_panel_on, output_view
-    text.replace("\r", "")
     b_helper_panel_on = True
     if not ST3:
         if b_overwrite or not output_view:

@@ -1,0 +1,14 @@
+[
+    {
+        "caption": "RSBIDE: Go To Definition",
+        "command": "go_to_definition"
+    },
+    {
+        "caption": "RSBIDE: Print Sign To Panel",
+        "command": "print_sign_to_panel"
+    },
+    {
+        "caption": "RSBIDE: Rebuild Cache",
+        "command": "rebuild_cache"
+    }
+]

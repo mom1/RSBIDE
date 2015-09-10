@@ -8,6 +8,7 @@
 import sublime
 import sublime_plugin
 import os
+import pickle
 import re
 import threading
 import codecs
@@ -41,11 +42,17 @@ class RSBIDE:
     COMPLETION = 'completion'
 
     EMPTY = ''
+    tmp_folder = os.path.expandvars(r'%TEMP%')
 
     def clear(self):
         self.files = dict()
         self.filesxml = dict()
         self.filesimport = dict()
+
+    def rebuild_cache(self):
+        if not Pref.scan_running:
+            self.clear()
+            RSBIDECollectorThread().start()
 
     def save_functions(self, file, data):
         self.files[file] = data
@@ -55,6 +62,27 @@ class RSBIDE:
 
     def save_imports(self, file, data):
         self.filesimport[file] = data
+
+    def save_to_cache(self):
+        if os.path.lexists(self.tmp_folder):
+            with open(os.path.join(self.tmp_folder, 'files_cache.obj'), 'wb') as cache_file:
+                pickle.dump(self.files, cache_file)
+            with open(os.path.join(self.tmp_folder, 'filesxml_cache.obj'), 'wb') as cache_file:
+                pickle.dump(self.filesxml, cache_file)
+            with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'wb') as cache_file:
+                pickle.dump(self.filesimport, cache_file)
+
+
+    def load_from_cache(self):
+        if os.path.lexists(os.path.join(self.tmp_folder, 'files_cache.obj')):
+            with open(os.path.join(self.tmp_folder, 'files_cache.obj'), 'rb') as cache_file:
+                    self.files = pickle.load(cache_file)
+        if os.path.lexists(os.path.join(self.tmp_folder, 'filesxml_cache.obj')):
+            with open(os.path.join(self.tmp_folder, 'filesxml_cache.obj'), 'rb') as cache_file:
+                    self.filesxml = pickle.load(cache_file)
+        if os.path.lexists(os.path.join(self.tmp_folder, 'filesimport_cache.obj')):
+            with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'rb') as cache_file:
+                    self.filesimport = pickle.load(cache_file)
 
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
@@ -168,12 +196,12 @@ class RSBIDECollectorThread(threading.Thread):
             try:
                 self.parse_functions(norm_path(self.file))
                 self.parse_import(norm_path(self.file))
+                RSBIDE.save_to_cache()
             except:
                 pass
         elif not Pref.scan_running:
             Pref.scan_running = True
             Pref.scan_started = time.time()
-
             # the list of opened files in all the windows
             files = list(Pref.updated_files)
             # the list of opened folders in all the windows
@@ -260,6 +288,7 @@ class RSBIDECollectorThread(threading.Thread):
             RSBIDE.save_objs("Object", obj)
             RSBIDE.save_objs("Field", fields)
             RSBIDE.save_objs("Method", methods)
+            RSBIDE.save_to_cache()
             if debug:
                 print('Scan done in '+str(time.time()-Pref.scan_started)+' seconds - Scan was aborted: '+str(Pref.scan_aborted))
                 print('Files Seen:'+str(files_seen)+', Files MAC:'+str(files_mac)+', Cache Miss:'+str(files_cache_miss)+', Cache Hit:'+str(files_cache_hit)+', Failed Parsing:'+str(files_failed_parsing))
@@ -271,7 +300,7 @@ class RSBIDECollectorThread(threading.Thread):
     def parse_functions(self, file):
         if debug:
             print('\nParsing functions for file:\n'+file)
-        lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and "macro" in line.lower()]
+        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and "macro" in line.lower()]
         functions = []
         for line in lines:
             matches = RSBIDE.parse_line(line)
@@ -411,9 +440,12 @@ class Pref():
 
         update_folders()
 
-        RSBIDE.clear()
+        RSBIDE.load_from_cache()
         RSBIDECollectorThread().start()
 
+class RebuildCacheCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        RSBIDE.rebuild_cache()
 
 class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
     """Show declare func in panel"""
