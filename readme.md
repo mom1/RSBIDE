@@ -13,9 +13,10 @@ Features
     * Case insensitive completions
     * Parameter hints
 * **Go to declaration and back again**
-    * Go To Definition  `macro(...)` according environment (import files) default key [alt+g]
-    * go to the declaration of the currently selected functions via alt+g, ctrl + left click
-    * Print Signature macro To Panel ["alt+s"]
+    * Go To Definition  `macro(...)` and `class(...) name (...)` according environment (import files) default key <kbd>Alt + G</kbd>
+    * go to the declaration of the currently selected functions via <kbd>Alt + G</kbd>, <kbd>Ctrl + left click</kbd>
+    * Print Signature `macro` and `class` To Panel <kbd>Alt + S</kbd> 
+
         ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/GotoPanel.jpg)
     * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **DllRegister RS-Balance 3 from project folder**
@@ -26,8 +27,8 @@ Features
     * For .mac files
 * **Launch RS-Balance 3**
     * quickly open the Client with your Reg configuration
-    * to Run Client use Ctrl + B, F7 or search for it in the command palette.
-    * use Ctrl + Shift + B to choice:
+    * to Run Client use <kbd>Ctrl + B</kbd>, <kbd>F7</kbd> or search for it in the command palette.
+    * use <kbd>Ctrl + Shift + B</kbd> to choice:
         - DebugClient (RSInit.exe -client -rsldebug)
         - DebugClient - Server console (RPCserv.exe -c -cfg RPCServ.exe.rsconfig)
         - DebugClient - Client NO rsldebug (RSInit.exe -client)
@@ -41,7 +42,7 @@ Installation
 ------------
 **Very easy with [Package Control](http://wbond.net/sublime_packages/package_control) right inside Sublime Text 3 (Package Control needs to be installed):**
 
-1.  Ctrl + shift + P
+1.  <kbd>Ctrl + shift + P</kbd>
 2.  Search for "install", hit enter
 3.  Search for "RSBIDE", hit enter
 

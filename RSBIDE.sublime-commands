@@ -10,5 +10,9 @@
     {
         "caption": "RSBIDE: Rebuild Cache",
         "command": "rebuild_cache"
+    },
+    {
+        "caption": "RSBIDE: DllRegister RS-Balance 3",
+        "command": "rsb_reg"
     }
 ]

@@ -143,7 +143,15 @@ class RSBIDE:
                 return matches.groupdict()
 
     def parseimport(self, total):
-         sregexp = r"(?i)^\s*(import)\s+\"?((?P<name>([\w\d\s])*)(.mac)*)\"?\s*(,||;)"
+         sregexp =   r"(?i)^\s*(import)\s+\"?((?P<name>([\w\d\s])*)(.mac)*)\"?\s*(,||;)"
+         # TODO parse "Import comain1, comain2, coainN;"
+         # sregexp2 = r'(((([\w\d\s])+)|(\"((([\w\d\s])+)\.(mac))\")))(,|;)'
+         # sregexp1 = r'^\s*(import)\s+(([\w\d\s]+)|(\"(([\w\d\s]+)\.(mac))\"))(?:(,[\w\d\s]+)|(\"(([\w\d\s]+)\.(mac))\"))*(,|;)'
+         # if 'import COdlgAktVypRabot, CommonFunction'.lower() in total.lower():
+         #    print("IN")
+         #    print(re.findall(sregexp2, total, re.I | re.A | re.S | re.M))
+         #    match = re.finditer(sregexp1, total, re.I | re.A | re.S | re.M)
+         #    print([m.groups() for m in re.finditer(sregexp1, total, re.I | re.A | re.S | re.M)])
          return [m.groupdict() for m in re.finditer(sregexp, total, re.I | re.A | re.S | re.M)]
 
     def get_files_import(self, file, isReset):

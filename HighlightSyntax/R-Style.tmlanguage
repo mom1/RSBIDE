@@ -277,7 +277,7 @@
         </dict>
         <dict>
             <key>begin</key>
-            <string>(?i)^\s*(private)?\s*(class)\s+(\(\s*)?([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)?(\s*\)\s*)?(\/*.*\*\/\s*)*(?=[А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)</string>
+            <string>(?i)^\s*(private)?\s*(class)\s+((\()\s*([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*(\)))?(\/*.*\*\/)*\s*(?=[А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)</string>
             <key>beginCaptures</key>
             <dict>
                 <key>1</key>
@@ -290,12 +290,12 @@
                     <key>name</key>
                     <string>storage.type.class.mac</string>
                 </dict>
-                <key>4</key>
+                <key>5</key>
                 <dict>
                     <key>name</key>
                     <string>entity.other.inherited-class.mac</string>
                 </dict>
-                <key>6</key>
+                <key>7</key>
                 <dict>
                     <key>name</key>
                     <string>comment.block.mac</string>
@@ -308,11 +308,11 @@
                 <key>2</key>
                 <dict>
                     <key>name</key>
-                    <string>punctuation.section.function.begin.mac</string>
+                    <string>punctuation.section.class.begin.mac</string>
                 </dict>
             </dict>
             <key>name</key>
-            <string>meta.function.mac</string>
+            <string>meta.class.mac</string>
             <key>patterns</key>
             <array>
                 <dict>
@@ -335,7 +335,7 @@
                         </dict>
                     </dict>
                     <key>contentName</key>
-                    <string>meta.function.parameters.mac</string>
+                    <string>meta.class.parameters.mac</string>
                     <key>end</key>
                     <string>(\))</string>
                     <key>patterns</key>
@@ -346,7 +346,7 @@
                                 <key>1</key>
                                 <dict>
                                     <key>name</key>
-                                    <string>variable.parameter.function.mac</string>
+                                    <string>variable.parameter.class.mac</string>
                                 </dict>
                                 <key>2</key>
                                 <dict>

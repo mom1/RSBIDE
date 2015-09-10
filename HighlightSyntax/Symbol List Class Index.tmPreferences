@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>name</key>
+    <string>Symbol List Class Index</string>
+    <key>scope</key>
+    <string>source.mac entity.name.class.mac</string>
+    <key>settings</key>
+    <dict>
+        <key>showInIndexedSymbolList</key>
+        <integer>1</integer>
+    </dict>
+    <key>uuid</key>
+    <string>2CEA49B2-A5C5-405C-82E2-B8B668877C36</string>
+</dict>
+</plist>
