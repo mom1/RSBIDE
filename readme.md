@@ -42,7 +42,7 @@ Installation
 ------------
 **Very easy with [Package Control](http://wbond.net/sublime_packages/package_control) right inside Sublime Text 3 (Package Control needs to be installed):**
 
-1.  <kbd>Ctrl + shift + P</kbd>
+1.  <kbd>Ctrl + Shift + P</kbd>
 2.  Search for "install", hit enter
 3.  Search for "RSBIDE", hit enter
 

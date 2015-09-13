@@ -143,16 +143,15 @@ class RSBIDE:
                 return matches.groupdict()
 
     def parseimport(self, total):
-         sregexp =   r"(?i)^\s*(import)\s+\"?((?P<name>([\w\d\s])*)(.mac)*)\"?\s*(,||;)"
-         # TODO parse "Import comain1, comain2, coainN;"
-         # sregexp2 = r'(((([\w\d\s])+)|(\"((([\w\d\s])+)\.(mac))\")))(,|;)'
-         # sregexp1 = r'^\s*(import)\s+(([\w\d\s]+)|(\"(([\w\d\s]+)\.(mac))\"))(?:(,[\w\d\s]+)|(\"(([\w\d\s]+)\.(mac))\"))*(,|;)'
+         # sregexp =   r"(?i)^\s*(import)\s+\"?((?P<name>([\w\d\s])*)(.mac)*)\"?\s*(,||;)"
+         sregexp2 = r'(\"?((([\w\d\s])*)(?:.mac)*)\"?)\s*(?:(,|;))'
+         imstrip = re.compile(re.escape('import '), re.IGNORECASE)
          # if 'import COdlgAktVypRabot, CommonFunction'.lower() in total.lower():
-         #    print("IN")
-         #    print(re.findall(sregexp2, total, re.I | re.A | re.S | re.M))
-         #    match = re.finditer(sregexp1, total, re.I | re.A | re.S | re.M)
-         #    print([m.groups() for m in re.finditer(sregexp1, total, re.I | re.A | re.S | re.M)])
-         return [m.groupdict() for m in re.finditer(sregexp, total, re.I | re.A | re.S | re.M)]
+         #     print("IN")
+         #     imstrip = re.compile(re.escape('import '), re.IGNORECASE)
+         #     print([imstrip.sub('', x[2]) for x in re.findall(sregexp2, total, re.I | re.A | re.S | re.M)])
+         # return [m.groupdict() for m in re.finditer(sregexp, total, re.I | re.A | re.S | re.M)]
+         return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I | re.A | re.S | re.M)]
 
     def get_files_import(self, file, isReset):
         global already_im
@@ -203,6 +202,7 @@ class RSBIDECollectorThread(threading.Thread):
         if self.file:
             try:
                 self.parse_functions(norm_path(self.file))
+                RSBIDE.filesimport[norm_path(self.file)] = []
                 self.parse_import(norm_path(self.file))
                 RSBIDE.save_to_cache()
             except:
@@ -321,7 +321,7 @@ class RSBIDECollectorThread(threading.Thread):
             print('\nParsing import in file:\n'+file)
         lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and "import" in line.lower()]
         matches = RSBIDE.parseimport("".join(lines))
-        imporFiles = list(set([mort + ".mac" for mort in [it["name"].lower() for it in matches]]))
+        imporFiles = list(set([mort.strip() + ".mac" for mort in [it.lower() for it in matches]]))
         RSBIDE.save_imports(basename(file), imporFiles)
 
     def get_name(self, elem, lelem=None):
@@ -474,11 +474,14 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
                 "$folder", sublime.active_window().extract_variables()),
                  normpath(symbol[0][1]))
         nline = symbol[0][2][0]
-        lines = [line.rstrip('\r\n')
-                 for i, line in enumerate(
-                 codecs.open(file, encoding='cp1251', errors='replace'))
-                 if i >= nline-1 and i <= nline + 9]
-        print_to_panel(view, "\n".join(lines))
+        lnline = 0
+        lines = []
+        for i, line in enumerate(codecs.open(file, encoding='cp1251', errors='replace')):
+            if i >= nline-10 and i <= nline + 9:
+              lines.append(line.rstrip('\r\n'))  
+            if nline == i:
+                lnline = len(lines)
+        print_to_panel(view, "\n".join(lines), showline=lnline)
 
 
 def get_result(view):
