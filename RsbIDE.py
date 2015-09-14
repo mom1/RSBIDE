@@ -385,6 +385,13 @@ def norm_path_string(file):
     return file.strip().lower().replace('\\', '/').replace('//', '/')
 
 
+def normalize_to_system_style_path(path):
+    if sublime.platform() == 'windows':
+        path= re.sub(r"/([A-Za-z])/(.+)", r"\1:/\2", path)
+        path= re.sub(r"/", r"\\", path)
+    return path.lower()
+
+
 def should_exclude(file):
     return len([1 for exclusion in Pref.excluded_files_or_folders if exclusion in norm_path_string(file).split('/')])
 
@@ -470,9 +477,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         if len(symbol) == 0:
             print_to_panel(view, view.substr(sel) + " not found in index")
             return
-        file = os.path.join(sublime.expand_variables(
-                "$folder", sublime.active_window().extract_variables()),
-                 normpath(symbol[0][1]))
+        file = normalize_to_system_style_path(symbol[0][0])
         nline = symbol[0][2][0]
         lnline = 0
         lines = []

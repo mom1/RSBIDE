@@ -1,0 +1,37 @@
+{
+    "selector": "source.mac",
+    "cmd": ["RSInit.exe"],
+    "shell": true,
+    "working_dir": "$folder",
+    "variants":
+    [
+        {
+            "name": "client -rsldebug",
+            "windows":
+            {
+                "cmd": ["RSInit.exe", "-client", "-rsldebug"]
+            }
+        },
+        {
+            "name": "$file_name -rsldebug",
+            "windows":
+            {
+                "cmd": ["RSInit.exe", "$file_name", "-rsldebug"]
+            }
+        },
+        {
+            "name": "client",
+            "windows":
+            {
+                "cmd": ["RSInit.exe", "-client"]
+            }
+        },        
+        {
+            "name": "RPCserv -c -cfg RPCServ.exe.rsconfig",
+            "windows":
+            {
+                "cmd": ["start", "RPCserv.exe", "-c", "-cfg", "RPCServ.exe.rsconfig"]
+            }
+        }
+    ]
+}
