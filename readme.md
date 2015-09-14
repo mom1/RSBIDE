@@ -29,10 +29,11 @@ Features
     * quickly open the Client with your Reg configuration
     * to Run Client use <kbd>Ctrl + B</kbd>, <kbd>F7</kbd> or search for it in the command palette.
     * use <kbd>Ctrl + Shift + B</kbd> to choice:
-        - DebugClient (RSInit.exe -client -rsldebug)
-        - DebugClient - Server console (RPCserv.exe -c -cfg RPCServ.exe.rsconfig)
-        - DebugClient - Client NO rsldebug (RSInit.exe -client)
-        - DebugClient - Mac with rsldebug (RSInit.exe Curr_file_name -rsldebug)
+        - RSInit (RSInit.exe)
+        - RSInit - client -rsldebug
+        - RSInit - $file_name -rsldebug
+        - RSInit - client
+        - RSInit - RPCserv.exe -c -cfg RPCServ.exe.rsconfig
 * **Various useful Snippets**
     * predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 
