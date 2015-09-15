@@ -143,14 +143,8 @@ class RSBIDE:
                 return matches.groupdict()
 
     def parseimport(self, total):
-         # sregexp =   r"(?i)^\s*(import)\s+\"?((?P<name>([\w\d\s])*)(.mac)*)\"?\s*(,||;)"
          sregexp2 = r'(\"?((([\w\d\s])*)(?:.mac)*)\"?)\s*(?:(,|;))'
          imstrip = re.compile(re.escape('import '), re.IGNORECASE)
-         # if 'import COdlgAktVypRabot, CommonFunction'.lower() in total.lower():
-         #     print("IN")
-         #     imstrip = re.compile(re.escape('import '), re.IGNORECASE)
-         #     print([imstrip.sub('', x[2]) for x in re.findall(sregexp2, total, re.I | re.A | re.S | re.M)])
-         # return [m.groupdict() for m in re.finditer(sregexp, total, re.I | re.A | re.S | re.M)]
          return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I | re.A | re.S | re.M)]
 
     def get_files_import(self, file, isReset):

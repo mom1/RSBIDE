@@ -1,0 +1,8 @@
+RSBIDE 1.1.5
+-------------
+Подсветка
+  * Не открытый многострочный комментарий
+  * Выделение в комментариях ключивых слов
+  FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED BY|CREATION DATE|LAST
+  UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP 
+  * TODO Переход к объявлению переменных в текущем файле
