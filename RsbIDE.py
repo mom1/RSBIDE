@@ -512,6 +512,12 @@ def get_result(view):
             if basename(norm_path_string(item[0])) in already_im:
                  im_result.insert(already_im.index(basename(norm_path_string(item[0]))), item)
         result = im_result
+    # elif len(result) == 0:
+    #     vars = []
+    #     [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
+    #     result[0] = view.file_name() if view.file_name() else ''
+    #     result[0][1] = basename(result[0])
+        
     return result
 
 
