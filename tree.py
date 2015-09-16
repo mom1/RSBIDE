@@ -23,18 +23,17 @@ class Tree:
 
         return node
 
-    def display(self, identifier, depth=_ROOT):
+    def display(self, identifier, depth=_ROOT, pathfile="C:\myfile"):
         children = self[identifier].children
-        f = open('C:\myfile','a')
+        f = open(pathfile,'a')
         if depth == _ROOT:
             print("{0}".format(identifier),  file=f)
         else:
             print("\t"*depth, "{0}".format(identifier), file=f)
-            # pass
         f.close()
         depth += 1
         for child in children:
-            self.display(child, depth)  # recursive call
+            self.display(child, depth, pathfile)  # recursive call
 
     def traverse(self, identifier, mode=_DEPTH):
         # Python generator. Loosly based on an algorithm from 

@@ -36,6 +36,8 @@ Features
         - RSInit - RPCserv.exe -c -cfg RPCServ.exe.rsconfig
 * **Various useful Snippets**
     * predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
+* **Other commands**
+    * Print Tree Import - Printing in file *.treeimport tree import files from current and open in new tab
 
 See Packages/RSBIDE/RSBIDE.sublime-settings for options. As with all ST packages, copy this file into your Packages/User folder and editing the copy there.
 

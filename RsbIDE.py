@@ -156,9 +156,9 @@ class RSBIDE:
                 return matches.groupdict()
 
     def parseimport(self, total):
-         sregexp2 = r'(\"?((([\w\d\s])*)(?:.mac)*)\"?)\s*(?:(,|;))'
+         sregexp2 = r'(\"?((([\w\d])*)(?:.mac)*)\"?)\s*(?:(,|;))'
          imstrip = re.compile(re.escape('import '), re.IGNORECASE)
-         return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I | re.A | re.S | re.M)]
+         return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I | re.A)]
 
     def get_files_import(self, file, isReset):
         global already_im
@@ -326,7 +326,8 @@ class RSBIDECollectorThread(threading.Thread):
     def parse_import(self, file):
         if debug:
             print('\nParsing import in file:\n'+file)
-        lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and "import" in line.lower()]
+        pattern = re.compile(r"^\s*(import)\s+", re.I | re.A | re.S)
+        lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
         matches = RSBIDE.parseimport("".join(lines))
         imporFiles = list(set([mort.strip() + ".mac" for mort in [it.lower() for it in matches]]))
         RSBIDE.save_imports(basename(file), imporFiles)
@@ -570,26 +571,29 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 class PrintTreeImportCommand(sublime_plugin.WindowCommand):
    def run(self):
         view = self.window.active_view()
+        (_ROOT, _DEPTH, _BREADTH) = range(3)
         LInFile = []
-        already_tree = []
         tree = Tree()
         bfile = basename(norm_path_string(view.file_name()))
-        if bfile.lower() not in [x.lower() for x in already_tree]:
-                LInFile.append(bfile)
-                already_tree.append(bfile)
-                tree.add_node(bfile)  # root node
+        LInFile.append(bfile)
+        tree.add_node(bfile)  # root node
+        
         for file_im in LInFile:
+            # print("Analiz file: ", file_im)
             if file_im not in RSBIDE.filesimport.keys():
                 continue
+            # print("In Cashe: \n", list(set(RSBIDE.filesimport[file_im])))
+            # print("In Tree: ")
             for i in list(set(RSBIDE.filesimport[file_im])):
-                tree.add_node(i, file_im)
-                if len(LInFile) > 900:
-                    break
-                LInFile.append(i)
-        
-        tree.display(bfile) # python will convert \n to os.linesep
-         # you can omit in most cases as the destructor will call it
-        
+                if i not in tree[file_im].children:
+                    if i not in LInFile:
+                        LInFile.append(i)
+                        tree.add_node(i, file_im)
+                    else:
+                        tree.add_node(i+"_"+str(len(LInFile)), file_im)
+        tree.display(bfile, pathfile=norm_path_string(view.file_name())+".treeimport")
+        self.window.open_file("%s:%s:%s" % (view.file_name()+".treeimport", 0, 0), sublime.ENCODED_POSITION)
+        # self.window.open_file("%s:%s:%s" % (self.result[idx][0], self.result[idx][2][0], self.result[idx][2][1]), flags)
 
 
 def RSBIDE_folder_change_watcher():
