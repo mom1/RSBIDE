@@ -1,0 +1,11 @@
+RSBIDE 1.1.6
+-------------
+- Bug Fix 
+
+- print_tree_import
+
+- indexing import files fix 
+
+- no folding comment
+
+- add screenshot

@@ -2,7 +2,7 @@
 
 This plugin adds RS-Balance 3 completions and some IDE-like functions to Sublime Text 3
 
-![SublimeRStyle](https://raw.github.com/mom1/RSBIDE/master/SublimeRStyle.jpg)
+![SublimeRStyle](https://raw.github.com/mom1/RSBIDE/master/screenshot/SublimeRStyle.jpg)
 
 Features
 ------------
@@ -17,12 +17,14 @@ Features
     * go to the declaration of the currently selected functions via <kbd>Alt + G</kbd>, <kbd>Ctrl + left click</kbd>
     * Print Signature `macro` and `class` To Panel <kbd>Alt + S</kbd> 
 
-        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/GotoPanel.jpg)
+        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **DllRegister RS-Balance 3 from project folder**
     * Folder context menu "DllRegister RS-Balance 3"
     * Disable if not folder RS-Balance 3
     * Show result registration in status line
+        
+        ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
 * **Syntax highlighting**
     * For .mac files
 * **Launch RS-Balance 3**
@@ -38,6 +40,8 @@ Features
     * predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Other commands**
     * Print Tree Import - Printing in file *.treeimport tree import files from current and open in new tab
+    
+        ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
 
 See Packages/RSBIDE/RSBIDE.sublime-settings for options. As with all ST packages, copy this file into your Packages/User folder and editing the copy there.
 

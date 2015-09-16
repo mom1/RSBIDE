@@ -81,21 +81,21 @@ class RSBIDE:
                         self.files = pickle.load(cache_file)
                     except Exception:
                         os.remove(cache_file)
-                        pickle.load(cache_file)
+                        self.files = dict()
         if os.path.lexists(os.path.join(self.tmp_folder, 'filesxml_cache.obj')):
             with open(os.path.join(self.tmp_folder, 'filesxml_cache.obj'), 'rb') as cache_file:
                     try:
                         self.filesxml = pickle.load(cache_file)
                     except Exception:
                         os.remove(cache_file)
-                        self.filesxml = pickle.load(cache_file)
+                        self.filesxml = dict()
         if os.path.lexists(os.path.join(self.tmp_folder, 'filesimport_cache.obj')):
             with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'rb') as cache_file:
                     try:
                          self.filesimport = pickle.load(cache_file)
                     except Exception:
                          os.remove(cache_file)
-                         self.filesxml = pickle.load(cache_file)
+                         self.filesimport = dict()
 
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
