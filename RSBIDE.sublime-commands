@@ -14,5 +14,9 @@
     {
         "caption": "RSBIDE: DllRegister RS-Balance 3",
         "command": "rsb_reg"
+    },
+    {
+        "caption": "RSBIDE: Print Tree Import",
+        "command": "print_tree_import"
     }
 ]

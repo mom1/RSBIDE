@@ -15,6 +15,7 @@ import codecs
 import time
 import xml.etree.ElementTree as ET
 from os.path import basename, dirname, normpath, normcase, realpath
+from RSBIDE.tree import Tree
 
 try:
     import thread
@@ -76,13 +77,25 @@ class RSBIDE:
     def load_from_cache(self):
         if os.path.lexists(os.path.join(self.tmp_folder, 'files_cache.obj')):
             with open(os.path.join(self.tmp_folder, 'files_cache.obj'), 'rb') as cache_file:
-                    self.files = pickle.load(cache_file)
+                    try:
+                        self.files = pickle.load(cache_file)
+                    except Exception:
+                        os.remove(cache_file)
+                        pickle.load(cache_file)
         if os.path.lexists(os.path.join(self.tmp_folder, 'filesxml_cache.obj')):
             with open(os.path.join(self.tmp_folder, 'filesxml_cache.obj'), 'rb') as cache_file:
-                    self.filesxml = pickle.load(cache_file)
+                    try:
+                        self.filesxml = pickle.load(cache_file)
+                    except Exception:
+                        os.remove(cache_file)
+                        self.filesxml = pickle.load(cache_file)
         if os.path.lexists(os.path.join(self.tmp_folder, 'filesimport_cache.obj')):
             with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'rb') as cache_file:
-                    self.filesimport = pickle.load(cache_file)
+                    try:
+                         self.filesimport = pickle.load(cache_file)
+                    except Exception:
+                         os.remove(cache_file)
+                         self.filesxml = pickle.load(cache_file)
 
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
@@ -552,6 +565,31 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
             else:
                self.window.focus_view(self.old_view)
                self.old_view.show_at_center(self.current_file_location)
+
+
+class PrintTreeImportCommand(sublime_plugin.WindowCommand):
+   def run(self):
+        view = self.window.active_view()
+        LInFile = []
+        already_tree = []
+        tree = Tree()
+        bfile = basename(norm_path_string(view.file_name()))
+        if bfile.lower() not in [x.lower() for x in already_tree]:
+                LInFile.append(bfile)
+                already_tree.append(bfile)
+                tree.add_node(bfile)  # root node
+        for file_im in LInFile:
+            if file_im not in RSBIDE.filesimport.keys():
+                continue
+            for i in list(set(RSBIDE.filesimport[file_im])):
+                tree.add_node(i, file_im)
+                if len(LInFile) > 900:
+                    break
+                LInFile.append(i)
+        
+        tree.display(bfile) # python will convert \n to os.linesep
+         # you can omit in most cases as the destructor will call it
+        
 
 
 def RSBIDE_folder_change_watcher():
