@@ -158,7 +158,7 @@ class RSBIDE:
     def parseimport(self, total):
          sregexp2 = r'(\"?((([\w\d])*)(?:.mac)*)\"?)\s*(?:(,|;))'
          imstrip = re.compile(re.escape('import '), re.IGNORECASE)
-         return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I | re.A)]
+         return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I)]
 
     def get_files_import(self, file, isReset):
         global already_im
@@ -315,7 +315,8 @@ class RSBIDECollectorThread(threading.Thread):
     def parse_functions(self, file):
         if debug:
             print('\nParsing functions for file:\n'+file)
-        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and "macro" in line.lower()]
+        pattern = re.compile(r"^\s*(macro)\s+", re.I | re.S)
+        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
         functions = []
         for line in lines:
             matches = RSBIDE.parse_line(line)
@@ -326,7 +327,7 @@ class RSBIDECollectorThread(threading.Thread):
     def parse_import(self, file):
         if debug:
             print('\nParsing import in file:\n'+file)
-        pattern = re.compile(r"^\s*(import)\s+", re.I | re.A | re.S)
+        pattern = re.compile(r"^\s*(import)\s+", re.I | re.S)
         lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
         matches = RSBIDE.parseimport("".join(lines))
         imporFiles = list(set([mort.strip() + ".mac" for mort in [it.lower() for it in matches]]))
@@ -448,7 +449,7 @@ class Pref():
 
         Pref.forget_deleted_files = s.get('forget_deleted_files', False)
 
-        Pref.expressions = [re.compile(v, re.I | re.A).search for v in [
+        Pref.expressions = [re.compile(v, re.I).search for v in [
             r'macro\s*(?P<name>\w+)\s*\((?P<sign>[^\)]*)(\)|\n)',
             r'macro\s*(?P<name>\w+)\s*(?P<sign>)'
         ]]
@@ -491,7 +492,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         lines = []
         for i, line in enumerate(codecs.open(file, encoding='cp1251', errors='replace')):
             if i >= nline-10 and i <= nline + 9:
-              lines.append(line.rstrip('\r\n'))  
+              lines.append(line.rstrip('\r\n'))
             if nline == i:
                 lnline = len(lines)
         print_to_panel(view, "\n".join(lines), showline=lnline)
@@ -525,7 +526,7 @@ def get_result(view):
     #     [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
     #     result[0] = view.file_name() if view.file_name() else ''
     #     result[0][1] = basename(result[0])
-        
+
     return result
 
 
@@ -577,7 +578,7 @@ class PrintTreeImportCommand(sublime_plugin.WindowCommand):
         bfile = basename(norm_path_string(view.file_name()))
         LInFile.append(bfile)
         tree.add_node(bfile)  # root node
-        
+
         for file_im in LInFile:
             # print("Analiz file: ", file_im)
             if file_im not in RSBIDE.filesimport.keys():
