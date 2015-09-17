@@ -1,0 +1,3 @@
+RSBIDE 1.1.7
+-------------
+- Добавлен русский readme_ru.md и ST_Key.png
