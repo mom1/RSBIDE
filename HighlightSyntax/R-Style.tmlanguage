@@ -474,6 +474,10 @@
                             <key>match</key>
                             <string>([А-Яа-яa-zA-Z_][А-Яа-яa-zA-Z_0-9]*)\s*(([:]\s*(\w*))|([,]))?</string>
                         </dict>
+                        <dict>
+                            <key>include</key>
+                            <string>$self</string>
+                        </dict>
                     </array>
                 </dict>
                 <dict>
