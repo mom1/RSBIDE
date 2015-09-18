@@ -16,6 +16,7 @@ import time
 import xml.etree.ElementTree as ET
 from os.path import basename, dirname, normpath, normcase, realpath
 from RSBIDE.tree import Tree
+from RSBIDE.RsbIde_print_panel import get_panel
 
 try:
     import thread
@@ -131,8 +132,14 @@ class RSBIDE:
         # append "var" names from current file
         vars = []
         [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
-        [completions.append(self.create_var_completion(var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in]
-
+        [completions.append(self.create_var_completion(var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
+        # append "globals from CommonVariables.mac"
+        gvars = []
+        pfile = [sfile for sfile in self.files if basename(sfile).lower() == "CommonVariables.mac".lower()][0]
+        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(pfile, encoding='cp1251', errors='replace') if len(line) < 300]
+        parse_panel = get_panel(view, "".join(lines))
+        gvars = [parse_panel.substr(parse_panel.word(selection)) for selection in parse_panel.find_by_selector('variable.declare.name.mac')]
+        [completions.append(self.create_var_completion(var, "Global")) for var in list(set(gvars)) if len(var) > 1 and var not in already_in]
         return completions
 
     def create_function_completion(self, function, location):
