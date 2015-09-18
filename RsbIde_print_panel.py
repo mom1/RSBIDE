@@ -44,3 +44,13 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, showline=0):
     panel.set_read_only(True)
     view.window().run_command("show_panel", {"panel": "output.Rsb_panel"})
 
+
+def get_panel(view, text, b_overwrite=True, bLog=False):
+    panel = view.window().create_output_panel('Rsb_parse_panel')
+    panel.set_read_only(False)
+    panel.run_command('append', {'characters': text})
+
+    panel.set_syntax_file(view.settings().get('syntax'))
+
+    panel.set_read_only(True)
+    return panel

@@ -15,7 +15,7 @@
     "Object",
     "Variant",
     "Numeric",
-    "Decimal", 
+    "Decimal",
     "Money",
     "Double",
     "Bool",
@@ -24,7 +24,10 @@
     "Dttm",
     "ProcRef",
     "MethodRef",
-    "return"
+    "return",
+    "else",
+    "elif",
+    "end"
     ],
     "forget_deleted_files": false,
     "excluded_files_or_folders":
