@@ -98,9 +98,45 @@ class RSBIDE:
                          os.remove(cache_file)
                          self.filesimport = dict()
 
+    def without_duplicates(self, words):
+        result = []
+        used_words = []
+        for w, v in words:
+            if w.lower() not in used_words:
+                used_words.append(w.lower())
+                result.append((w, v))
+        return result
+
+    def joinpaths(self, dir, files):
+        return [os.path.join(dir, f) for f in files if f.lower().endswith(".mac")]
+        # [self.joinpaths(dir, files) for dir, dnames, files in os.walk(folder)]
+
+    def get_file_in_project(self):
+        update_folders()
+        pfiles = []
+        folders = list(Pref.updated_folders)
+        Pref.folders = list(folders)
+        # deduplicate
+        folders = list(set(folders))
+        _folders = []
+        for folder in folders:
+            _folders = deduplicate_crawl_folders(_folders, folder)
+        folders = _folders
+        for folder in folders:
+            for dir, dnames, files in os.walk(folder):
+                fils = self.joinpaths(dir, files)
+                pfiles += [x for x in fils if not should_exclude(x) and x not in pfiles]
+        return pfiles
+
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
-
+        # completion import files
+        if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":
+            currentImport = [os.path.splitext(basename(view.substr(s).lower().strip()))[0] for s in view.find_by_selector('import.file.mac')]
+            pfiles = self.get_file_in_project()
+            lfile = [self.create_var_completion(os.path.splitext(basename(fil))[0],"File") for fil in pfiles if os.path.splitext(basename(fil.lower()))[0] not in currentImport]
+            lfile = self.without_duplicates(list(lfile))
+            return lfile
         # start with default completions
         completions = list(Pref.always_on_auto_completions)
         # word completion from xml
@@ -134,12 +170,8 @@ class RSBIDE:
         [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
         [completions.append(self.create_var_completion(var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
         # append "globals from CommonVariables.mac"
-        gvars = []
-        pfile = [sfile for sfile in self.files if basename(sfile).lower() == "CommonVariables.mac".lower()][0]
-        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(pfile, encoding='cp1251', errors='replace') if len(line) < 300]
-        parse_panel = get_panel(view, "".join(lines))
-        gvars = [parse_panel.substr(parse_panel.word(selection)) for selection in parse_panel.find_by_selector('variable.declare.name.mac')]
-        [completions.append(self.create_var_completion(var, "Global")) for var in list(set(gvars)) if len(var) > 1 and var not in already_in]
+        [completions.append(self.create_var_completion(var, "Global")) for var in list(set(self.get_globals(view))) if len(var) > 1 and var not in already_in]
+        completions = self.without_duplicates(completions)
         return completions
 
     def create_function_completion(self, function, location):
@@ -161,6 +193,16 @@ class RSBIDE:
             matches = regexp(line)
             if matches:
                 return matches.groupdict()
+
+    def get_globals(self, view):
+        gvars = []
+        if view == None:
+            return gvars
+        pfile = [sfile for sfile in self.files if basename(sfile).lower() == "CommonVariables.mac".lower()][0]
+        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(pfile, encoding='cp1251', errors='replace') if len(line) < 300]
+        parse_panel = get_panel(view, "".join(lines))
+        gvars = [parse_panel.substr(parse_panel.word(selection)) for selection in parse_panel.find_by_selector('variable.declare.name.mac')]
+        return gvars
 
     def parseimport(self, total):
          sregexp2 = r'(\"?((([\w\d])*)(?:.mac)*)\"?)\s*(?:(,|;))'
@@ -222,6 +264,7 @@ class RSBIDECollectorThread(threading.Thread):
             except:
                 pass
         elif not Pref.scan_running:
+            sublime.status_message('Scaning Run')
             Pref.scan_running = True
             Pref.scan_started = time.time()
             # the list of opened files in all the windows
@@ -311,6 +354,7 @@ class RSBIDECollectorThread(threading.Thread):
             RSBIDE.save_objs("Field", fields)
             RSBIDE.save_objs("Method", methods)
             RSBIDE.save_to_cache()
+            sublime.status_message('Scan done in ' + str(time.time()-Pref.scan_started) + ' seconds - ' + 'File scans ' + str(files_mac + files_xml))
             if debug:
                 print('Scan done in '+str(time.time()-Pref.scan_started)+' seconds - Scan was aborted: '+str(Pref.scan_aborted))
                 print('Files Seen:'+str(files_seen)+', Files MAC:'+str(files_mac)+', Cache Miss:'+str(files_cache_miss)+', Cache Hit:'+str(files_cache_hit)+', Failed Parsing:'+str(files_failed_parsing))
