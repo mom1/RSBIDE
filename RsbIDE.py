@@ -38,6 +38,7 @@ class RSBIDE:
     files = dict()
     filesxml = dict()
     filesimport = dict()
+    ffiles = []
 
     NAME = 'name'
     SIGN = 'sign'
@@ -50,6 +51,7 @@ class RSBIDE:
         self.files = dict()
         self.filesxml = dict()
         self.filesimport = dict()
+        self.ffiles = []
 
     def rebuild_cache(self):
         if not Pref.scan_running:
@@ -65,6 +67,16 @@ class RSBIDE:
     def save_imports(self, file, data):
         self.filesimport[file] = data
 
+    def save_ff(self, file):
+        lfile = normalize_to_system_style_path(file.lower())
+        file  = normalize_to_system_style_path(file)
+        if file in self.ffiles:
+            return
+        for x in self.ffiles:
+          if lfile == x.lower():
+                self.ffiles.remove(x)
+        self.ffiles.append(file)
+
     def save_to_cache(self):
         if os.path.lexists(self.tmp_folder):
             with open(os.path.join(self.tmp_folder, 'files_cache.obj'), 'wb') as cache_file:
@@ -73,6 +85,8 @@ class RSBIDE:
                 pickle.dump(self.filesxml, cache_file)
             with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'wb') as cache_file:
                 pickle.dump(self.filesimport, cache_file)
+            with open(os.path.join(self.tmp_folder, 'ffiles_cache.obj'), 'wb') as cache_file:
+                pickle.dump(self.ffiles, cache_file)
 
 
     def load_from_cache(self):
@@ -97,6 +111,13 @@ class RSBIDE:
                     except Exception:
                          os.remove(cache_file)
                          self.filesimport = dict()
+        if os.path.lexists(os.path.join(self.tmp_folder, 'ffiles_cache.obj')):
+            with open(os.path.join(self.tmp_folder, 'ffiles_cache.obj'), 'rb') as cache_file:
+                    try:
+                         self.ffiles = pickle.load(cache_file)
+                    except Exception:
+                         os.remove(cache_file)
+                         self.ffiles = []
 
     def without_duplicates(self, words):
         result = []
@@ -107,35 +128,15 @@ class RSBIDE:
                 result.append((w, v))
         return result
 
-    def joinpaths(self, dir, files):
-        return [os.path.join(dir, f) for f in files if f.lower().endswith(".mac")]
-        # [self.joinpaths(dir, files) for dir, dnames, files in os.walk(folder)]
-
-    def get_file_in_project(self):
-        update_folders()
-        pfiles = []
-        folders = list(Pref.updated_folders)
-        Pref.folders = list(folders)
-        # deduplicate
-        folders = list(set(folders))
-        _folders = []
-        for folder in folders:
-            _folders = deduplicate_crawl_folders(_folders, folder)
-        folders = _folders
-        for folder in folders:
-            for dir, dnames, files in os.walk(folder):
-                fils = self.joinpaths(dir, files)
-                pfiles += [x for x in fils if not should_exclude(x) and x not in pfiles]
-        return pfiles
-
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
         # completion import files
         if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":
             currentImport = [os.path.splitext(basename(view.substr(s).lower().strip()))[0] for s in view.find_by_selector('import.file.mac')]
-            pfiles = self.get_file_in_project()
+            pfiles = self.ffiles
             lfile = [self.create_var_completion(os.path.splitext(basename(fil))[0],"File") for fil in pfiles if os.path.splitext(basename(fil.lower()))[0] not in currentImport]
             lfile = self.without_duplicates(list(lfile))
+            lfile.sort()
             return lfile
         # start with default completions
         completions = list(Pref.always_on_auto_completions)
@@ -147,8 +148,8 @@ class RSBIDE:
         # append these from indexed files
         already_in = []
         for file, data in self.files.items():
-            if basename(file) not in already_im or norm_path_string(
-                sublime.expand_variables("$folder", sublime.active_window().extract_variables())) not in file:
+            if basename(file).lower() not in already_im or norm_path_string(
+                sublime.expand_variables("$folder", sublime.active_window().extract_variables())) not in file.lower():
                 continue
             if not skip_deleted or (skip_deleted and os.path.lexists(file)):
                 location = basename(file)
@@ -260,6 +261,7 @@ class RSBIDECollectorThread(threading.Thread):
                 self.parse_functions(norm_path(self.file))
                 RSBIDE.filesimport[norm_path(self.file)] = []
                 self.parse_import(norm_path(self.file))
+                RSBIDE.save_ff(self.file)
                 RSBIDE.save_to_cache()
             except:
                 pass
@@ -324,8 +326,9 @@ class RSBIDECollectorThread(threading.Thread):
                             break
                         files_seen += 1
                         file = os.path.join(dir, f)
-                        if not should_exclude(file) and is_mac_file(file):
+                        if not should_exclude(file.lower()) and is_mac_file(file.lower()):
                             files_mac += 1
+                            RSBIDE.save_ff(file)
                             file = norm_path(file)
                             if file not in RSBIDE.files:
                                 try:
@@ -336,7 +339,7 @@ class RSBIDECollectorThread(threading.Thread):
                                     files_failed_parsing += 1
                             else:
                                 files_cache_hit += 1
-                        if not should_exclude(file) and is_xml_file(file):
+                        elif not should_exclude(file.lower()) and is_xml_file(file.lower()):
                             files_xml += 1
                             file = norm_path(file)
                             if file not in RSBIDE.filesxml:
@@ -449,7 +452,7 @@ def normalize_to_system_style_path(path):
     if sublime.platform() == 'windows':
         path= re.sub(r"/([A-Za-z])/(.+)", r"\1:/\2", path)
         path= re.sub(r"/", r"\\", path)
-    return path.lower()
+    return path
 
 
 def should_exclude(file):
@@ -548,6 +551,32 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
                 lnline = len(lines)
         print_to_panel(view, "\n".join(lines), showline=lnline)
 
+def getShortPathName(path):
+    import ctypes
+    from ctypes.wintypes import MAX_PATH
+    buf = ctypes.create_unicode_buffer(MAX_PATH)
+    GetShortPathName = ctypes.windll.kernel32.GetShortPathNameW
+    rv = GetShortPathName(path, buf, MAX_PATH)
+    if rv == 0 or rv > MAX_PATH:
+        return path
+    else:
+        return buf.value
+
+def getLongPathName(path):
+    import ctypes
+    from ctypes.wintypes import MAX_PATH
+    buf = ctypes.create_unicode_buffer(MAX_PATH)
+    GetLongPathName = ctypes.windll.kernel32.GetLongPathNameW
+    rv = GetLongPathName(path, buf, MAX_PATH)
+    if rv == 0 or rv > MAX_PATH:
+        return path
+    else:
+        return buf.value
+
+def _get_case_sensitive_name(s):
+        """ Returns long name in case sensitive format """
+        path = getLongPathName(getShortPathName(s))
+        return path
 
 def get_result(view):
     sel = view.sel()[0]
@@ -557,13 +586,25 @@ def get_result(view):
             sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
 
     word = view.substr(sel)
-    for file, data in RSBIDE.files.items():
-        if basename(file).lower() not in list(map(str.lower, already_im)):
-            continue
-        for func in data:
-            if func[RSBIDE.NAME].lower() == word.lower():
-                word = func[RSBIDE.NAME]
-                break
+    if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":
+        res = []
+        for file in RSBIDE.ffiles:
+            if basename(file).lower() ==  word.lower() + ".mac":
+                file = _get_case_sensitive_name(normalize_to_system_style_path(file))
+                file = "/"+file.replace(":","").replace('\\', '/')
+                sfile = file
+                for x in Pref.updated_folders:
+                    sfile = sfile.replace("/"+_get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":","").replace('\\','/')+"/","")
+                res.append((file, sfile, (0,0)))
+        return res
+    else:
+        for file, data in RSBIDE.files.items():
+            if basename(file).lower() not in list(map(str.lower, already_im)):
+                continue
+            for func in data:
+                if func[RSBIDE.NAME].lower() == word.lower():
+                    word = func[RSBIDE.NAME]
+                    break
 
     result = window.lookup_symbol_in_index(word)
     im_result = []
@@ -577,7 +618,6 @@ def get_result(view):
     #     [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
     #     result[0] = view.file_name() if view.file_name() else ''
     #     result[0][1] = basename(result[0])
-
     return result
 
 
@@ -645,7 +685,6 @@ class PrintTreeImportCommand(sublime_plugin.WindowCommand):
                         tree.add_node(i+"_"+str(len(LInFile)), file_im)
         tree.display(bfile, pathfile=norm_path_string(view.file_name())+".treeimport")
         self.window.open_file("%s:%s:%s" % (view.file_name()+".treeimport", 0, 0), sublime.ENCODED_POSITION)
-        # self.window.open_file("%s:%s:%s" % (self.result[idx][0], self.result[idx][2][0], self.result[idx][2][1]), flags)
 
 
 def RSBIDE_folder_change_watcher():
