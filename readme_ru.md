@@ -12,9 +12,13 @@
     * Вместе с именем функции подставляются ее возможные параметры
     * Авто-дополнение Object/Field/Method из *.xml (RSTypeInfo)
     * Авто-дополнение не чувствительно к регистру
+    * Авто-дополнение в области import (подсказываются только файлы из проекта)
+    
+        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
 * **Перейти к объявлению и обратно**
     * Перейти к определению  `macro(...)` и `class(...) name (...)` с учетом импортируемых файлов (import files) клавиши по умолчанию <kbd>Alt + G</kbd>
     * Перейти к определению выделенных функций через <kbd>Alt + G</kbd>, <kbd>Ctrl + left click</kbd>
+    * Перейти к файлу из области import <kbd>Alt + G</kbd>
     * Посмотреть структуру `macro` или `class` в нижней панели <kbd>Alt + S</kbd> 
 
         ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)

@@ -12,9 +12,13 @@ Features
     * Autocomplete Object/Field/Method from *.xml (RSTypeInfo)
     * Case insensitive completions
     * Parameter hints
+    * Auto-completion in the field of import (prompts only files from the project)
+
+        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
 * **Go to declaration and back again**
     * Go To Definition  `macro(...)` and `class(...) name (...)` according environment (import files) default key <kbd>Alt + G</kbd>
     * go to the declaration of the currently selected functions via <kbd>Alt + G</kbd>, <kbd>Ctrl + left click</kbd>
+    * Go to the file from the import <kbd> Alt + G </ kbd>
     * Print Signature `macro` and `class` To Panel <kbd>Alt + S</kbd> 
 
         ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
