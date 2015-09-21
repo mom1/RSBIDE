@@ -586,7 +586,7 @@ def get_result(view):
             sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
 
     word = view.substr(sel)
-    if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":
+    if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":  # if scope import go to file rowcol 0 0
         res = []
         for file in RSBIDE.ffiles:
             if basename(file).lower() ==  word.lower() + ".mac":
@@ -594,8 +594,9 @@ def get_result(view):
                 file = "/"+file.replace(":","").replace('\\', '/')
                 sfile = file
                 for x in Pref.updated_folders:
-                    sfile = sfile.replace("/"+_get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":","").replace('\\','/')+"/","")
-                res.append((file, sfile, (0,0)))
+                    if "/"+x.lower().replace(":","") in sfile.lower():
+                        sfile = sfile.replace("/"+_get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":","").replace('\\','/')+"/","")
+                        res.append((file, sfile, (0,0)))
         return res
     else:
         for file, data in RSBIDE.files.items():
@@ -608,16 +609,24 @@ def get_result(view):
 
     result = window.lookup_symbol_in_index(word)
     im_result = []
-    if len(result) > 1:
+    if len(result) > 1:  # if found in index check location must by in import
         for item in result:
             if basename(norm_path_string(item[0])) in already_im:
                  im_result.insert(already_im.index(basename(norm_path_string(item[0]))), item)
         result = im_result
-    # elif len(result) == 0:
-    #     vars = []
-    #     [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
-    #     result[0] = view.file_name() if view.file_name() else ''
-    #     result[0][1] = basename(result[0])
+    elif len(result) == 0:  # if not found in index try find variable in current file
+        vars = []
+        file = _get_case_sensitive_name(view.file_name().lower())
+        file = "/"+file.replace(":","").replace('\\', '/')
+        sfile = file
+        for x in Pref.updated_folders:
+            if "/"+x.lower().replace(":","") in sfile.lower():
+                sfile = sfile.replace("/"+_get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":","").replace('\\','/')+"/","")
+        vars = [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(selection)).lower()]
+        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.parameter.function.mac') if word.lower() == view.substr(view.word(selection)).lower()]
+        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.parameter.class.mac') if word.lower() == view.substr(view.word(selection)).lower()]
+        if len(vars) > 0:
+            result = vars
     return result
 
 
@@ -643,6 +652,7 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
             # несколько раз (в каждой функции) и не понятно к какой переходить
             # print(view.file_name())
             # self.open_file(0)
+            # В get_result(view) реализован сбор переменных по тек. файлу без анализа области
             return
 
         self.window.show_quick_panel(["%s (%s)" % (r[1], r[2][0]) for r in self.result], self.open_file, 0, 0, lambda x: self.open_file(x, True))
