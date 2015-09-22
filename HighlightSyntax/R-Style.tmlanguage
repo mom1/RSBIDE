@@ -100,24 +100,26 @@
                         <key>1</key>
                         <dict>
                             <key>name</key>
+                            <string>invalid.deprecated.needfix.source.mac</string>
+                        </dict>
+                        <key>2</key>
+                        <dict>
+                            <key>name</key>
                             <string>constant.language.comment.source.mac</string>
                         </dict>
-
-                        <key>2</key>
+                        <key>3</key>
                         <dict>
                             <key>name</key> <!-- TODO: add variable entity highlighting -->
                             <string>constant.language.comment.source.mac</string>
                         </dict>
-
-                        <key>3</key>
+                        <key>4</key>
                         <dict>
                             <key>name</key>
                             <string>constant.language.comment.source.mac</string>
                         </dict>
                     </dict>
-
                     <key>match</key>
-                    <string>(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:</string>
+                    <string>(!.*\n)|(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:</string>
                 </dict>
             </array>
         </dict>
@@ -317,7 +319,7 @@
         </dict>
         <dict>
             <key>comment</key>
-            <string>Процедура  удаленного запуска макропрограмм CallRemoteRsl</string>
+            <string>Процедура удаленного запуска макропрограмм CallRemoteRsl</string>
             <key>match</key>
             <string>(?i)\b(CallRemoteRsl)\b</string>
             <key>name</key>
