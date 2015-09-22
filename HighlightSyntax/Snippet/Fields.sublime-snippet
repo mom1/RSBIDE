@@ -2,5 +2,5 @@
     <content><![CDATA[Fields("$0").Value]]></content>
     <tabTrigger>Fields</tabTrigger>
     <scope>source.mac</scope>
-    <description>Fields("$0").Value</description>
+    <description>Fields("").Value</description>
 </snippet>

@@ -141,38 +141,39 @@ class RSBIDE:
         # start with default completions
         completions = list(Pref.always_on_auto_completions)
         # word completion from xml
-        for stype, word in self.filesxml.items():
-            for x in word:
-                completions.append(self.create_var_completion(x, stype))
-        self.get_files_import(view.file_name(), True)
-        # append these from indexed files
-        already_in = []
-        for file, data in self.files.items():
-            if basename(file).lower() not in already_im or norm_path_string(
-                sublime.expand_variables("$folder", sublime.active_window().extract_variables())) not in file.lower():
-                continue
-            if not skip_deleted or (skip_deleted and os.path.lexists(file)):
-                location = basename(file)
-                for function in data:
-                    if prefix.lower() in function[self.NAME].lower():
-                        already_in.append(function[self.NAME])
-                        completion = self.create_function_completion(
-                            function, location)
-                        completions.append(completion)
-        # current file
-        location = basename(view.file_name()) if view.file_name() else ''
-        if debug:
-            print (view.file_name())
-        # append functions from current view that yet have not been saved
-        [completions.append(self.create_function_completion(self.parse_line(view.substr(view.line(selection))), location)) for selection in view.find_by_selector('entity.name.function') if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
-
-        # append "var" names from current file
-        vars = []
-        [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
-        [completions.append(self.create_var_completion(var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
-        # append "globals from CommonVariables.mac"
-        [completions.append(self.create_var_completion(var, "Global")) for var in list(set(self.get_globals(view))) if len(var) > 1 and var not in already_in]
-        completions = self.without_duplicates(completions)
+        if "string.quoted.double" in view.scope_name(view.sel()[0].a):
+            for stype, word in self.filesxml.items():
+                for x in word:
+                    completions.append(self.create_var_completion(x, stype))
+        else:
+            self.get_files_import(view.file_name(), True)
+            # append these from indexed files
+            already_in = []
+            for file, data in self.files.items():
+                if basename(file).lower() not in already_im or norm_path_string(
+                    sublime.expand_variables("$folder", sublime.active_window().extract_variables())) not in file.lower():
+                    continue
+                if not skip_deleted or (skip_deleted and os.path.lexists(file)):
+                    location = basename(file)
+                    for function in data:
+                        if prefix.lower() in function[self.NAME].lower():
+                            already_in.append(function[self.NAME])
+                            completion = self.create_function_completion(
+                                function, location)
+                            completions.append(completion)
+            # current file
+            location = basename(view.file_name()) if view.file_name() else ''
+            if debug:
+                print (view.file_name())
+            # append functions from current view that yet have not been saved
+            [completions.append(self.create_function_completion(self.parse_line(view.substr(view.line(selection))), location)) for selection in view.find_by_selector('entity.name.function') if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
+            # append "var" names from current file
+            vars = []
+            [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
+            [completions.append(self.create_var_completion(var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
+            # append "globals from CommonVariables.mac"
+            [completions.append(self.create_var_completion(var, "Global")) for var in list(set(self.get_globals(view))) if len(var) > 1 and var not in already_in]
+            completions = self.without_duplicates(completions)
         return completions
 
     def create_function_completion(self, function, location):

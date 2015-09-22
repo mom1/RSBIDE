@@ -26,7 +26,7 @@
     "MethodRef",
     "return",
     "else",
-    "elif",
+    "elif ($0)",
     "end"
     ],
     "forget_deleted_files": false,
