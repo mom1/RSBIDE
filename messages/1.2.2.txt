@@ -1,0 +1,8 @@
+RSBIDE 1.2.2
+-------------
+- Optimization
+    - snippets
+    - auto-completion in string from xml only
+    and from xml not in out of string
+
+- hightlight invalid.deprecated after (!)
