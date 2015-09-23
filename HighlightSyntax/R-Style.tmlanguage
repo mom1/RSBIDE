@@ -587,6 +587,7 @@
                 </dict>
             </array>
         </dict>
+        <!-- Variable -->
         <dict>
             <key>begin</key>
             <string>(?i)\s*((private|local)\s+)?(var)\s+</string>
@@ -618,21 +619,69 @@
             <key>patterns</key>
             <array>
                 <dict>
-                    <key>captures</key>
+                    <key>begin</key>
+                    <string>(?i)(?=[А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)</string>
+                    <key>contentName</key>
+                    <string>variable.declare.name.mac</string>
+                    <key>end</key>
+                    <string>(?![А-Яа-яA-Za-z0-9_])</string>
+                </dict>
+                <dict>
+                    <key>match</key>
+                    <string>\s*(:\s*\w+)</string>
+                    <key>name</key>
+                    <string>storage.type.variable.mac</string>
+                </dict>
+                <dict>
+                    <key>begin</key>
+                    <string>(?i)\s*(=)\s*</string>
+                    <key>beginCaptures</key>
                     <dict>
                         <key>1</key>
                         <dict>
                             <key>name</key>
-                            <string>variable.declare.name.mac</string>
-                        </dict>
-                        <key>2</key>
-                        <dict>
-                            <key>name</key>
-                            <string>storage.type.variable.parameter.mac</string>
+                            <string>keyword.operator.mac</string>
                         </dict>
                     </dict>
+                    <key>contentName</key>
+                    <string>value.mac</string>
+                    <key>end</key>
+                    <string>(?![А-Яа-яA-Za-z0-9_])</string>
+                    <key>patterns</key>
+                    <array>
+                        <dict>
+                            <key>include</key>
+                            <string>$self</string>
+                        </dict>
+                    </array>
+                </dict>
+                <dict>
+                    <key>begin</key>
+                    <string>(?i)(?=\()</string>
+                    <key>contentName</key>
+                    <string>parameters.value.mac</string>
+                    <key>end</key>
+                    <string>(?=\))</string>
+                    <key>patterns</key>
+                    <array>
+                        <dict>
+                            <key>include</key>
+                            <string>$self</string>
+                        </dict>
+                    </array>
+                </dict>
+                <dict>
                     <key>match</key>
-                    <string>\b(?&lt;![\)\(@\\\.=+\*\/])\s*(?&lt;![\=\-+\\\*\/]\s)([А-Яа-яa-zA-Z_][А-Яа-яa-zA-Z_0-9]*)\s*(:\s*\w+)?\s*(,|\b)\s*(?![\s\).,\("+@\-])</string>
+                    <string>\s*(\.\s*\w+)</string>
+                    <key>name</key>
+                    <string>property.value.mac</string>
+                    <key>patterns</key>
+                    <array>
+                        <dict>
+                            <key>include</key>
+                            <string>$self</string>
+                        </dict>
+                    </array>
                 </dict>
                 <dict>
                     <key>include</key>
@@ -640,6 +689,7 @@
                 </dict>
             </array>
         </dict>
+        <!-- END Variable -->
         <dict>
             <key>begin</key>
             <string>(")</string>
