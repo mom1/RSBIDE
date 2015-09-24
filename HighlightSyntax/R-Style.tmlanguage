@@ -634,7 +634,7 @@
                 </dict>
                 <dict>
                     <key>begin</key>
-                    <string>(?i)\s*(=)\s*</string>
+                    <string>(?i)\s*(=|\*|\-|\+|==|!=|&lt;=|&gt;=|&lt;&gt;|&lt;|&gt;)\s*</string>
                     <key>beginCaptures</key>
                     <dict>
                         <key>1</key>
@@ -657,7 +657,7 @@
                 </dict>
                 <dict>
                     <key>begin</key>
-                    <string>(?i)(?=\()</string>
+                    <string>(\()</string>
                     <key>contentName</key>
                     <string>parameters.value.mac</string>
                     <key>end</key>
