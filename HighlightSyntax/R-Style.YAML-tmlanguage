@@ -30,6 +30,7 @@ repository:
             name: constant.language.comment.source.mac
         match: '(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED
           BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:'
+      - include: '#comments'
     - match: \*/.*\n
       name: invalid.illegal.stray-comment-end.source.mac
     - begin: //!
@@ -78,14 +79,16 @@ repository:
       - include: $self
   class:
     patterns:
-    - begin: (?i)^\s*(private)?\s*(class)\s+((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(?=[\w_][\w\d_]*)
+    - begin: (?i)(\s+|^)(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)
       beginCaptures:
-        '1':
-          name: storage.modifier.mac
         '2':
           name: storage.type.class.mac
-        '5':
+        '3':
+          name: comment.block.mac
+        '6':
           name: entity.other.inherited-class.mac
+        '8':
+          name: comment.block.mac
       end: (?i)(\))|(\s*$)|([:]\s*(\w*))
       endCaptures:
         '2':
@@ -111,16 +114,17 @@ repository:
             '3':
               name: storage.type.variable.parameter.mac
           match: (?i)([\w_][\w_\d]*)\s*(([:]\s*(\w*))|([,]))?
-        - include: $self
-      - include: $self
+        - include: '#simple'
   macro:
     patterns:
-    - begin: (?i)^\s*((private|local)\s+)?(macro)\s+(?=[\w_][\w\d_]*)
+    - begin: (?i)\s*((private|local)\s+)?(macro)\s+(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)
       beginCaptures:
         '2':
           name: storage.modifier.mac
         '3':
           name: storage.type.function.mac
+        '4':
+          name: comment.block.mac
       end: (\))|(\s*$)|([:]\s*(@?\w*))
       endCaptures:
         '0':

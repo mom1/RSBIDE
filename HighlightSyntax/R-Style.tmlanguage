@@ -74,23 +74,28 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)^\s*(private)?\s*(class)\s+((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(?=[\w_][\w\d_]*)</string>
+					<string>(?i)(\s+|^)(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)</string>
 					<key>beginCaptures</key>
 					<dict>
-						<key>1</key>
-						<dict>
-							<key>name</key>
-							<string>storage.modifier.mac</string>
-						</dict>
 						<key>2</key>
 						<dict>
 							<key>name</key>
 							<string>storage.type.class.mac</string>
 						</dict>
-						<key>5</key>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>comment.block.mac</string>
+						</dict>
+						<key>6</key>
 						<dict>
 							<key>name</key>
 							<string>entity.other.inherited-class.mac</string>
+						</dict>
+						<key>8</key>
+						<dict>
+							<key>name</key>
+							<string>comment.block.mac</string>
 						</dict>
 					</dict>
 					<key>end</key>
@@ -160,13 +165,9 @@
 								</dict>
 								<dict>
 									<key>include</key>
-									<string>$self</string>
+									<string>#simple</string>
 								</dict>
 							</array>
-						</dict>
-						<dict>
-							<key>include</key>
-							<string>$self</string>
 						</dict>
 					</array>
 				</dict>
@@ -214,6 +215,10 @@
 							</dict>
 							<key>match</key>
 							<string>(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:</string>
+						</dict>
+						<dict>
+							<key>include</key>
+							<string>#comments</string>
 						</dict>
 					</array>
 				</dict>
@@ -503,7 +508,7 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)^\s*((private|local)\s+)?(macro)\s+(?=[\w_][\w\d_]*)</string>
+					<string>(?i)\s*((private|local)\s+)?(macro)\s+(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>2</key>
@@ -515,6 +520,11 @@
 						<dict>
 							<key>name</key>
 							<string>storage.type.function.mac</string>
+						</dict>
+						<key>4</key>
+						<dict>
+							<key>name</key>
+							<string>comment.block.mac</string>
 						</dict>
 					</dict>
 					<key>end</key>
