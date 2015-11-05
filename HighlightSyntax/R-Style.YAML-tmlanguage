@@ -1,0 +1,297 @@
+fileTypes:
+- mac
+name: RStyle
+patterns:
+- include: '#comments'
+- include: '#numeric'
+- include: '#import'
+- include: '#class'
+- include: '#macro'
+- include: '#var'
+- include: '#string'
+- include: '#language'
+
+repository:
+  comments:
+    patterns:
+    - begin: /\*
+      captures:
+        '0':
+          name: punctuation.definition.comment.source.mac
+      end: \*/
+      name: comment.block.source.mac
+      patterns:
+      - captures:
+          '1':
+            name: constant.language.comment.source.mac
+          '2':
+            name: constant.language.comment.source.mac
+          '3':
+            name: constant.language.comment.source.mac
+        match: '(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED
+          BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:'
+    - match: \*/.*\n
+      name: invalid.illegal.stray-comment-end.source.mac
+    - begin: //!
+      name: invalid.deprecated.needfix.source.mac
+      end: $\n?
+    - begin: //
+      end: $\n?
+      name: comment.line.double-slash.source.mac
+      patterns:
+      - captures:
+          '2':
+            name: constant.language.comment.source.mac
+          '3':
+            name: constant.language.comment.source.mac
+          '4':
+            name: constant.language.comment.source.mac
+        match: '(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED
+          BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:'
+  numeric:
+    patterns:
+    - captures:
+        '1':
+          name: constant.numeric.mac
+      comment: Tab stops like $1, $2...
+      match: \$(\d+)
+      name: keyword.mac
+    - match: (?i)\b((0(x|X)[0-9a-fA-F]+)|([0-9]+(\.[0-9]+)?))\b
+      name: constant.numeric.mac
+    - match: (\$)
+      name: invalid.mac
+  import:
+    patterns:
+    - begin: (?i)^\s*(import)\s+
+      beginCaptures:
+        '1':
+          name: keyword.control.import.mac
+      end: (\;)
+      endCaptures:
+        '1':
+          name: punctuation.definition.end.mac
+      patterns:
+      - captures:
+          '1':
+            name: import.file.mac
+        match: \"*(([\w\d\s])*(.mac)*)\"?\s*(,||;)
+      - include: $self
+  class:
+    patterns:
+    - begin: (?i)^\s*(private)?\s*(class)\s+((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(?=[\w_][\w\d_]*)
+      beginCaptures:
+        '1':
+          name: storage.modifier.mac
+        '2':
+          name: storage.type.class.mac
+        '5':
+          name: entity.other.inherited-class.mac
+      end: (?i)(\))|(\s*$)|([:]\s*(\w*))
+      endCaptures:
+        '2':
+          name: punctuation.section.class.begin.mac
+      name: meta.class.mac
+      patterns:
+      - include: '#simple'
+      - begin: (?i)(?=[\w_][\w\d_]*)
+        contentName: entity.name.class.mac
+        end: (?i)(?![\w\d_])
+      - begin: (\()
+        beginCaptures:
+          '1':
+            name: punctuation.definition.parameters.begin.mac
+        contentName: meta.class.parameters.mac
+        end: (\))
+        patterns:
+        - captures:
+            '1':
+              name: variable.parameter.class.mac
+            '2':
+              name: punctuation.separator.parameters.mac
+            '3':
+              name: storage.type.variable.parameter.mac
+          match: (?i)([\w_][\w_\d]*)\s*(([:]\s*(\w*))|([,]))?
+        - include: $self
+      - include: $self
+  macro:
+    patterns:
+    - begin: (?i)^\s*((private|local)\s+)?(macro)\s+(?=[\w_][\w\d_]*)
+      beginCaptures:
+        '2':
+          name: storage.modifier.mac
+        '3':
+          name: storage.type.function.mac
+      end: (\))|(\s*$)|([:]\s*(@?\w*))
+      endCaptures:
+        '0':
+          name: punctuation.definition.parameters.end.mac
+        '4':
+          name: storage.type.variable.parameter.mac
+      name: meta.function.mac
+      patterns:
+      - include: '#simple'
+      - begin: (?i)(?=[\w_][\w\d_]*)
+        contentName: entity.name.function.mac
+        end: (?![\w\d_])
+      - begin: (\()
+        beginCaptures:
+          '1':
+            name: punctuation.definition.parameters.begin.mac
+        contentName: meta.function.parameters.mac
+        end: (\))
+        patterns:
+        - captures:
+            '1':
+              name: variable.parameter.function.mac
+            '2':
+              name: punctuation.separator.parameters.mac
+            '4':
+              name: storage.type.variable.parameter.mac
+          match: (?i)([\w_][\w_\d]*)\s*(([:]\s*(@?\w*))|([,]))?
+        - include: $self
+      - include: $self
+  var:
+    patterns:
+    - begin: (?i)\s*((private|local)\s+)?(var)\s+
+      beginCaptures:
+        '1':
+          name: storage.modifier.mac
+        '3':
+          name: storage.type.var.mac
+      end: (\;)
+      endCaptures:
+        '1':
+          name: punctuation.definition.parameters.end.mac
+      name: meta.variable.mac
+      patterns:
+      - begin: (?i)(?=[\w_][\w\d_]*)
+        contentName: variable.declare.name.mac
+        end: (?![\w\d_])
+      - match: \s*(:\s*\w+)
+        name: storage.type.variable.mac
+      - begin: (?i)\s*(=|\*|\-|\+|==|!=|<=|>=|<>|<|>)\s*
+        beginCaptures:
+          '1':
+            name: keyword.operator.mac
+        contentName: value.mac
+        end: (?![\w\d\/\\\*_\s\(\)\"])
+        patterns:
+        - include: '#callmacro'
+        - include: '#simple'
+      - match: \s*(\.\s*\w+)
+        name: property.value.mac
+        patterns:
+        - include: '#simple'
+      - include: '#simple'
+  callmacro:
+    patterns:
+    - begin: (?i)([\w_][\w\d_]*)\s*\(
+      end: \)
+      patterns:
+      - include: '#simple'
+      - include: '#callmacro'
+  string:
+    patterns:
+    - begin: (")
+      beginCaptures:
+        '1':
+          name: punctuation.definition.string.begin.mac
+      comment: double quoted string
+      end: ((?<=")(")|")|(\n)
+      endCaptures:
+        '1':
+          name: punctuation.definition.string.end.mac
+        '2':
+          name: meta.empty-string.double.mac
+        '3':
+          name: invalid.illegal.unclosed-string.mac
+      name: string.quoted.double.single-line.raw.mac
+      patterns:
+      - match: ([^\.])(\\\")([\s\w]*\.?[\w\s]*)(\\\")
+        name: constant.other.table-name.mac
+      - match: (`)
+        name: string.quoted.double.single-line.raw.mac
+      - match: (')
+        name: string.quoted.double.single-line.raw.mac
+      - match: (\#|--)?
+        name: string.quoted.double.single-line.raw.mac
+      - match: (\/\*|\*\/)?
+        name: string.quoted.double.single-line.raw.mac
+      - match: (\\x[0-9A-F]{2})|(\\[0-7]{3})|(\\\\)|(\\\")|(\\n)|(\\r)
+        name: constant.character.escape.mac
+      - include: source.sql
+  language:
+    patterns:
+    - match: (?i)\b(Null|NullObj)\b
+      name: constant.language.mac
+    - match: (?i)\btrue\b
+      name: constant.language.boolean.true.mac
+    - match: (?i)\bfalse\b
+      name: constant.language.boolean.false.mac
+    - match: (?i)\b(const)\b
+      name: storage.modifier.mac
+    - match: (?i)(this)
+      name: constant.language.mac
+    - comment: keyword operators that evaluate to True or False
+      match: (?i)\b(and|not|or)\b
+      name: keyword.operator.logical.mac
+    - comment: magic variables which a class/module may have.
+      match: (?i)\b(private|local|debugbreak|file|weakref|cpwin)\b
+      name: keyword.control.mac
+    - match: (?i)\*|\-|\+|==|=|!=|<=|>=|<>|<|>
+      name: keyword.operator.mac
+    - match: \.
+      name: meta.delimiter.method.period.mac
+    - comment: "ключевые слова, которые формируют или прерывают цикл"
+      match: (?i)\b(elif|else|for|if|while|break|continue|return|end)\b
+      name: keyword.control.flow.mac
+    - comment: "Стандартные процедуры ввода данных"
+      match: (?i)\b(GetInt|GetDouble|GetMoney|GetString|GetStringR|GetDate|GetTRUE|GetTime)\b
+      name: support.function.in.mac
+    - comment: "Стандартные процедуры вывода"
+      match: (?i)\b(Print|PrintLn|Message|SetOutput|SetColumn|FlushColumn|ClearColumn|SetDefPrec|SetOutHandler|GetPRNInfo|SetPRNInfo|SetDefMoneyPrec)\b
+      name: support.function.out.mac
+    - comment: "Процедуры преобразования типа"
+      match: (?i)\b(Asize|CurToStrAlt|Date|DateSplit|Decimal|Double|DoubleL|DtTm|DtTmSplit|Floor|Int|MkStr|Money|MonName|NumToStr|Round|RubToStr|RubToStrAlt|SetAutoMoneyFloor|String|Time|TimeSplit|ValType)\b
+      name: support.function.exchange.type.mac
+    - comment: "Процедуры для работы со строками"
+      match: (?i)\b(CodeFor|Index|StrBrk|StrFor|StrLen|StrLwr|StrSet|StrSplit|StrSplit2|StrSubst|StrUpr|SubStr|ToANSI|ToOEM|Trim)\b
+      name: support.function.string.mac
+    - comment: "Параметры процедур"
+      match: (?i)\b(GetParm|SetParm|Parmcount)\b
+      name: support.function.param.mac
+    - comment: "Математические процедуры"
+      match: (?i)\b(Exp|Log|Log10|Pow|Sqrt|Abs|Min|Max|Mod)\b
+      name: support.function.matematical.mac
+    - comment: "Процедуры управления файлами и каталогами"
+      match: (?i)\b(CopyFile|GetCurDir|GetFileInfo|GetIniFileValue|MakeDir|RemoveDir|RemoveFile|RenameFile)\b
+      name: support.function.file.mac
+    - comment: "Процедура запуска внешних программ Run"
+      match: (?i)\b(Run)\b
+      name: support.function.run.mac
+    - comment: "Процедура удаленного запуска макропрограмм CallRemoteRsl"
+      match: (?i)\b(CallRemoteRsl)\b
+      name: support.function.remoterun.mac
+    - comment: "Процедуры для работы с классами и объектами"
+      match: (?i)\b(CallR2M|record|ClrRmtOnRelease|GenAttach|GenClassName|GenGetProp|GenNumProps|GenObject|GenPropID|GenRun|GenSetProp|GetNamedChanel|IsEqClass|R2M)\b
+      name: support.function.calssobj.mac
+    - comment: "Прочие процедуры"
+      match: (?i)\b(AddEvent|BegAction|EndAction|CmdArgs|CurrentLine|ClassKind|CheckBits|DateShift|InstLoadModule|ErrBox|ErrPrint|ExecExp|ExecMacro|ExecMacro2|ExecMacroFile|ExecMacroModule|Exit|FindPath|GetEnv|GetLangId|GetLocaleInfo|GetUIMode|GetSysDir|GetUserName|GCollect|IsSQL|MemSize|MergeFile|ModuleFileName|ModuleName|MsgBoxEx|PrintModule|PrintSymModule|PrintFiles|PrintRefs|PrintProps|PrintGlobs|PrintLocs|PrintStack|Random|ReplaceMacro|RunError|SetExitFlag|SplitFile|StrongRef|StartProg|SysGetProperty|SysPutProperty|Trace|UnderRCWHost|Version|ZeroValue|OnError)\b
+      name: support.function.other.mac
+    - comment: "Стандартные классы языка RSL"
+      match: (?i)\b(TArray|TDirList|TRslChanel|TRcwSite|TRslEvHandler|TRslEvSourse|TRcwHost|TRsAxServer|TClrHost|TStream|TDbError|RslTimer)\b
+      name: class.language.mac
+    - comment: "Конструктор ActiveX-объектов"
+      match: (?i)\b(activex)\b
+      name: class.language.activex.mac
+    - comment: "RS-Forms"
+      match: (?i)\b(TControl|addHandler)\b
+      name: support.function.rsforms.mac
+  simple:
+    patterns:
+    - include: '#comments'
+    - include: '#numeric'
+    - include: '#string'
+    - include: '#language'
+scopeName: source.mac
+uuid: f24766ec-8d6d-423b-8b09-3f9939e4ff02
