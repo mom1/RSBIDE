@@ -51,9 +51,11 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)([\w_][\w\d_]*)\s*\(</string>
+					<string>(?i)\.?([\w_][\w\d_]*)\s*\(</string>
 					<key>end</key>
 					<string>\)</string>
+					<key>name</key>
+					<string>meta.call.mac</string>
 					<key>patterns</key>
 					<array>
 						<dict>
@@ -811,32 +813,17 @@
 									<string>keyword.operator.mac</string>
 								</dict>
 							</dict>
-							<key>contentName</key>
-							<string>value.mac</string>
 							<key>end</key>
-							<string>(?![\w\d\/\\\*_\s\(\)\"\[\]])</string>
+							<string>(?![\w\d\/\\\*_\s\(\)\"\[\]\.])</string>
 							<key>patterns</key>
 							<array>
+								<dict>
+									<key>include</key>
+									<string>#simple</string>
+								</dict>
 								<dict>
 									<key>include</key>
 									<string>#callmacro</string>
-								</dict>
-								<dict>
-									<key>include</key>
-									<string>#simple</string>
-								</dict>
-							</array>
-						</dict>
-						<dict>
-							<key>match</key>
-							<string>\s*(\.\s*\w+)</string>
-							<key>name</key>
-							<string>property.value.mac</string>
-							<key>patterns</key>
-							<array>
-								<dict>
-									<key>include</key>
-									<string>#simple</string>
 								</dict>
 							</array>
 						</dict>

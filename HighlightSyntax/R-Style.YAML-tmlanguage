@@ -177,20 +177,19 @@ repository:
         beginCaptures:
           '1':
             name: keyword.operator.mac
-        contentName: value.mac
-        end: (?![\w\d\/\\\*_\s\(\)\"\[\]])
         patterns:
+        - include: '#simple'
+        # contentName: value.mac
+        end: (?![\w\d\/\\\*_\s\(\)\"\[\]\.])
+        patterns:
+        - include: '#simple'
         - include: '#callmacro'
-        - include: '#simple'
-      - match: \s*(\.\s*\w+)
-        name: property.value.mac
-        patterns:
-        - include: '#simple'
       - include: '#simple'
   callmacro:
     patterns:
-    - begin: (?i)([\w_][\w\d_]*)\s*\(
+    - begin: (?i)\.?([\w_][\w\d_]*)\s*\(
       end: \)
+      name: meta.call.mac
       patterns:
       - include: '#simple'
       - include: '#callmacro'
