@@ -93,6 +93,8 @@ repository:
       endCaptures:
         '2':
           name: punctuation.section.class.begin.mac
+        '4':
+          name: storage.type.variable.parameter.mac
       name: meta.class.mac
       patterns:
       - include: '#simple'
@@ -154,7 +156,7 @@ repository:
           match: (?i)([\w_][\w_\d]*)\s*(([:]\s*(@?\w*))|([,]))?
         - include: $self
       - include: $self
-  var:
+  for:
     patterns:
     - begin: (?i)\s*(for)
       beginCaptures:
@@ -167,16 +169,24 @@ repository:
       name: meta.for.mac
       patterns:
       - include: '#simple'
-      - begin: (?i)\s*(var)\s+
-        beginCaptures:
-          '1':
-            name: storage.type.var.mac
-        end: (\,)
+      - begin: (\()
+        end: (\))
         patterns:
         - include: '#simple'
-        - begin: (?i)(?=[\w_][\w\d_]*)
-          contentName: variable.declare.name.mac
-          end: (?![\w\d_])
+        - begin: (?i)\s*(var)\s+
+          beginCaptures:
+            '1':
+              name: storage.type.var.mac
+          end: (\,)
+          patterns:
+          - include: '#simple'
+          - begin: (?i)(?=[\w_][\w\d_]*)
+            contentName: variable.declare.name.mac
+            end: (?![\w\d_])
+      - include: '#var'
+  var:
+    patterns:
+    - include: '#for'
     - begin: (?i)\s*((private|local)\s+)?(var)\s+
       beginCaptures:
         '1':

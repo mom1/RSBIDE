@@ -109,6 +109,11 @@
 							<key>name</key>
 							<string>punctuation.section.class.begin.mac</string>
 						</dict>
+						<key>4</key>
+						<dict>
+							<key>name</key>
+							<string>storage.type.variable.parameter.mac</string>
+						</dict>
 					</dict>
 					<key>name</key>
 					<string>meta.class.mac</string>
@@ -268,6 +273,89 @@
 							</dict>
 							<key>match</key>
 							<string>(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:</string>
+						</dict>
+					</array>
+				</dict>
+			</array>
+		</dict>
+		<key>for</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>begin</key>
+					<string>(?i)\s*(for)</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.control.flow.mac</string>
+						</dict>
+					</dict>
+					<key>end</key>
+					<string>(?i)(end)</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.control.flow.mac</string>
+						</dict>
+					</dict>
+					<key>name</key>
+					<string>meta.for.mac</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#simple</string>
+						</dict>
+						<dict>
+							<key>begin</key>
+							<string>(\()</string>
+							<key>end</key>
+							<string>(\))</string>
+							<key>patterns</key>
+							<array>
+								<dict>
+									<key>include</key>
+									<string>#simple</string>
+								</dict>
+								<dict>
+									<key>begin</key>
+									<string>(?i)\s*(var)\s+</string>
+									<key>beginCaptures</key>
+									<dict>
+										<key>1</key>
+										<dict>
+											<key>name</key>
+											<string>storage.type.var.mac</string>
+										</dict>
+									</dict>
+									<key>end</key>
+									<string>(\,)</string>
+									<key>patterns</key>
+									<array>
+										<dict>
+											<key>include</key>
+											<string>#simple</string>
+										</dict>
+										<dict>
+											<key>begin</key>
+											<string>(?i)(?=[\w_][\w\d_]*)</string>
+											<key>contentName</key>
+											<string>variable.declare.name.mac</string>
+											<key>end</key>
+											<string>(?![\w\d_])</string>
+										</dict>
+									</array>
+								</dict>
+							</array>
+						</dict>
+						<dict>
+							<key>include</key>
+							<string>#var</string>
 						</dict>
 					</array>
 				</dict>
@@ -759,64 +847,8 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>begin</key>
-					<string>(?i)\s*(for)</string>
-					<key>beginCaptures</key>
-					<dict>
-						<key>1</key>
-						<dict>
-							<key>name</key>
-							<string>keyword.control.flow.mac</string>
-						</dict>
-					</dict>
-					<key>end</key>
-					<string>(?i)(end)</string>
-					<key>endCaptures</key>
-					<dict>
-						<key>1</key>
-						<dict>
-							<key>name</key>
-							<string>keyword.control.flow.mac</string>
-						</dict>
-					</dict>
-					<key>name</key>
-					<string>meta.for.mac</string>
-					<key>patterns</key>
-					<array>
-						<dict>
-							<key>include</key>
-							<string>#simple</string>
-						</dict>
-						<dict>
-							<key>begin</key>
-							<string>(?i)\s*(var)\s+</string>
-							<key>beginCaptures</key>
-							<dict>
-								<key>1</key>
-								<dict>
-									<key>name</key>
-									<string>storage.type.var.mac</string>
-								</dict>
-							</dict>
-							<key>end</key>
-							<string>(\,)</string>
-							<key>patterns</key>
-							<array>
-								<dict>
-									<key>include</key>
-									<string>#simple</string>
-								</dict>
-								<dict>
-									<key>begin</key>
-									<string>(?i)(?=[\w_][\w\d_]*)</string>
-									<key>contentName</key>
-									<string>variable.declare.name.mac</string>
-									<key>end</key>
-									<string>(?![\w\d_])</string>
-								</dict>
-							</array>
-						</dict>
-					</array>
+					<key>include</key>
+					<string>#for</string>
 				</dict>
 				<dict>
 					<key>begin</key>
