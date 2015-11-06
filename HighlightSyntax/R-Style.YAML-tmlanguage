@@ -178,7 +178,7 @@ repository:
           '1':
             name: keyword.operator.mac
         contentName: value.mac
-        end: (?![\w\d\/\\\*_\s\(\)\"])
+        end: (?![\w\d\/\\\*_\s\(\)\"\[\]])
         patterns:
         - include: '#callmacro'
         - include: '#simple'

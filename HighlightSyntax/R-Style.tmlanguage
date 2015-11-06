@@ -814,7 +814,7 @@
 							<key>contentName</key>
 							<string>value.mac</string>
 							<key>end</key>
-							<string>(?![\w\d\/\\\*_\s\(\)\"])</string>
+							<string>(?![\w\d\/\\\*_\s\(\)\"\[\]])</string>
 							<key>patterns</key>
 							<array>
 								<dict>
