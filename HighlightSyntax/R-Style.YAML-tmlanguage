@@ -158,7 +158,7 @@ repository:
       - include: $self
   for:
     patterns:
-    - begin: (?i)\s*(for)
+    - begin: (?i)\b(for)(?=\s+|\/)\b
       beginCaptures:
         '1':
           name: keyword.control.flow.mac
@@ -173,7 +173,7 @@ repository:
         end: (\))
         patterns:
         - include: '#simple'
-        - begin: (?i)\s*(var)\s+
+        - begin: (?i)\b(var)(?=\s+|\/)\b
           beginCaptures:
             '1':
               name: storage.type.var.mac
