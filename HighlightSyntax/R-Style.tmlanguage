@@ -76,7 +76,7 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)(\s+|^)(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)</string>
+					<string>(?i)(\s+|^)?(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>2</key>
@@ -474,7 +474,7 @@
 					<key>comment</key>
 					<string>Прочие процедуры</string>
 					<key>match</key>
-					<string>(?i)\b(AddEvent|BegAction|EndAction|CmdArgs|CurrentLine|ClassKind|CheckBits|DateShift|InstLoadModule|ErrBox|ErrPrint|ExecExp|ExecMacro|ExecMacro2|ExecMacroFile|ExecMacroModule|Exit|FindPath|GetEnv|GetLangId|GetLocaleInfo|GetUIMode|GetSysDir|GetUserName|GCollect|IsSQL|MemSize|MergeFile|ModuleFileName|ModuleName|MsgBoxEx|PrintModule|PrintSymModule|PrintFiles|PrintRefs|PrintProps|PrintGlobs|PrintLocs|PrintStack|Random|ReplaceMacro|RunError|SetExitFlag|SplitFile|StrongRef|StartProg|SysGetProperty|SysPutProperty|Trace|UnderRCWHost|Version|ZeroValue|OnError)\b</string>
+					<string>(?i)\b(AddEvent|BegAction|EndAction|CmdArgs|CurrentLine|ClassKind|CheckBits|DateShift|InstLoadModule|ErrBox|ErrPrint|ExecExp|ExecMacro|ExecMacro2|ExecMacroFile|ExecMacroModule|Exit|FindPath|GetEnv|GetLangId|GetLocaleInfo|GetUIMode|GetSysDir|GetUserName|GCollect|IsSQL|MemSize|MergeFile|ModuleFileName|ModuleName|MsgBox|MsgBoxEx|PrintModule|PrintSymModule|PrintFiles|PrintRefs|PrintProps|PrintGlobs|PrintLocs|PrintStack|Random|ReplaceMacro|RunError|SetExitFlag|SplitFile|StrongRef|StartProg|SysGetProperty|SysPutProperty|Trace|UnderRCWHost|Version|ZeroValue|OnError)\b</string>
 					<key>name</key>
 					<string>support.function.other.mac</string>
 				</dict>
@@ -758,6 +758,66 @@
 		<dict>
 			<key>patterns</key>
 			<array>
+				<dict>
+					<key>begin</key>
+					<string>(?i)\s*(for)</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.control.flow.mac</string>
+						</dict>
+					</dict>
+					<key>end</key>
+					<string>(?i)(end)</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.control.flow.mac</string>
+						</dict>
+					</dict>
+					<key>name</key>
+					<string>meta.for.mac</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#simple</string>
+						</dict>
+						<dict>
+							<key>begin</key>
+							<string>(?i)\s*(var)\s+</string>
+							<key>beginCaptures</key>
+							<dict>
+								<key>1</key>
+								<dict>
+									<key>name</key>
+									<string>storage.type.var.mac</string>
+								</dict>
+							</dict>
+							<key>end</key>
+							<string>(\,)</string>
+							<key>patterns</key>
+							<array>
+								<dict>
+									<key>include</key>
+									<string>#simple</string>
+								</dict>
+								<dict>
+									<key>begin</key>
+									<string>(?i)(?=[\w_][\w\d_]*)</string>
+									<key>contentName</key>
+									<string>variable.declare.name.mac</string>
+									<key>end</key>
+									<string>(?![\w\d_])</string>
+								</dict>
+							</array>
+						</dict>
+					</array>
+				</dict>
 				<dict>
 					<key>begin</key>
 					<string>(?i)\s*((private|local)\s+)?(var)\s+</string>

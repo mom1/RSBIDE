@@ -79,7 +79,7 @@ repository:
       - include: $self
   class:
     patterns:
-    - begin: (?i)(\s+|^)(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)
+    - begin: (?i)(\s+|^)?(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)
       beginCaptures:
         '2':
           name: storage.type.class.mac
@@ -156,6 +156,27 @@ repository:
       - include: $self
   var:
     patterns:
+    - begin: (?i)\s*(for)
+      beginCaptures:
+        '1':
+          name: keyword.control.flow.mac
+      end: (?i)(end)
+      endCaptures:
+        '1':
+          name: keyword.control.flow.mac
+      name: meta.for.mac
+      patterns:
+      - include: '#simple'
+      - begin: (?i)\s*(var)\s+
+        beginCaptures:
+          '1':
+            name: storage.type.var.mac
+        end: (\,)
+        patterns:
+        - include: '#simple'
+        - begin: (?i)(?=[\w_][\w\d_]*)
+          contentName: variable.declare.name.mac
+          end: (?![\w\d_])
     - begin: (?i)\s*((private|local)\s+)?(var)\s+
       beginCaptures:
         '1':
@@ -279,7 +300,7 @@ repository:
       match: (?i)\b(CallR2M|record|ClrRmtOnRelease|GenAttach|GenClassName|GenGetProp|GenNumProps|GenObject|GenPropID|GenRun|GenSetProp|GetNamedChanel|IsEqClass|R2M)\b
       name: support.function.calssobj.mac
     - comment: "Прочие процедуры"
-      match: (?i)\b(AddEvent|BegAction|EndAction|CmdArgs|CurrentLine|ClassKind|CheckBits|DateShift|InstLoadModule|ErrBox|ErrPrint|ExecExp|ExecMacro|ExecMacro2|ExecMacroFile|ExecMacroModule|Exit|FindPath|GetEnv|GetLangId|GetLocaleInfo|GetUIMode|GetSysDir|GetUserName|GCollect|IsSQL|MemSize|MergeFile|ModuleFileName|ModuleName|MsgBoxEx|PrintModule|PrintSymModule|PrintFiles|PrintRefs|PrintProps|PrintGlobs|PrintLocs|PrintStack|Random|ReplaceMacro|RunError|SetExitFlag|SplitFile|StrongRef|StartProg|SysGetProperty|SysPutProperty|Trace|UnderRCWHost|Version|ZeroValue|OnError)\b
+      match: (?i)\b(AddEvent|BegAction|EndAction|CmdArgs|CurrentLine|ClassKind|CheckBits|DateShift|InstLoadModule|ErrBox|ErrPrint|ExecExp|ExecMacro|ExecMacro2|ExecMacroFile|ExecMacroModule|Exit|FindPath|GetEnv|GetLangId|GetLocaleInfo|GetUIMode|GetSysDir|GetUserName|GCollect|IsSQL|MemSize|MergeFile|ModuleFileName|ModuleName|MsgBox|MsgBoxEx|PrintModule|PrintSymModule|PrintFiles|PrintRefs|PrintProps|PrintGlobs|PrintLocs|PrintStack|Random|ReplaceMacro|RunError|SetExitFlag|SplitFile|StrongRef|StartProg|SysGetProperty|SysPutProperty|Trace|UnderRCWHost|Version|ZeroValue|OnError)\b
       name: support.function.other.mac
     - comment: "Стандартные классы языка RSL"
       match: (?i)\b(TArray|TDirList|TRslChanel|TRcwSite|TRslEvHandler|TRslEvSourse|TRcwHost|TRsAxServer|TClrHost|TStream|TDbError|RslTimer)\b
