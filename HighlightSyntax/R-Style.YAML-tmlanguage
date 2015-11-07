@@ -63,7 +63,7 @@ repository:
       name: invalid.mac
   import:
     patterns:
-    - begin: (?i)^\s*(import)\s+
+    - begin: (?i)\s*\b(import)\s*\b
       beginCaptures:
         '1':
           name: keyword.control.import.mac
@@ -79,7 +79,7 @@ repository:
       - include: $self
   class:
     patterns:
-    - begin: (?i)(\s+|^)?(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)
+    - begin: (?i)(\s+|^)?\b(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)\b
       beginCaptures:
         '2':
           name: storage.type.class.mac
@@ -119,7 +119,7 @@ repository:
         - include: '#simple'
   macro:
     patterns:
-    - begin: (?i)\s*((private|local)\s+)?(macro)\s+(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)
+    - begin: (?i)\s*((private|local)\s+)?\b(macro)\s+(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)\b
       beginCaptures:
         '2':
           name: storage.modifier.mac
@@ -187,7 +187,7 @@ repository:
   var:
     patterns:
     - include: '#for'
-    - begin: (?i)\s*((private|local)\s+)?(var)\s+
+    - begin: (?i)\s*((private|local)\s+)?\b(var)\s*\b
       beginCaptures:
         '1':
           name: storage.modifier.mac

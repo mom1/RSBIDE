@@ -76,7 +76,7 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)(\s+|^)?(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)</string>
+					<string>(?i)(\s+|^)?\b(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)\b</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>2</key>
@@ -367,7 +367,7 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)^\s*(import)\s+</string>
+					<string>(?i)\s*\b(import)\s*\b</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>1</key>
@@ -598,7 +598,7 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)\s*((private|local)\s+)?(macro)\s+(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)</string>
+					<string>(?i)\s*((private|local)\s+)?\b(macro)\s+(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)\b</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>2</key>
@@ -852,7 +852,7 @@
 				</dict>
 				<dict>
 					<key>begin</key>
-					<string>(?i)\s*((private|local)\s+)?(var)\s+</string>
+					<string>(?i)\s*((private|local)\s+)?\b(var)\s*\b</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>1</key>
