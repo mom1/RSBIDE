@@ -1,0 +1,9 @@
+RSBIDE 1.2.5
+-------------
+- BugFix
+ - array value in declare variable
+ - add meta call mac
+ - for ( var val, 1, 10)
+ - for ( var val, 1, 10)
+    var val, df = ...;
+ - /**/for/**/ (/**/var/**/ val, 1, 10)
