@@ -1,0 +1,6 @@
+RSBIDE 1.2.6
+-------------
+
+BugFix
+    - `/*  */  class /* asd */ (Main_obj) /* 123 */ Test /**/ (
+  a_, b_, c_ ) /**/`
