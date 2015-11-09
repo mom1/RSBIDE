@@ -162,7 +162,7 @@ repository:
       beginCaptures:
         '1':
           name: keyword.control.flow.mac
-      end: (?i)(end)
+      end: (?i)\b(end)\b
       endCaptures:
         '1':
           name: keyword.control.flow.mac
