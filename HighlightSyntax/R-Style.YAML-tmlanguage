@@ -79,17 +79,17 @@ repository:
       - include: $self
   class:
     patterns:
-    - begin: (?i)(\s+|^)?\b(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)\b
+    - begin: (?i)(\s+|^)?\b(class)\s*((\/\*)([\w\d\s])*(\*\/))*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*((\/\*)([\w\d\s])*(\*\/))*\s*(?=[\w_][\w\d_]*)\b
       beginCaptures:
         '2':
           name: storage.type.class.mac
         '3':
           name: comment.block.mac
-        '6':
+        '9':
           name: entity.other.inherited-class.mac
-        '8':
+        '11':
           name: comment.block.mac
-      end: (?i)(\))|(\s*$)|([:]\s*(\w*))
+      end: (?i)(\))|(\s*$)
       endCaptures:
         '2':
           name: punctuation.section.class.begin.mac
@@ -208,10 +208,7 @@ repository:
         beginCaptures:
           '1':
             name: keyword.operator.mac
-        patterns:
-        - include: '#simple'
-        # contentName: value.mac
-        end: (?![\w\d\/\\\*_\s\(\)\"\[\]\.])
+        end: (?:(?=\;)|(,))
         patterns:
         - include: '#simple'
         - include: '#callmacro'

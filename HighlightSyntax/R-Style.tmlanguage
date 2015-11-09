@@ -76,9 +76,14 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)(\s+|^)?\b(class)\s*(\/\*.*\*\/)*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*(\/\*.*\*\/)*\s*(?=[\w_][\w\d_]*)\b</string>
+					<string>(?i)(\s+|^)?\b(class)\s*((\/\*)([\w\d\s])*(\*\/))*\s*((\()\s*([\w_][\w\d_]*)\s*(\)))?\s*((\/\*)([\w\d\s])*(\*\/))*\s*(?=[\w_][\w\d_]*)\b</string>
 					<key>beginCaptures</key>
 					<dict>
+						<key>11</key>
+						<dict>
+							<key>name</key>
+							<string>comment.block.mac</string>
+						</dict>
 						<key>2</key>
 						<dict>
 							<key>name</key>
@@ -89,19 +94,14 @@
 							<key>name</key>
 							<string>comment.block.mac</string>
 						</dict>
-						<key>6</key>
+						<key>9</key>
 						<dict>
 							<key>name</key>
 							<string>entity.other.inherited-class.mac</string>
 						</dict>
-						<key>8</key>
-						<dict>
-							<key>name</key>
-							<string>comment.block.mac</string>
-						</dict>
 					</dict>
 					<key>end</key>
-					<string>(?i)(\))|(\s*$)|([:]\s*(\w*))</string>
+					<string>(?i)(\))|(\s*$)</string>
 					<key>endCaptures</key>
 					<dict>
 						<key>2</key>
@@ -906,7 +906,7 @@
 								</dict>
 							</dict>
 							<key>end</key>
-							<string>(?![\w\d\/\\\*_\s\(\)\"\[\]\.])</string>
+							<string>(?:(?=\;)|(,))</string>
 							<key>patterns</key>
 							<array>
 								<dict>
