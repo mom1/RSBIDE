@@ -51,7 +51,7 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>(?i)\.?([\w_][\w\d_]*)\s*\(</string>
+					<string>(?i)\.?(?:([\w_][\w\d_])*)\s*\(</string>
 					<key>end</key>
 					<string>\)</string>
 					<key>name</key>
