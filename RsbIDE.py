@@ -698,6 +698,25 @@ class PrintTreeImportCommand(sublime_plugin.WindowCommand):
         self.window.open_file("%s:%s:%s" % (view.file_name()+".treeimport", 0, 0), sublime.ENCODED_POSITION)
 
 
+class StatusBarFunctionCommand(sublime_plugin.TextCommand):
+
+    def run(self, edit):
+        view = self.view
+        region = view.sel()[0]
+        functionRegs = view.find_by_selector('entity.name.function.mac')
+        for r in reversed(functionRegs):
+            if r.a < region.a:
+                txt = view.substr(r)
+                name = txt.split(" ")[0]
+                if ":" in name:
+                    name = name.replace(":", "")
+
+                final_txt = "Macro %s" % name
+                view.set_status('procedure', final_txt)
+                return
+        view.erase_status('procedure')
+
+
 def RSBIDE_folder_change_watcher():
     while True:
         time.sleep(5)
