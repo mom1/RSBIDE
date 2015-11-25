@@ -180,7 +180,7 @@
 				</dict>
 			</array>
 		</dict>
-		<key>comments</key>
+		<key>comment_block</key>
 		<dict>
 			<key>patterns</key>
 			<array>
@@ -225,24 +225,16 @@
 						</dict>
 						<dict>
 							<key>include</key>
-							<string>#comments</string>
+							<string>#comment_block</string>
 						</dict>
 					</array>
 				</dict>
-				<dict>
-					<key>match</key>
-					<string>\*/.*\n</string>
-					<key>name</key>
-					<string>invalid.illegal.stray-comment-end.source.mac</string>
-				</dict>
-				<dict>
-					<key>begin</key>
-					<string>//!</string>
-					<key>end</key>
-					<string>$\n?</string>
-					<key>name</key>
-					<string>invalid.deprecated.needfix.source.mac</string>
-				</dict>
+			</array>
+		</dict>
+		<key>comment_line</key>
+		<dict>
+			<key>patterns</key>
+			<array>
 				<dict>
 					<key>begin</key>
 					<string>//</string>
@@ -275,6 +267,34 @@
 							<string>(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:</string>
 						</dict>
 					</array>
+				</dict>
+			</array>
+		</dict>
+		<key>comments</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#comment_block</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comment_line</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>\*/.*\n</string>
+					<key>name</key>
+					<string>invalid.illegal.stray-comment-end.source.mac</string>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>//!</string>
+					<key>end</key>
+					<string>$\n?</string>
+					<key>name</key>
+					<string>invalid.deprecated.needfix.source.mac</string>
 				</dict>
 			</array>
 		</dict>

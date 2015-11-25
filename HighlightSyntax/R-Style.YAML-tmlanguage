@@ -10,9 +10,8 @@ patterns:
 - include: '#var'
 - include: '#string'
 - include: '#language'
-
 repository:
-  comments:
+  comment_block:
     patterns:
     - begin: /\*
       captures:
@@ -30,12 +29,9 @@ repository:
             name: constant.language.comment.source.mac
         match: '(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED
           BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:'
-      - include: '#comments'
-    - match: \*/.*\n
-      name: invalid.illegal.stray-comment-end.source.mac
-    - begin: //!
-      name: invalid.deprecated.needfix.source.mac
-      end: $\n?
+      - include: '#comment_block'
+  comment_line:
+    patterns:
     - begin: //
       end: $\n?
       name: comment.line.double-slash.source.mac
@@ -49,6 +45,15 @@ repository:
             name: constant.language.comment.source.mac
         match: '(?i:(@parameter|@param)\s*|@)([a-z-A-Z_][a-z-A-Z_0-9]+)|(?i:(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED
           BY|CREATION DATE|LAST UPDATE|TODO|HACK|FIXME|WARNING|NOTE|INFO|HELP))\s*:'
+  comments:
+    patterns:
+    - include: '#comment_block'
+    - include: '#comment_line'
+    - match: \*/.*\n
+      name: invalid.illegal.stray-comment-end.source.mac
+    - begin: //!
+      name: invalid.deprecated.needfix.source.mac
+      end: $\n?
   numeric:
     patterns:
     - captures:
