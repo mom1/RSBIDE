@@ -1,5 +1,7 @@
 # RSBIDE
 
+*[English version of the documentation](readme.md)*
+
 Этот плагин добавляет IDE-шные функции для RS-Balance 3 в Sublime Text 3
 
 ![SublimeRStyle](https://raw.github.com/mom1/RSBIDE/master/screenshot/SublimeRStyle.jpg)
@@ -65,6 +67,8 @@
 
  * [rstylelint](https://github.com/mom1/SublimeLinter-contrib-rstylelint)
     * Проверка и подсветка синтаксических ошибок (с использованием rsl интерпретатора)
+ * [RegExLink](https://github.com/mom1/RegExLink)
+    * Открытие *.lbr файлов через контекстное меню дизайнером из проекта
 
 Отличная [картинка](https://raw.github.com/mom1/RSBIDE/master/screenshot/ST_Key.png) для изучения основных комбинаций http://www.sublimetext.com/
 

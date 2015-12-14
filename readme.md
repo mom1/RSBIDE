@@ -1,5 +1,7 @@
 # RSBIDE
 
+*[Русская версия документации](readme_ru.md)*
+
 This plugin adds RS-Balance 3 completions and some IDE-like functions to Sublime Text 3
 
 ![SublimeRStyle](https://raw.github.com/mom1/RSBIDE/master/screenshot/SublimeRStyle.jpg)
@@ -67,6 +69,8 @@ Installation
 
  * [rstylelint](https://github.com/mom1/SublimeLinter-contrib-rstylelint)
     * Check and highlight syntax errors
+ * [RegExLink](https://github.com/mom1/RegExLink)
+    * Opening *.lbr files through the context menu of the project designer
 
 ST3 only:
   [Sublime Text 3]: http://www.sublimetext.com/3
