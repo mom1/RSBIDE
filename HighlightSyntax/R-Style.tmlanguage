@@ -510,7 +510,7 @@
 					<key>comment</key>
 					<string>Стандартные процедуры вывода</string>
 					<key>match</key>
-					<string>(?i)\b(Print|PrintLn|Message|SetOutput|SetColumn|FlushColumn|ClearColumn|SetDefPrec|SetOutHandler|GetPRNInfo|SetPRNInfo|SetDefMoneyPrec)\b</string>
+					<string>(?i)\b(Print|Sprintf|PrintLn|Message|SetOutput|SetColumn|FlushColumn|ClearColumn|SetDefPrec|SetOutHandler|GetPRNInfo|SetPRNInfo|SetDefMoneyPrec)\b</string>
 					<key>name</key>
 					<string>support.function.out.mac</string>
 				</dict>

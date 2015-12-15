@@ -1,6 +1,9 @@
+# [PackageDev] target_format: plist, ext: tmLanguage
+name: RStyle
+scopeName: source.mac
+uuid: f24766ec-8d6d-423b-8b09-3f9939e4ff02
 fileTypes:
 - mac
-name: RStyle
 patterns:
 - include: '#comments'
 - include: '#numeric'
@@ -285,7 +288,7 @@ repository:
       match: (?i)\b(GetInt|GetDouble|GetMoney|GetString|GetStringR|GetDate|GetTRUE|GetTime)\b
       name: support.function.in.mac
     - comment: "Стандартные процедуры вывода"
-      match: (?i)\b(Print|PrintLn|Message|SetOutput|SetColumn|FlushColumn|ClearColumn|SetDefPrec|SetOutHandler|GetPRNInfo|SetPRNInfo|SetDefMoneyPrec)\b
+      match: (?i)\b(Print|Sprintf|PrintLn|Message|SetOutput|SetColumn|FlushColumn|ClearColumn|SetDefPrec|SetOutHandler|GetPRNInfo|SetPRNInfo|SetDefMoneyPrec)\b
       name: support.function.out.mac
     - comment: "Процедуры преобразования типа"
       match: (?i)\b(Asize|CurToStrAlt|Date|DateSplit|Decimal|Double|DoubleL|DtTm|DtTmSplit|Floor|Int|MkStr|Money|MonName|NumToStr|Round|RubToStr|RubToStrAlt|SetAutoMoneyFloor|String|Time|TimeSplit|ValType)\b
@@ -329,5 +332,3 @@ repository:
     - include: '#numeric'
     - include: '#string'
     - include: '#language'
-scopeName: source.mac
-uuid: f24766ec-8d6d-423b-8b09-3f9939e4ff02

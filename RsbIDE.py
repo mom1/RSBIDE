@@ -8,6 +8,7 @@
 import sublime
 import sublime_plugin
 import os
+import json
 import pickle
 import re
 import threading
@@ -522,12 +523,19 @@ class Pref():
         RSBIDE.load_from_cache()
         RSBIDECollectorThread().start()
 
+
 class RebuildCacheCommand(sublime_plugin.WindowCommand):
+
     def run(self):
         RSBIDE.rebuild_cache()
 
+
 class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
+
     """Show declare func in panel"""
+
+    cache = {}
+
     def run(self):
         ST3 = int(sublime.version()) > 3000
         if ST3:
@@ -539,6 +547,10 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
                 sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
         symbol = get_result(view)
         if len(symbol) == 0:
+            doc_string = self.get_doc(view)
+            if doc_string:
+                print_to_panel(view, doc_string, bDoc=True)
+                return
             print_to_panel(view, view.substr(sel) + " not found in index")
             return
         file = normalize_to_system_style_path(symbol[0][0])
@@ -547,10 +559,52 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         lines = []
         for i, line in enumerate(codecs.open(file, encoding='cp1251', errors='replace')):
             if i >= nline-10 and i <= nline + 9:
-              lines.append(line.rstrip('\r\n'))
+                lines.append(line.rstrip('\r\n'))
             if nline == i:
                 lnline = len(lines)
         print_to_panel(view, "\n".join(lines), showline=lnline)
+
+    def get_doc(self, view):
+        lang = 'mac'
+        # if lang not in self.cache:
+        path_db = os.path.dirname(
+            os.path.abspath(__file__)) + "/dbHelp/%s.json" % lang
+        # print("Loaded Docs db:", path_db)
+
+        if os.path.exists(path_db):
+            self.cache[lang] = json.load(open(path_db))
+        else:
+            self.cache[lang] = {}
+
+        words = [view.substr(view.word(view.sel()[0]))]
+        completions = self.cache[lang]
+        found = False
+        for word in words:
+            completion = completions.get(word)
+            if completion:
+                found = completion
+                break
+        if found:
+            menus = []
+
+            # Title
+            menus.append("Документация для " + found["name"] + "\n" + "=" * max(len("Документация для " + found["name"]), 40) + "\n")
+
+            # Syntax
+            menus.append(found["syntax"] + "\n")
+
+            # Parameters
+            for parameter in found["params"]:
+                menus.append(
+                    "\t- " + parameter["name"] + ": " + parameter["descr"] + "\n")
+
+            # Description
+            menus.append("\n" + found["descr"] + "\n")
+            # print(''.join(menus))
+            return ''.join(menus)
+        else:
+            return None
+
 
 def getShortPathName(path):
     import ctypes
