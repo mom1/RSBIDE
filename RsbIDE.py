@@ -562,7 +562,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
                 lines.append(line.rstrip('\r\n'))
             if nline == i:
                 lnline = len(lines)
-        print_to_panel(view, "\n".join(lines), showline=lnline)
+        print_to_panel(view, "\n".join(lines), showline=lnline, region_mark=symbol[0][2])
 
     def get_doc(self, view):
         lang = 'mac'
@@ -580,7 +580,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         completions = self.cache[lang]
         found = False
         for word in words:
-            completion = completions.get(word)
+            completion = completions.get(word.lower())
             if completion:
                 found = completion
                 break
