@@ -279,6 +279,14 @@
 					<string>#comment_block</string>
 				</dict>
 				<dict>
+					<key>begin</key>
+					<string>//!</string>
+					<key>end</key>
+					<string>$\n?</string>
+					<key>name</key>
+					<string>invalid.deprecated.needfix.source.mac</string>
+				</dict>
+				<dict>
 					<key>include</key>
 					<string>#comment_line</string>
 				</dict>
@@ -287,14 +295,6 @@
 					<string>\*/.*\n</string>
 					<key>name</key>
 					<string>invalid.illegal.stray-comment-end.source.mac</string>
-				</dict>
-				<dict>
-					<key>begin</key>
-					<string>//!</string>
-					<key>end</key>
-					<string>$\n?</string>
-					<key>name</key>
-					<string>invalid.deprecated.needfix.source.mac</string>
 				</dict>
 			</array>
 		</dict>

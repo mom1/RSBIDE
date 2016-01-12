@@ -51,12 +51,12 @@ repository:
   comments:
     patterns:
     - include: '#comment_block'
-    - include: '#comment_line'
-    - match: \*/.*\n
-      name: invalid.illegal.stray-comment-end.source.mac
     - begin: //!
       name: invalid.deprecated.needfix.source.mac
       end: $\n?
+    - include: '#comment_line'
+    - match: \*/.*\n
+      name: invalid.illegal.stray-comment-end.source.mac
   numeric:
     patterns:
     - captures:
