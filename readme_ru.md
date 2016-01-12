@@ -25,6 +25,9 @@
 
         ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * При просмотре в определениях вы всегда можете вернуться к исходной позиции с помощью <kbd>Esc</kbd>
+        ![DocPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/DocPanel.jpg)
+* **Просмотр документации**
+    * Если по <kbd>Alt + S</kbd> слово под курсором не найденно в индексе, то пытаемся найти в документации (Бета)
 * **DllRegister RS-Balance 3 для проектной папки**
     * Пункт контекстного меню "DllRegister RS-Balance 3" на папке, регистрирует dll
     * Выключена если в папке нет dll для регистрации RS-Balance 3
