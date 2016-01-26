@@ -246,7 +246,7 @@ repository:
           name: invalid.illegal.unclosed-string.mac
       name: string.quoted.double.single-line.raw.mac
       patterns:
-      - match: ([^\.]|(?:(?<=\")))(\\\")([\s\w]*\.?[\w\s]*)([^\.])(\\\")
+      - match: ([^\.]|(?:(?<=\")))(\\\")([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")
         name: constant.other.table-name.mac
       - match: (`)
         name: string.quoted.double.single-line.raw.mac
