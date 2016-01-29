@@ -820,7 +820,7 @@
 					<array>
 						<dict>
 							<key>match</key>
-							<string>([^\.]|(?:(?&lt;=\")))(\\\")([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")</string>
+							<string>([^\.]|(?:(?&lt;=\")))(\\\")([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")(?:(?=\W))</string>
 							<key>name</key>
 							<string>constant.other.table-name.mac</string>
 						</dict>
