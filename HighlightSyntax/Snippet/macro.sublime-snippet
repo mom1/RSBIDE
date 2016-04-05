@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-macro ${1:NameMacro} (${2:Param})
+macro ${1:NameMacro} (${2:Sender:Object})
    //Comment macro
    ${0:$TM_SELECTED_TEXT}
 End;

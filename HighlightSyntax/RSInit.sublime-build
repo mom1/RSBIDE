@@ -25,13 +25,35 @@
             {
                 "cmd": ["RSInit.exe", "-client"]
             }
-        },        
+        },
         {
             "name": "RPCserv -c -cfg RPCServ.exe.rsconfig",
             "windows":
             {
                 "cmd": ["start", "RPCserv.exe", "-c", "-cfg", "RPCServ.exe.rsconfig"]
             }
-        }
+        },
+        {
+            "name": "TerminalClient -rsldebug",
+            "windows":
+            {
+                "cmd": ["start", "RSInit.exe", "-macro", "StartED", "WHTerminalClientEDSln.mac", "/NoMax", "-rsldebug"]
+            }
+        },
+        {
+            "name": "TypeInfo ",
+            "windows":
+            {
+                "cmd": ["start", "RSTypeInfoEditor.exe"]
+            }
+        },
+        {
+            "name": "RSAdmin ",
+            "windows":
+            {
+                "cmd": ["start", "RSAdmin.exe"]
+            }
+        },
+
     ]
 }
