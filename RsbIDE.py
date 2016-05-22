@@ -23,7 +23,8 @@ try:
     import thread
 except:
     import _thread as thread
-
+global IS_ST3
+IS_ST3 = sublime.version().startswith('3')
 
 global debug
 debug = False
@@ -413,11 +414,11 @@ class RSBIDECollectorThread(threading.Thread):
 
 class RSBIDEEventListener(sublime_plugin.EventListener):
 
-    def on_post_save(self, view):
+    def on_post_save_async(self, view):
         if is_RStyle_view(view):
             RSBIDECollectorThread(view.file_name()).start()
 
-    def on_load(self, view):
+    def on_load_async(self, view):
         if is_RStyle_view(view) and is_mac_file(view.file_name()):
             if norm_path(view.file_name()) not in RSBIDE.files:
                 RSBIDECollectorThread(view.file_name()).start()
@@ -545,8 +546,8 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
     cache = {}
 
     def run(self):
-        ST3 = int(sublime.version()) > 3000
-        if ST3:
+        global IS_ST3
+        if IS_ST3:
             from RSBIDE.RsbIde_print_panel import print_to_panel
         view = self.window.active_view()
         sel = view.sel()[0]
@@ -801,5 +802,5 @@ def plugin_loaded():
         running_RSBIDE_folder_change_watcher = True
         thread.start_new_thread(RSBIDE_folder_change_watcher, ())
 
-if int(sublime.version()) < 3000:
+if not IS_ST3:
     sublime.set_timeout(lambda: plugin_loaded(), 0)
