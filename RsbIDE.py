@@ -70,11 +70,11 @@ class RSBIDE:
 
     def save_ff(self, file):
         lfile = normalize_to_system_style_path(file.lower())
-        file  = normalize_to_system_style_path(file)
+        file = normalize_to_system_style_path(file)
         if file in self.ffiles:
             return
         for x in self.ffiles:
-          if lfile == x.lower():
+            if lfile == x.lower():
                 self.ffiles.remove(x)
         self.ffiles.append(file)
 
@@ -88,7 +88,6 @@ class RSBIDE:
                 pickle.dump(self.filesimport, cache_file)
             with open(os.path.join(self.tmp_folder, 'ffiles_cache.obj'), 'wb') as cache_file:
                 pickle.dump(self.ffiles, cache_file)
-
 
     def load_from_cache(self):
         if os.path.lexists(os.path.join(self.tmp_folder, 'files_cache.obj')):
@@ -108,17 +107,17 @@ class RSBIDE:
         if os.path.lexists(os.path.join(self.tmp_folder, 'filesimport_cache.obj')):
             with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'rb') as cache_file:
                     try:
-                         self.filesimport = pickle.load(cache_file)
+                        self.filesimport = pickle.load(cache_file)
                     except Exception:
-                         os.remove(cache_file)
-                         self.filesimport = dict()
+                        os.remove(cache_file)
+                        self.filesimport = dict()
         if os.path.lexists(os.path.join(self.tmp_folder, 'ffiles_cache.obj')):
             with open(os.path.join(self.tmp_folder, 'ffiles_cache.obj'), 'rb') as cache_file:
                     try:
-                         self.ffiles = pickle.load(cache_file)
+                        self.ffiles = pickle.load(cache_file)
                     except Exception:
-                         os.remove(cache_file)
-                         self.ffiles = []
+                        os.remove(cache_file)
+                        self.ffiles = []
 
     def without_duplicates(self, words):
         result = []
@@ -133,9 +132,12 @@ class RSBIDE:
         skip_deleted = Pref.forget_deleted_files
         # completion import files
         if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":
-            currentImport = [os.path.splitext(basename(view.substr(s).lower().strip()))[0] for s in view.find_by_selector('import.file.mac')]
+            currentImport = [os.path.splitext(basename(
+                view.substr(s).lower().strip()))[0] for s in view.find_by_selector('import.file.mac')]
             pfiles = self.ffiles
-            lfile = [self.create_var_completion(os.path.splitext(basename(fil))[0],"File") for fil in pfiles if os.path.splitext(basename(fil.lower()))[0] not in currentImport]
+            lfile = [self.create_var_completion(os.path.splitext(
+                basename(fil))[0], "File") for fil in pfiles if os.path.splitext(
+                    basename(fil.lower()))[0] not in currentImport]
             lfile = self.without_duplicates(list(lfile))
             lfile.sort()
             return lfile
@@ -152,7 +154,8 @@ class RSBIDE:
             already_in = []
             for file, data in self.files.items():
                 if basename(file).lower() not in already_im or norm_path_string(
-                    sublime.expand_variables("$folder", sublime.active_window().extract_variables())) not in file.lower():
+                    sublime.expand_variables(
+                        "$folder", sublime.active_window().extract_variables())) not in file.lower():
                     continue
                 if not skip_deleted or (skip_deleted and os.path.lexists(file)):
                     location = basename(file)
@@ -165,13 +168,18 @@ class RSBIDE:
             # current file
             location = basename(view.file_name()) if view.file_name() else ''
             if debug:
-                print (view.file_name())
+                print(view.file_name())
             # append functions from current view that yet have not been saved
-            [completions.append(self.create_function_completion(self.parse_line(view.substr(view.line(selection))), location)) for selection in view.find_by_selector('entity.name.function') if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
+            [completions.append(self.create_function_completion(
+                self.parse_line(
+                    view.substr(
+                        view.line(selection))), location)) for selection in view.find_by_selector('entity.name.function') if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
             # append "var" names from current file
             vars = []
-            [view.substr(selection) for selection in view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)]
-            [completions.append(self.create_var_completion(var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
+            res = view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)
+            [view.substr(selection) for selection in res]
+            [completions.append(self.create_var_completion(
+                var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
             # append "globals from CommonVariables.mac"
             [completions.append(self.create_var_completion(var, "Global")) for var in list(set(self.get_globals(view))) if len(var) > 1 and var not in already_in]
             completions = self.without_duplicates(completions)
@@ -183,8 +191,8 @@ class RSBIDE:
             if function[self.SIGN].strip() == self.EMPTY:
                 hint = self.EMPTY
             else:
-                hint = ", ".join(["${%s:%s}" % (k+1, v.strip()) for k, v in enumerate(function[self.SIGN].split(','))])
-            function[self.COMPLETION] = (name + '\t' + location, function[self.NAME] + '(' + hint+')')
+                hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(function[self.SIGN].split(','))])
+            function[self.COMPLETION] = (name + '\t' + location, function[self.NAME] + '(' + hint + ')')
             del function[self.SIGN]  # no longer needed
         return function[self.COMPLETION]
 
@@ -199,7 +207,7 @@ class RSBIDE:
 
     def get_globals(self, view):
         gvars = []
-        if view == None:
+        if view is None:
             return gvars
         pfile = [sfile for sfile in self.files if basename(sfile).lower() == "CommonVariables.mac".lower()][0]
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(pfile, encoding='cp1251', errors='replace') if len(line) < 300]
@@ -208,9 +216,9 @@ class RSBIDE:
         return gvars
 
     def parseimport(self, total):
-         sregexp2 = r'(\"?((([\w\d])*)(?:.mac)*)\"?)\s*(?:(,|;))'
-         imstrip = re.compile(re.escape('import '), re.IGNORECASE)
-         return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I)]
+        sregexp2 = r'(\"?((([\w\d])*)(?:.mac)*)\"?)\s*(?:(,|;))'
+        imstrip = re.compile(re.escape('import '), re.IGNORECASE)
+        return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I)]
 
     def get_files_import(self, file, isReset):
         global already_im
@@ -230,7 +238,7 @@ class RSBIDE:
             currdiff = list(set(self.filesimport[file_im]) - set([x.lower() for x in LInFile]))
             LInFile.extend(currdiff)
         if debug:
-            print('Scan import done in '+str(time.time()-t)+' seconds')
+            print('Scan import done in ' + str(time.time() - t) + ' seconds')
 
 
 RSBIDE = RSBIDE()
@@ -359,18 +367,18 @@ class RSBIDECollectorThread(threading.Thread):
             RSBIDE.save_objs("Field", fields)
             RSBIDE.save_objs("Method", methods)
             RSBIDE.save_to_cache()
-            sublime.status_message('Scan done in ' + str(time.time()-Pref.scan_started) + ' seconds - ' + 'File scans ' + str(files_mac + files_xml))
+            sublime.status_message('Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - ' + 'File scans ' + str(files_mac + files_xml))
             if debug:
-                print('Scan done in '+str(time.time()-Pref.scan_started)+' seconds - Scan was aborted: '+str(Pref.scan_aborted))
-                print('Files Seen:'+str(files_seen)+', Files MAC:'+str(files_mac)+', Cache Miss:'+str(files_cache_miss)+', Cache Hit:'+str(files_cache_hit)+', Failed Parsing:'+str(files_failed_parsing))
-                print('Files Seen:'+str(files_seen)+', Files XML:'+str(files_xml)+', Cache Miss:'+str(files_cache_miss_xml)+', Cache Hit:'+str(files_cache_hit_xml)+', Failed Parsing:'+str(files_failed_parsing))
+                print('Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - Scan was aborted: ' + str(Pref.scan_aborted))
+                print('Files Seen:' + str(files_seen) + ', Files MAC:' + str(files_mac) + ', Cache Miss:' + str(files_cache_miss) + ', Cache Hit:' + str(files_cache_hit) + ', Failed Parsing:' + str(files_failed_parsing))
+                print('Files Seen:' + str(files_seen) + ', Files XML:' + str(files_xml) + ', Cache Miss:' + str(files_cache_miss_xml) + ', Cache Hit:' + str(files_cache_hit_xml) + ', Failed Parsing:' + str(files_failed_parsing))
 
             Pref.scan_running = False
             Pref.scan_aborted = False
 
     def parse_functions(self, file):
         if debug:
-            print('\nParsing functions for file:\n'+file)
+            print('\nParsing functions for file:\n' + file)
         pattern = re.compile(r"^\s*(macro)\s+", re.I | re.S)
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
         functions = []
@@ -382,7 +390,7 @@ class RSBIDECollectorThread(threading.Thread):
 
     def parse_import(self, file):
         if debug:
-            print('\nParsing import in file:\n'+file)
+            print('\nParsing import in file:\n' + file)
         pattern = re.compile(r"^\s*(import)\s+", re.I | re.S)
         lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
         matches = RSBIDE.parseimport("".join(lines))
@@ -452,8 +460,8 @@ def norm_path_string(file):
 
 def normalize_to_system_style_path(path):
     if sublime.platform() == 'windows':
-        path= re.sub(r"/([A-Za-z])/(.+)", r"\1:/\2", path)
-        path= re.sub(r"/", r"\\", path)
+        path = re.sub(r"/([A-Za-z])/(.+)", r"\1:/\2", path)
+        path = re.sub(r"/", r"\\", path)
     return path
 
 
@@ -482,11 +490,11 @@ def deduplicate_crawl_folders(items, item):
     new_list = []
     add = True
     for i in items:
-        if i.find(item+'\\') == 0 or i.find(item+'/') == 0:
+        if i.find(item + '\\') == 0 or i.find(item + '/') == 0:
             continue
         else:
             new_list.append(i)
-        if (item+'\\').find(i+'\\') == 0 or (item+'/').find(i+'/') == 0:
+        if (item + '\\').find(i + '\\') == 0 or (item + '/').find(i + '/') == 0:
             add = False
     if add:
         new_list.append(item)
@@ -558,7 +566,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         lnline = 0
         lines = []
         for i, line in enumerate(codecs.open(file, encoding='cp1251', errors='replace')):
-            if i >= nline-10 and i <= nline + 9:
+            if i >= nline - 10 and i <= nline + 9:
                 lines.append(line.rstrip('\r\n'))
             if nline == i:
                 lnline = len(lines)
@@ -617,6 +625,7 @@ def getShortPathName(path):
     else:
         return buf.value
 
+
 def getLongPathName(path):
     import ctypes
     from ctypes.wintypes import MAX_PATH
@@ -628,10 +637,12 @@ def getLongPathName(path):
     else:
         return buf.value
 
+
 def _get_case_sensitive_name(s):
         """ Returns long name in case sensitive format """
         path = getLongPathName(getShortPathName(s))
         return path
+
 
 def get_result(view):
     sel = view.sel()[0]
@@ -644,14 +655,14 @@ def get_result(view):
     if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":  # if scope import go to file rowcol 0 0
         res = []
         for file in RSBIDE.ffiles:
-            if basename(file).lower() ==  word.lower() + ".mac":
+            if basename(file).lower() == word.lower() + ".mac":
                 file = _get_case_sensitive_name(normalize_to_system_style_path(file))
-                file = "/"+file.replace(":","").replace('\\', '/')
+                file = "/" + file.replace(":", "").replace('\\', '/')
                 sfile = file
                 for x in Pref.updated_folders:
-                    if "/"+x.lower().replace(":","") in sfile.lower():
-                        sfile = sfile.replace("/"+_get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":","").replace('\\','/')+"/","")
-                        res.append((file, sfile, (0,0)))
+                    if "/" + x.lower().replace(":", "") in sfile.lower():
+                        sfile = sfile.replace("/" + _get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
+                        res.append((file, sfile, (0, 0)))
         return res
     else:
         for file, data in RSBIDE.files.items():
@@ -667,16 +678,16 @@ def get_result(view):
     if len(result) > 1:  # if found in index check location must by in import
         for item in result:
             if basename(norm_path_string(item[0])) in already_im:
-                 im_result.insert(already_im.index(basename(norm_path_string(item[0]))), item)
+                im_result.insert(already_im.index(basename(norm_path_string(item[0]))), item)
         result = im_result
     elif len(result) == 0:  # if not found in index try find variable in current file
         vars = []
         file = _get_case_sensitive_name(view.file_name().lower())
-        file = "/"+file.replace(":","").replace('\\', '/')
+        file = "/" + file.replace(":", "").replace('\\', '/')
         sfile = file
         for x in Pref.updated_folders:
-            if "/"+x.lower().replace(":","") in sfile.lower():
-                sfile = sfile.replace("/"+_get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":","").replace('\\','/')+"/","")
+            if "/" + x.lower().replace(":", "") in sfile.lower():
+                sfile = sfile.replace("/" + _get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
         vars = [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(selection)).lower()]
         vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.parameter.function.mac') if word.lower() == view.substr(view.word(selection)).lower()]
         vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.parameter.class.mac') if word.lower() == view.substr(view.word(selection)).lower()]
@@ -719,14 +730,14 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
                 flags |= sublime.TRANSIENT
 
             if idx > -1:
-               self.window.open_file("%s:%s:%s" % (self.result[idx][0], self.result[idx][2][0], self.result[idx][2][1]), flags)
+                self.window.open_file("%s:%s:%s" % (self.result[idx][0], self.result[idx][2][0], self.result[idx][2][1]), flags)
             else:
-               self.window.focus_view(self.old_view)
-               self.old_view.show_at_center(self.current_file_location)
+                self.window.focus_view(self.old_view)
+                self.old_view.show_at_center(self.current_file_location)
 
 
 class PrintTreeImportCommand(sublime_plugin.WindowCommand):
-   def run(self):
+    def run(self):
         view = self.window.active_view()
         (_ROOT, _DEPTH, _BREADTH) = range(3)
         LInFile = []
@@ -747,28 +758,28 @@ class PrintTreeImportCommand(sublime_plugin.WindowCommand):
                         LInFile.append(i)
                         tree.add_node(i, file_im)
                     else:
-                        tree.add_node(i+"_"+str(len(LInFile)), file_im)
-        tree.display(bfile, pathfile=norm_path_string(view.file_name())+".treeimport")
-        self.window.open_file("%s:%s:%s" % (view.file_name()+".treeimport", 0, 0), sublime.ENCODED_POSITION)
+                        tree.add_node(i + "_" + str(len(LInFile)), file_im)
+        tree.display(bfile, pathfile=norm_path_string(view.file_name()) + ".treeimport")
+        self.window.open_file("%s:%s:%s" % (view.file_name() + ".treeimport", 0, 0), sublime.ENCODED_POSITION)
 
 
-class StatusBarFunctionCommand(sublime_plugin.TextCommand):
+# class StatusBarFunctionCommand(sublime_plugin.TextCommand):
 
-    def run(self, edit):
-        view = self.view
-        region = view.sel()[0]
-        functionRegs = view.find_by_selector('entity.name.function.mac')
-        for r in reversed(functionRegs):
-            if r.a < region.a:
-                txt = view.substr(r)
-                name = txt.split(" ")[0]
-                if ":" in name:
-                    name = name.replace(":", "")
+#     def run(self, edit):
+#         view = self.view
+#         region = view.sel()[0]
+#         functionRegs = view.find_by_selector('entity.name.function.mac')
+#         for r in reversed(functionRegs):
+#             if r.a < region.a:
+#                 txt = view.substr(r)
+#                 name = txt.split(" ")[0]
+#                 if ":" in name:
+#                     name = name.replace(":", "")
 
-                final_txt = "Macro %s" % name
-                view.set_status('procedure', final_txt)
-                return
-        view.erase_status('procedure')
+#                 final_txt = "Macro %s" % name
+#                 view.set_status('procedure', final_txt)
+#                 return
+#         view.erase_status('procedure')
 
 
 def RSBIDE_folder_change_watcher():
@@ -786,7 +797,7 @@ def plugin_loaded():
     s.clear_on_change('reload')
     s.add_on_change('reload', lambda: Pref.load())
 
-    if not 'running_RSBIDE_folder_change_watcher' in globals():
+    if 'running_RSBIDE_folder_change_watcher' not in globals():
         running_RSBIDE_folder_change_watcher = True
         thread.start_new_thread(RSBIDE_folder_change_watcher, ())
 

@@ -27,7 +27,7 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
         name_panel = 'Rsb_panel'
 
     if b_overwrite or not output_view:
-        panel = view.window().create_output_panel(name_panel)
+        panel = view.window().create_output_panel(name_panel, False)
         output_view = panel
     else:
         panel = output_view
@@ -61,7 +61,7 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
 
 
 def get_panel(view, text, b_overwrite=True, bLog=False):
-    panel = view.window().create_output_panel('Rsb_parse_panel')
+    panel = view.window().create_output_panel('Rsb_parse_panel', False)
     panel.set_read_only(False)
     panel.run_command('append', {'characters': text})
 
