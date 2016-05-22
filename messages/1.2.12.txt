@@ -1,0 +1,5 @@
+RSBIDE 1.2.12
+--------------
+- Правильный снипет title
+- Функция status_bar_function удалена
+- Марафет :lipstick: :lips:
