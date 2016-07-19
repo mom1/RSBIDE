@@ -15,25 +15,22 @@ Features
     * Case insensitive completions
     * Parameter hints
     * Auto-completion in the field of import (prompts only files from the project)
-
-        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
+    ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
 * **Go to declaration and back again**
     * Go To Definition  `macro(...)` and `class(...) name (...)` according environment (import files) default key <kbd>Alt + G</kbd>
     * go to the declaration of the currently selected functions via <kbd>Alt + G</kbd>, <kbd>Ctrl + left click</kbd>
     * Go to the file from the import <kbd> Alt + G </ kbd>
     * Print Signature `macro` and `class` To Panel <kbd>Alt + S</kbd> 
-
-        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
+    ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **Viewing documents**
     * If <kbd> Alt + S </kbd> word under the cursor is not found in the index, then try to find documentation (Beta)
-        ![DocPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/DocPanel.jpg)
+    ![DocPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/DocPanel.jpg)
 * **DllRegister RS-Balance 3 from project folder**
     * Folder context menu "DllRegister RS-Balance 3"
     * Disable if not folder RS-Balance 3
     * Show result registration in status line
-        
-        ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
+    ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
 * **Syntax highlighting**
     * For .mac files
 * **Launch RS-Balance 3**
@@ -49,8 +46,7 @@ Features
     * predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Other commands**
     * Print Tree Import - Printing in file *.treeimport tree import files from current and open in new tab
-    
-        ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
+    ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
 
 See Packages/RSBIDE/RSBIDE.sublime-settings for options. As with all ST packages, copy this file into your Packages/User folder and editing the copy there.
 
