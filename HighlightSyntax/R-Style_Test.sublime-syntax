@@ -275,9 +275,6 @@ contexts:
       push:
         - include: simple
         - include: callmacro
-        # - match: '(?i)\b(?=\()\b'
-        #   push: callmacro
-        # - match: '(?i)\b(?=\))\b'
           pop: true
         - match: \)
           scope: punctuation.definition.parameters.end.mact
