@@ -12,9 +12,13 @@ contexts:
     - include: comments
     - include: numeric
     - include: import
-    - include: class
-    - include: macro
-    - include: var
+    - match: '(?i)\b(?=class)\b'
+      push: class
+    - match: '(?i)\b(?=macro)\b'
+      push: macro
+    - match: '(?i)\b(?=var)\b'
+      push: var
+    - include: flow
     - include: string
     - include: language
 
@@ -82,36 +86,26 @@ contexts:
       pop: true
 
   class:
+    - include: simple
+    - meta_scope: meta.class.mact
     - match: '(?i)\bclass\b'
       scope: storage.type.class.mact
       push:
-        - meta_scope: meta.class.mact
-        - include: simple
-        - include: var
-        - include: macro
+        - include: comments
         - match: '\('
           scope: punctuation.definition.inherited-class.mact
           push: class-inherited
-        - match: '(?i)(END)'
-          scope: keyword.class.end.mact
-          pop: true
         - match: '(?={{identifier}})'
-          push: class-definition
-
-  class-definition:
-    - include: simple
-    - match: '\n'
+          set: class-definition
+    - include: flow
+    - match: '(?i)\b(?=macro)\b'
+      push: macro
+    - match: '(?i)\b(?=var)\b'
+      push: var
+    - match: '(?i)(END)\s*(;)'
+      captures:
+        1: keyword.class.end.mact
       pop: true
-    - match: '({{identifier}})'
-      scope: entity.name.class.mact
-      push:
-        - match: '\n'
-          pop: true
-        - match: (?!{{identifier}})
-          pop: true
-    - match: '\('
-      scope: punctuation.definition.classparam.mact
-      push: class-param
 
   class-inherited:
     - meta_scope: inherited-class.mact
@@ -122,16 +116,31 @@ contexts:
       scope: punctuation.definition.inherited-class.mact
       pop: true
 
+  class-definition:
+    - include: simple
+    - match: '({{identifier}})'
+      scope: entity.name.class.mact
+      set:
+        - include: comments
+        - match: '\s*(\()'
+          captures:
+            1: punctuation.definition.classparam.begin.mact
+          set: class-param
+        - match: '(?i)\b(?=END)\b'
+          pop: true
+        - match: '(?={{identifier}})'
+          pop: true
+
   class-param:
     - meta_scope: class-param.mact
-    - include: comments
-    - match: '(?i)({{identifier}})\s*'
-      scope: variable.parameter.class.mact
     - include: type-variable
+    - include: comments
+    - match: '(?i)({{identifier}})'
+      scope: variable.parameter.class.mact
     - match: (?=,)
       set: class-param-continue
     - match: '\)'
-      scope: punctuation.definition.classparam.mact
+      scope: punctuation.definition.classparam.end.mact
       pop: true
 
   class-param-continue:
@@ -144,29 +153,36 @@ contexts:
 
   macro:
     - include: modifier
+    - include: simple
+    - meta_scope: meta.macro.mact
     - match: '(?i)\bmacro\b'
       scope: storage.type.macro.mact
       push:
-        - meta_scope: meta.macro.mact
-        - include: macro-declaration
-
-  macro-declaration:
-    - include: comments
-    - match: '(?i)(END)(;)'
+        - include: comments
+        - match: '(?={{identifier}})'
+          set: macro-declaration
+    - include: flow
+    - match: '(?i)\b(?=var)\b'
+      push: var
+    - match: '(?i)(END)\s*(;)'
       captures:
         1: keyword.macro.end.mact
       pop: true
-    - match: '{{identifier}}'
+
+  macro-declaration:
+    - include: simple
+    - match: '({{identifier}})'
       scope: entity.name.function.mact
-      push:
-        - include: type-variable
-        - match: '\('
-          scope: punctuation.definition.parameters.begin.mact
-          push: macro-declaration-parameters
-        - match: '(?i)(?=END)'
-          pop: true
+      set:
         - include: simple
-        - include: var
+        - match: '\s*(\()'
+          captures:
+            1: punctuation.definition.parameters.begin.mact
+          set: macro-declaration-parameters
+        - match: '(?i)\b(?=END)\b'
+          pop: true
+        - match: '(?={{identifier}})'
+          pop: true
 
   macro-declaration-parameters:
     - meta_scope: macro-param.mact
@@ -205,9 +221,13 @@ contexts:
   var:
     - include: comments
     - include: modifier
+    - meta_scope: meta.variable.mact
     - match: '(?i)\bvar\b'
       scope: storage.type.var.mact
-      push: var-declaration
+      push:
+        - include: comments
+        - match: '(?={{identifier}})'
+          set: var-declaration
     - match: '\;'
       pop: true
 
@@ -215,7 +235,6 @@ contexts:
     - include: type-variable
     - include: comments
     - include: numeric
-    - meta_scope: meta.variable.mact
     - match: '({{identifier}})'
       scope: variable.declare.name.mact
       push:
@@ -225,18 +244,19 @@ contexts:
           pop: true
     - match: '(?i)(=|\*|\-|\+|==|!=|<=|>=|<>|<|>)'
       scope: keyword.operator.mact
-      push:
+      set:
+        - meta_scope: meta.variable.value.mact
         - include: comments
         - include: numeric
         - include: callmacro
-        - match: '(?=,)'
-          pop: true
+        - match: (?=,)
+          set: var-continue
         - match: '(?=\;)'
           pop: true
         - include: simple
     - match: (?=,)
       set: var-continue
-    - match: '(\;)'
+    - match: '(?=\;)'
       pop: true
 
   var-continue:
@@ -248,26 +268,113 @@ contexts:
       pop: true
 
   callmacro:
+    - meta_scope: meta.callmacro.mact
     - include: comments
     - match: '\('
       scope: punctuation.definition.parameters.begin.mact
       push:
         - include: simple
+        - include: callmacro
+        # - match: '(?i)\b(?=\()\b'
+        #   push: callmacro
+        # - match: '(?i)\b(?=\))\b'
+          pop: true
         - match: \)
           scope: punctuation.definition.parameters.end.mact
           pop: true
+
+  if:
+    - meta_scope: meta.if.mact
+    - include: simple
+    - match: '(?i)\b(if)\b'
+      scope: keyword.control.if.mact
+      push:
+        - include: simple
+        - match: '(?i)\b(?=if)\b'
+          push: if
+        - match: '(?i)\b(?=while)\b'
+          push: while
+        - match: '(?i)\b(?=for)\b'
+          push: for
+        - match: '(?i)\b(?=END)\b'
+          pop: true
+        - match: '(?i)\b(?=var)\b'
+          push: var
+    - match: '(?i)(END)\s*(;)?'
+      captures:
+        1: keyword.if.end.mact
+      pop: true
+
+  while:
+    - meta_scope: meta.while.mact
+    - include: simple
+    - match: '(?i)\b(while)\b'
+      scope: keyword.control.while.mact
+      push:
+        - include: simple
+        - match: '(?i)\b(?=if)\b'
+          push: if
+        - match: '(?i)\b(?=while)\b'
+          push: while
+        - match: '(?i)\b(?=for)\b'
+          push: for
+        - match: '(?i)\b(?=END)\b'
+          pop: true
+    - match: '(?i)(END)\s*(;)?'
+      captures:
+        1: keyword.while.end.mact
+      pop: true
+
+  for:
+    - meta_scope: meta.for.mact
+    - include: simple
+    - match: '(?i)\b(for)\b'
+      scope: keyword.control.for.mact
+      push:
+        - include: simple
+        - match: '(?i)\b(?=if)\b'
+          push: if
+        - match: '(?i)\b(?=while)\b'
+          push: while
+        - match: '(?i)\b(?=for)\b'
+          push: for
+        - match: '(?i)\b(?=END)\b'
+          pop: true
+        - match: '\('
+          push:
+            - match: (?i)\b(var)\b
+              scope: storage.type.var.mact
+              set:
+                - match: '({{identifier}})'
+                  scope: variable.declare.name.mact
+                - match: ','
+                  pop: true
+            - match: '\)'
+              pop: true
+    - match: '(?i)(END)\s*(;)?'
+      captures:
+        1: keyword.for.end.mact
+      pop: true
+
+  flow:
+    - match: '(?i)\b(?=if)\b'
+      push: if
+    - match: '(?i)\b(?=while)\b'
+      push: while
+    - match: '(?i)\b(?=for)\b'
+      push: for
 
   string:
     - match: '"'
       scope: punctuation.definition.string.begin.mact
       push:
         - meta_scope: string.quoted.double.mact
-        - match: (")|(\n)
+        - match: '(")|(\n)'
           captures:
             1: punctuation.definition.string.end.mact
             2: invalid.illegal.newline.mact
           pop: true
-        - match: '([{|\(]?[0-9A-F]{8}[-]?([0-9A-F]{4}[-]?){3}[0-9A-F]{12}[\)|}]?)'
+        - match: '(?i)([{|\(]?[0-9A-F]{8}[-]?([0-9A-F]{4}[-]?){3}[0-9A-F]{12}[\)|}]?)'
           scope: string.guid.mact
         - match: '(\s|(?:(?<=\"))|(?:(?<=\())|(?:(?<=\,)))(\\\")([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")(?:(?=\W))'
           scope: constant.other.table-name.mact
@@ -286,11 +393,29 @@ contexts:
         - match: '(?=<)'
           push: "Packages/XML/XML.sublime-syntax"
           with_prototype:
-            - match: '(?=>)|(?=")'
+            - match: '(?=")'
               pop: true
             - match: '(\\x[0-9A-F]{2})|(\\[0-7]{3})|(\\\\)|(\\\")|(\\n)|(\\r)'
               scope: constant.character.escape.mact
-        - include: "Packages/SQL/SQL.sublime-syntax"
+        - match: '(?!<)'
+          push: "Packages/SQL/SQL.sublime-syntax"
+          with_prototype:
+            - match: '(?=")'
+              pop: true
+            - match: '([{|\(]?[0-9A-F]{8}[-]?([0-9A-F]{4}[-]?){3}[0-9A-F]{12}[\)|}]?)'
+              scope: string.guid.mact
+            - match: '(\s|(?:(?<=\"))|(?:(?<=\())|(?:(?<=\,)))(\\\")([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")(?:(?=\W))'
+              scope: constant.other.table-name.mact
+            - match: '(`)'
+              scope: string.quoted.double.single-line.raw.mact
+            - match: (')
+              scope: string.quoted.double.single-line.raw.mact
+            - match: '(\#|--)?'
+              scope: string.quoted.double.single-line.raw.mact
+            - match: '(\/\*|\*\/)?'
+              scope: string.quoted.double.single-line.raw.mact
+            - match: '(\\x[0-9A-F]{2})|(\\[0-7]{3})|(\\\\)|(\\\")|(\\n)|(\\r)'
+              scope: constant.character.escape.mact
 
   language:
     - match: (?i)\b(Null|NullObj)\b
@@ -314,7 +439,7 @@ contexts:
     - match: \.
       scope: meta.delimiter.method.period.mact
     - comment: "ключевые слова, которые формируют или прерывают цикл"
-      match: (?i)\b(elif|else|for|if|while|break|continue|return)\b
+      match: (?i)\b(elif|else|break|continue|return)\b
       scope: keyword.control.flow.mact
     - comment: "Стандартные процедуры ввода данных"
       match: (?i)\b(GetInt|GetDouble|GetMoney|GetString|GetStringR|GetDate|GetTRUE|GetTime)\b
