@@ -5,15 +5,15 @@
     <key>name</key>
     <string>Symbol List Macro</string>
     <key>scope</key>
-    <string>source.mac meta.function.mac</string>
+    <string>source.mac meta.macro.mac entity.name.function.mac</string>
     <key>settings</key>
     <dict>
         <key>showInSymbolList</key>
         <integer>1</integer>
         <key>symbolTransformation</key>
         <string>
-        s/((private|local)\s*)?(macro)\s+([A-Za-z_][A-Za-z0-9_]*)/$3 $4/g;
-    </string>
+            s/([A-Za-z_][A-Za-z0-9_]*)/\tmacro $1/g;
+        </string>
     </dict>
     <key>uuid</key>
     <string>015BE156-8D74-4136-AF38-283708645115</string>

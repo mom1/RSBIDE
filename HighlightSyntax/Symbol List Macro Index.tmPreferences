@@ -1,21 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>name</key>
-    <string>Symbol List Class Index</string>
+    <string>Symbol List Macro</string>
     <key>scope</key>
-    <string>source.mac meta.class.mac entity.name.class.mac</string>
+    <string>source.mac meta.macro.mac entity.name.function.mac</string>
     <key>settings</key>
     <dict>
         <key>showInIndexedSymbolList</key>
         <integer>1</integer>
         <key>symbolIndexTransformation</key>
         <string>
-            s/([A-Za-z_][A-Za-z0-9_]*)/class $1/g;
+            s/([A-Za-z_][A-Za-z0-9_]*)/\tmacro $1/g;
         </string>
     </dict>
     <key>uuid</key>
-    <string>2CEA49B2-A5C5-405C-82E2-B8B668877C36</string>
+    <string>015BE156-8D74-4136-AF38-283708645115</string>
 </dict>
 </plist>

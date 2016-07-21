@@ -27,7 +27,7 @@ global IS_ST3
 IS_ST3 = sublime.version().startswith('3')
 
 global debug
-debug = False
+debug = True
 global already_im
 already_im = []
 obj = []
@@ -132,9 +132,9 @@ class RSBIDE:
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
         # completion import files
-        if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":
+        if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac":
             currentImport = [os.path.splitext(basename(
-                view.substr(s).lower().strip()))[0] for s in view.find_by_selector('import.file.mac')]
+                view.substr(s).lower().strip()))[0] for s in view.find_by_selector('meta.import.mac import.file.mac')]
             pfiles = self.ffiles
             lfile = [self.create_var_completion(os.path.splitext(
                 basename(fil))[0], "File") for fil in pfiles if os.path.splitext(
@@ -174,7 +174,7 @@ class RSBIDE:
             [completions.append(self.create_function_completion(
                 self.parse_line(
                     view.substr(
-                        view.line(selection))), location)) for selection in view.find_by_selector('entity.name.function') if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
+                        view.line(selection))), location)) for selection in view.find_by_selector('entity.name.function.mac') if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
             # append "var" names from current file
             vars = []
             res = view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)
@@ -238,6 +238,7 @@ class RSBIDE:
             already_im.extend(difflist)
             currdiff = list(set(self.filesimport[file_im]) - set([x.lower() for x in LInFile]))
             LInFile.extend(currdiff)
+            print(already_im)
         if debug:
             print('Scan import done in ' + str(time.time() - t) + ' seconds')
 
@@ -440,7 +441,7 @@ s = {}
 
 
 def is_RStyle_view(view, locations=None):
-    return (view.file_name() and is_mac_file(view.file_name())) or ('RStyle' in view.settings().get('syntax')) or (locations and len(locations) and '.mac' in view.scope_name(locations[0]))
+    return (view.file_name() and is_mac_file(view.file_name())) or ('RStyle' in view.settings().get('syntax'))  or ('R-Style' in view.settings().get('syntax'))or (locations and len(locations) and '.mac' in view.scope_name(locations[0]))
 
 
 def is_mac_file(file):
@@ -653,7 +654,7 @@ def get_result(view):
             sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
 
     word = view.substr(sel)
-    if view.scope_name(view.sel()[0].a) == "source.mac import.file.mac ":  # if scope import go to file rowcol 0 0
+    if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac":  # if scope import go to file rowcol 0 0
         res = []
         for file in RSBIDE.ffiles:
             if basename(file).lower() == word.lower() + ".mac":
@@ -690,8 +691,8 @@ def get_result(view):
             if "/" + x.lower().replace(":", "") in sfile.lower():
                 sfile = sfile.replace("/" + _get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
         vars = [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(selection)).lower()]
-        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.parameter.function.mac') if word.lower() == view.substr(view.word(selection)).lower()]
-        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.parameter.class.mac') if word.lower() == view.substr(view.word(selection)).lower()]
+        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('source.mac meta.class.mac meta.macro.mac macro-param.mac variable.parameter.macro.mac') if word.lower() == view.substr(view.word(selection)).lower()]
+        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('source.mac meta.class.mac class-param.mac variable.parameter.class.mac') if word.lower() == view.substr(view.word(selection)).lower()]
         if len(vars) > 0:
             result = vars
     return result
@@ -764,23 +765,25 @@ class PrintTreeImportCommand(sublime_plugin.WindowCommand):
         self.window.open_file("%s:%s:%s" % (view.file_name() + ".treeimport", 0, 0), sublime.ENCODED_POSITION)
 
 
-# class StatusBarFunctionCommand(sublime_plugin.TextCommand):
+class StatusBarFunctionCommand(sublime_plugin.TextCommand):
 
-#     def run(self, edit):
-#         view = self.view
-#         region = view.sel()[0]
-#         functionRegs = view.find_by_selector('entity.name.function.mac')
-#         for r in reversed(functionRegs):
-#             if r.a < region.a:
-#                 txt = view.substr(r)
-#                 name = txt.split(" ")[0]
-#                 if ":" in name:
-#                     name = name.replace(":", "")
-
-#                 final_txt = "Macro %s" % name
-#                 view.set_status('procedure', final_txt)
-#                 return
-#         view.erase_status('procedure')
+    def run(self, edit):
+        view = self.view
+        region = view.sel()[0]
+        classRegs = view.find_by_selector('meta.class.mac')
+        classRegsName = view.find_by_selector('meta.class.mac entity.name.class.mac')
+        functionRegs = view.find_by_selector('meta.macro.mac')
+        functionRegsName = view.find_by_selector('meta.macro.mac entity.name.function.mac')
+        MessStat = ''
+        for cr in [i for i in classRegs if i.contains(region)]:
+            for crn in [j for j in classRegsName if cr.contains(j)]:
+                MessStat += ' Class: ' + view.substr(crn)
+                break
+        for mr in [n for n in functionRegs if n.contains(region)]:
+            for mrn in [k for k in functionRegsName if mr.contains(k)]:
+                MessStat += ' Macro: ' + view.substr(mrn)
+                break
+        view.set_status('procedure', MessStat)
 
 
 def RSBIDE_folder_change_watcher():

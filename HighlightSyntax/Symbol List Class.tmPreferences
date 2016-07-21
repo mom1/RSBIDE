@@ -5,11 +5,15 @@
     <key>name</key>
     <string>Symbol List Class</string>
     <key>scope</key>
-    <string>source.mac meta.class.mac</string>
+    <string>source.mac meta.class.mac entity.name.class.mac</string>
     <key>settings</key>
     <dict>
         <key>showInSymbolList</key>
         <string>1</string>
+        <key>symbolTransformation</key>
+        <string>
+            s/([A-Za-z_][A-Za-z0-9_]*)/class $1/g;
+        </string>
     </dict>
     <key>uuid</key>
     <string>2CEA49B2-A5C5-405C-82E2-B8B668877C37</string>
