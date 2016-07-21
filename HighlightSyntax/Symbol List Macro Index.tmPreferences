@@ -10,10 +10,10 @@
     <dict>
         <key>showInIndexedSymbolList</key>
         <integer>1</integer>
-        <key>symbolIndexTransformation</key>
+        <!-- <key>symbolIndexTransformation</key>
         <string>
             s/([A-Za-z_][A-Za-z0-9_]*)/\tmacro $1/g;
-        </string>
+        </string> -->
     </dict>
     <key>uuid</key>
     <string>015BE156-8D74-4136-AF38-283708645115</string>

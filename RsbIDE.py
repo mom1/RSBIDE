@@ -27,7 +27,7 @@ global IS_ST3
 IS_ST3 = sublime.version().startswith('3')
 
 global debug
-debug = True
+debug = False
 global already_im
 already_im = []
 obj = []
@@ -238,7 +238,6 @@ class RSBIDE:
             already_im.extend(difflist)
             currdiff = list(set(self.filesimport[file_im]) - set([x.lower() for x in LInFile]))
             LInFile.extend(currdiff)
-            print(already_im)
         if debug:
             print('Scan import done in ' + str(time.time() - t) + ' seconds')
 
@@ -553,8 +552,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         view = self.window.active_view()
         sel = view.sel()[0]
         if sel.begin() == sel.end():
-            sel = view.expand_by_class(
-                sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
+            sel = view.word(sel)
         symbol = get_result(view)
         if len(symbol) == 0:
             doc_string = self.get_doc(view)
@@ -576,10 +574,8 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
 
     def get_doc(self, view):
         lang = 'mac'
-        # if lang not in self.cache:
         path_db = os.path.dirname(
             os.path.abspath(__file__)) + "/dbHelp/%s.json" % lang
-        # print("Loaded Docs db:", path_db)
 
         if os.path.exists(path_db):
             self.cache[lang] = json.load(open(path_db))
@@ -610,7 +606,6 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
 
             # Description
             menus.append("\n" + found["descr"] + "\n")
-            # print(''.join(menus))
             return ''.join(menus)
         else:
             return None
@@ -650,11 +645,10 @@ def get_result(view):
     sel = view.sel()[0]
     window = sublime.active_window()
     if sel.begin() == sel.end():
-        sel = view.expand_by_class(
-            sel, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
+        sel = view.word(sel)
 
     word = view.substr(sel)
-    if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac":  # if scope import go to file rowcol 0 0
+    if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
         res = []
         for file in RSBIDE.ffiles:
             if basename(file).lower() == word.lower() + ".mac":
@@ -674,7 +668,6 @@ def get_result(view):
                 if func[RSBIDE.NAME].lower() == word.lower():
                     word = func[RSBIDE.NAME]
                     break
-
     result = window.lookup_symbol_in_index(word)
     im_result = []
     if len(result) > 1:  # if found in index check location must by in import
@@ -689,10 +682,28 @@ def get_result(view):
         sfile = file
         for x in Pref.updated_folders:
             if "/" + x.lower().replace(":", "") in sfile.lower():
-                sfile = sfile.replace("/" + _get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
-        vars = [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(selection)).lower()]
-        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('source.mac meta.class.mac meta.macro.mac macro-param.mac variable.parameter.macro.mac') if word.lower() == view.substr(view.word(selection)).lower()]
-        vars += [(file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)) for selection in view.find_by_selector('source.mac meta.class.mac class-param.mac variable.parameter.class.mac') if word.lower() == view.substr(view.word(selection)).lower()]
+                sfile = sfile.replace("/" + _get_case_sensitive_name(
+                    normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
+
+        classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
+        macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
+        selections = [i for i in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(i)).lower()]
+        RegionMacroParam = view.find_by_selector('meta.macro.mac macro-param.mac variable.parameter.macro.mac')
+        RegionClassParam = view.find_by_selector('meta.class.mac class-param.mac variable.parameter.class.mac')
+
+        if len(classRegs) > 0 and len(selections) > 1:
+            selections = [i for i in selections for j in classRegs if j.contains(i)]
+        if len(macroRegs) > 0 and len(selections) > 1:
+            selections = [i for i in selections for j in macroRegs if j.contains(i)]
+        if len(macroRegs) > 0 and len(selections) == 0:
+            MacroParamRegs = [i for i in RegionMacroParam if word.lower() == view.substr(view.word(i)).lower()]
+            selections = [i for i in MacroParamRegs for j in macroRegs if j.contains(i)]
+        if len(classRegs) > 0 and len(macroRegs) == 0 and len(selections) == 0:
+            ClassParamRegion = [i for i in RegionClassParam if word.lower() == view.substr(view.word(i)).lower()]
+            selections = [i for i in ClassParamRegion for j in classRegs if j.contains(i)]
+
+        for selection in selections:
+            vars.append((file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)))
         if len(vars) > 0:
             result = vars
     return result
