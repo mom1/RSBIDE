@@ -27,7 +27,7 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
         name_panel = 'Rsb_panel'
 
     if b_overwrite or not output_view:
-        panel = view.window().create_output_panel(name_panel, False)
+        panel = view.window().create_output_panel(name_panel, True)
         output_view = panel
     else:
         panel = output_view
@@ -45,27 +45,20 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
         pass
     else:
         panel.set_syntax_file(view.settings().get('syntax'))
-    if region_mark:
-        # print(region_mark)
-        # flags = sublime.DRAW_NO_FILL
-        # region = panel.word(panel.text_point(showline, region_mark[1]))
-        # print(region)
-        # region = panel.expand_by_class(panel.text_point(showline-1, 0)-1, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END)
-        # panel.add_regions(
-        #     name_panel, region, 'string', 'dot', flags)
-        pass
 
-    panel.show_at_center(panel.line(panel.text_point(showline-1, 0)-1))
+    if showline:
+        position = panel.text_point(showline - 2, 0)
+        region = panel.line(position)
+        panel.add_regions('rsbide_declare', [region], 'string', 'dot', sublime.DRAW_NO_FILL)
+        panel.show_at_center(region)
     panel.set_read_only(True)
     view.window().run_command("show_panel", {"panel": "output.%s" % name_panel})
 
 
-def get_panel(view, text, b_overwrite=True, bLog=False):
-    panel = view.window().create_output_panel('Rsb_parse_panel', False)
+def get_panel(view, text, b_overwrite=True, bLog=False, name_panel='Rsb_parse_panel'):
+    panel = view.window().create_output_panel(name_panel)
     panel.set_read_only(False)
     panel.run_command('append', {'characters': text})
-
     panel.set_syntax_file(view.settings().get('syntax'))
-
     panel.set_read_only(True)
     return panel

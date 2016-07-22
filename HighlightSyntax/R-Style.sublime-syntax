@@ -3,6 +3,7 @@
 name: R-Style
 file_extensions: [mac]
 scope: source.mac
+author: MOM
 variables:
   identifier: '[_$[:alpha:]][_$[:alnum:]]*'
   constant_identifier: '[[:upper:]][_$[:digit:][:upper:]]*\b'
@@ -153,7 +154,6 @@ contexts:
 
   macro:
     - include: modifier
-    - include: simple
     - meta_scope: meta.macro.mac
     - match: '(?i)\bmacro\b'
       scope: storage.type.macro.mac
@@ -161,6 +161,7 @@ contexts:
         - include: comments
         - match: '(?={{identifier}})'
           set: macro-declaration
+    - include: simple
     - include: flow
     - match: '(?i)(?=\bvar\b)'
       push: var
@@ -170,7 +171,6 @@ contexts:
       pop: true
 
   macro-declaration:
-    - include: simple
     - match: '({{identifier}})'
       scope: entity.name.function.mac
       set:
@@ -183,6 +183,7 @@ contexts:
           pop: true
         - match: '(?={{identifier}})'
           pop: true
+    - include: simple
 
   macro-declaration-parameters:
     - meta_scope: macro-param.mac
@@ -339,6 +340,7 @@ contexts:
           pop: true
         - match: '\('
           push:
+            - include: simple
             - match: (?i)\b(var)\b
               scope: storage.type.var.mac
               set:
@@ -362,11 +364,11 @@ contexts:
       push: for
 
   string:
-    - match: '"'
+    - match: '("|“|”)'
       scope: punctuation.definition.string.begin.mac
       push:
         - meta_scope: string.quoted.double.mac
-        - match: '(")|(\n)'
+        - match: '("|“|”)|(\n)'
           captures:
             1: punctuation.definition.string.end.mac
             2: invalid.illegal.newline.mac
@@ -390,7 +392,7 @@ contexts:
         - match: '(?=<)'
           push: "Packages/XML/XML.sublime-syntax"
           with_prototype:
-            - match: '(?=")'
+            - match: '(?=("|“|”))'
               pop: true
             - match: '(\\x[0-9A-F]{2})|(\\[0-7]{3})|(\\\\)|(\\\")|(\\n)|(\\r)'
               scope: constant.character.escape.mac
@@ -404,7 +406,7 @@ contexts:
         - match: '(?!<)'
           push: "Packages/SQL/SQL.sublime-syntax"
           with_prototype:
-            - match: '(?=")'
+            - match: '(?=("|“|”))'
               pop: true
             - match: '([{|\(]?[0-9A-F]{8}[-]?([0-9A-F]{4}[-]?){3}[0-9A-F]{12}[\)|}]?)'
               scope: string.guid.mac

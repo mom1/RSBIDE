@@ -172,9 +172,9 @@ class RSBIDE:
                 print(view.file_name())
             # append functions from current view that yet have not been saved
             [completions.append(self.create_function_completion(
-                self.parse_line(
-                    view.substr(
-                        view.line(selection))), location)) for selection in view.find_by_selector('entity.name.function.mac') if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
+                self.parse_line(view.substr(view.line(selection))), location))
+                for selection in view.find_by_selector('entity.name.function.mac')
+                if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
             # append "var" names from current file
             vars = []
             res = view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)
@@ -182,7 +182,8 @@ class RSBIDE:
             [completions.append(self.create_var_completion(
                 var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
             # append "globals from CommonVariables.mac"
-            [completions.append(self.create_var_completion(var, "Global")) for var in list(set(self.get_globals(view))) if len(var) > 1 and var not in already_in]
+            [completions.append(self.create_var_completion(var, "Global"))
+                for var in list(set(self.get_globals(view))) if len(var) > 1 and var not in already_in]
             completions = self.without_duplicates(completions)
         return completions
 
@@ -371,8 +372,18 @@ class RSBIDECollectorThread(threading.Thread):
             sublime.status_message('Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - ' + 'File scans ' + str(files_mac + files_xml))
             if debug:
                 print('Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - Scan was aborted: ' + str(Pref.scan_aborted))
-                print('Files Seen:' + str(files_seen) + ', Files MAC:' + str(files_mac) + ', Cache Miss:' + str(files_cache_miss) + ', Cache Hit:' + str(files_cache_hit) + ', Failed Parsing:' + str(files_failed_parsing))
-                print('Files Seen:' + str(files_seen) + ', Files XML:' + str(files_xml) + ', Cache Miss:' + str(files_cache_miss_xml) + ', Cache Hit:' + str(files_cache_hit_xml) + ', Failed Parsing:' + str(files_failed_parsing))
+                print(
+                    'Files Seen:' + str(files_seen) +
+                    ', Files MAC:' + str(files_mac) +
+                    ', Cache Miss:' + str(files_cache_miss) +
+                    ', Cache Hit:' + str(files_cache_hit) +
+                    ', Failed Parsing:' + str(files_failed_parsing))
+                print(
+                    'Files Seen:' + str(files_seen) +
+                    ', Files XML:' + str(files_xml) +
+                    ', Cache Miss:' + str(files_cache_miss_xml) +
+                    ', Cache Hit:' + str(files_cache_hit_xml) +
+                    ', Failed Parsing:' + str(files_failed_parsing))
 
             Pref.scan_running = False
             Pref.scan_aborted = False
@@ -381,7 +392,10 @@ class RSBIDECollectorThread(threading.Thread):
         if debug:
             print('\nParsing functions for file:\n' + file)
         pattern = re.compile(r"^\s*(macro)\s+", re.I | re.S)
-        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
+        lines = [
+            line.rstrip('\r\n') + "\n"
+            for line in codecs.open(file, encoding='cp1251', errors='replace')
+            if len(line) < 300 and pattern.match(line.lower())]
         functions = []
         for line in lines:
             matches = RSBIDE.parse_line(line)
@@ -440,7 +454,10 @@ s = {}
 
 
 def is_RStyle_view(view, locations=None):
-    return (view.file_name() and is_mac_file(view.file_name())) or ('RStyle' in view.settings().get('syntax'))  or ('R-Style' in view.settings().get('syntax'))or (locations and len(locations) and '.mac' in view.scope_name(locations[0]))
+    return (
+        view.file_name() and is_mac_file(view.file_name()) or
+        ('RStyle' in view.settings().get('syntax')) or ('R-Style' in view.settings().get('syntax')) or
+        (locations and len(locations) and '.mac' in view.scope_name(locations[0])))
 
 
 def is_mac_file(file):
@@ -477,7 +494,10 @@ def update_folders():
         _folders = deduplicate_crawl_folders(_folders, folder)
     _folders.sort()
     Pref.updated_folders = _folders
-    Pref.updated_files = [norm_path(v.file_name()) for w in sublime.windows() for v in w.views() if v.file_name() and is_mac_file(v.file_name()) and not should_exclude(norm_path(v.file_name()))]
+    Pref.updated_files = [
+        norm_path(v.file_name())
+        for w in sublime.windows()
+        for v in w.views() if v.file_name() and is_mac_file(v.file_name()) and not should_exclude(norm_path(v.file_name()))]
 
 
 def should_abort():
@@ -636,9 +656,38 @@ def getLongPathName(path):
 
 
 def _get_case_sensitive_name(s):
-        """ Returns long name in case sensitive format """
-        path = getLongPathName(getShortPathName(s))
-        return path
+    """ Returns long name in case sensitive format """
+    path = getLongPathName(getShortPathName(s))
+    return path
+
+
+def get_declare_in_parent(view, classRegs, sel):
+    window = sublime.active_window()
+    select = []
+    regions_parent = [i for i in view.find_by_selector('entity.other.inherited-class.mac') for j in classRegs if j.contains(i)]
+    if len(regions_parent) == 0:
+        return []
+    else:
+        region_parent = regions_parent[0]
+    word = view.substr(region_parent)
+    result = window.lookup_symbol_in_index(word)
+    for item in result:
+        file = normalize_to_system_style_path(item[0])
+        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
+        parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel='parse_' + item[1])
+        reg_name_class = [i for i in parse_panel.find_by_selector('entity.name.class.mac') if word.lower() == parse_panel.substr(i).lower()]
+        regions_class = [i for i in parse_panel.find_by_selector('meta.class.mac') for j in reg_name_class if i.contains(j)]
+
+        if len(regions_class) > 0:
+            region_class = regions_class[0]
+            select += [
+                (item[0], item[1], (parse_panel.rowcol(i.a)[0] + 1, parse_panel.rowcol(i.a)[1] + 1))
+                for i in parse_panel.find_by_selector('source.mac meta.class.mac meta.variable.mac variable.declare.name.mac')
+                if sel.lower() == parse_panel.substr(i).lower() and region_class.contains(i)]
+            if len(select) == 0:
+                select += get_declare_in_parent(parse_panel, regions_class, sel)
+        sublime.active_window().destroy_output_panel('parse_' + item[1])
+    return select
 
 
 def get_result(view):
@@ -698,12 +747,16 @@ def get_result(view):
         if len(macroRegs) > 0 and len(selections) == 0:
             MacroParamRegs = [i for i in RegionMacroParam if word.lower() == view.substr(view.word(i)).lower()]
             selections = [i for i in MacroParamRegs for j in macroRegs if j.contains(i)]
-        if len(classRegs) > 0 and len(macroRegs) == 0 and len(selections) == 0:
+        elif len(macroRegs) == 0 and len(classRegs) > 0 and len(selections) == 0:
             ClassParamRegion = [i for i in RegionClassParam if word.lower() == view.substr(view.word(i)).lower()]
             selections = [i for i in ClassParamRegion for j in classRegs if j.contains(i)]
-
         for selection in selections:
             vars.append((file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)))
+        if len(classRegs) > 0 and len(selections) == 0:
+            in_parent = get_declare_in_parent(view, classRegs, view.substr(sel))
+            if len(in_parent) > 0:
+                vars = in_parent
+
         if len(vars) > 0:
             result = vars
     return result
@@ -781,19 +834,18 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         region = view.sel()[0]
-        classRegs = view.find_by_selector('meta.class.mac')
+        classRegs = [i for i in view.find_by_selector('meta.class.mac') if i.contains(region)]
         classRegsName = view.find_by_selector('meta.class.mac entity.name.class.mac')
-        functionRegs = view.find_by_selector('meta.macro.mac')
+        functionRegs = [n for n in view.find_by_selector('meta.macro.mac') if n.contains(region)]
         functionRegsName = view.find_by_selector('meta.macro.mac entity.name.function.mac')
         MessStat = ''
-        for cr in [i for i in classRegs if i.contains(region)]:
-            for crn in [j for j in classRegsName if cr.contains(j)]:
-                MessStat += ' Class: ' + view.substr(crn)
-                break
-        for mr in [n for n in functionRegs if n.contains(region)]:
-            for mrn in [k for k in functionRegsName if mr.contains(k)]:
-                MessStat += ' Macro: ' + view.substr(mrn)
-                break
+
+        for crn in [j for j in classRegsName for cr in classRegs if cr.contains(j)]:
+            MessStat += ' Class: ' + view.substr(crn)
+            break
+        for mrn in [k for k in functionRegsName for mr in functionRegs if mr.contains(k)]:
+            MessStat += ' Macro: ' + view.substr(mrn)
+            break
         view.set_status('procedure', MessStat)
 
 
