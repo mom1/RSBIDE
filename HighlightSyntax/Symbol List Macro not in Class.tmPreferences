@@ -5,17 +5,17 @@
     <key>name</key>
     <string>Symbol List Macro</string>
     <key>scope</key>
-    <string>meta.class.mac entity.name.function.mac</string>
+    <string>entity.name.function.mac - meta.class.mac</string>
     <key>settings</key>
     <dict>
         <key>showInSymbolList</key>
         <integer>1</integer>
         <key>symbolTransformation</key>
         <string>
-            s/([A-Za-z_][A-Za-z0-9_]*)/    macro $1/g;
+            s/([A-Za-z_][A-Za-z0-9_]*)/macro $1/g;
         </string>
     </dict>
     <key>uuid</key>
-    <string>015BE156-8D74-4136-AF38-283708645115</string>
+    <string>22D161C9-7EAA-4825-90C7-5E2D2703BBC7</string>
 </dict>
 </plist>

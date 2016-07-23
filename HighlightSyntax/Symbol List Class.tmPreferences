@@ -5,7 +5,7 @@
     <key>name</key>
     <string>Symbol List Class</string>
     <key>scope</key>
-    <string>source.mac meta.class.mac entity.name.class.mac</string>
+    <string>meta.class.mac entity.name.class.mac</string>
     <key>settings</key>
     <dict>
         <key>showInSymbolList</key>

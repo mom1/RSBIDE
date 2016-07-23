@@ -1,4 +1,4 @@
-# coding=cp1251
+# -*- coding: cp1251 -*-
 # -------------
 import sublime
 
@@ -20,14 +20,14 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
     name_panel = ''
 
     if bLog:
-        name_panel = 'Rsb_panel_log'
+        name_panel = 'RSBIDE:Log'
     elif bDoc:
-        name_panel = 'Rsb_panel_doc'
+        name_panel = 'RSBIDE:Documentation'
     else:
-        name_panel = 'Rsb_panel'
+        name_panel = 'RSBIDE:Declaration'
 
     if b_overwrite or not output_view:
-        panel = view.window().create_output_panel(name_panel, True)
+        panel = view.window().create_output_panel(name_panel, False)
         output_view = panel
     else:
         panel = output_view
@@ -46,7 +46,7 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
     else:
         panel.set_syntax_file(view.settings().get('syntax'))
 
-    if showline:
+    if showline > 1:
         position = panel.text_point(showline - 2, 0)
         region = panel.line(position)
         panel.add_regions('rsbide_declare', [region], 'string', 'dot', sublime.DRAW_NO_FILL)
@@ -56,7 +56,7 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
 
 
 def get_panel(view, text, b_overwrite=True, bLog=False, name_panel='Rsb_parse_panel'):
-    panel = view.window().create_output_panel(name_panel)
+    panel = view.window().create_output_panel(name_panel, True)
     panel.set_read_only(False)
     panel.run_command('append', {'characters': text})
     panel.set_syntax_file(view.settings().get('syntax'))

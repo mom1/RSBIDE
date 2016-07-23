@@ -71,7 +71,8 @@ contexts:
     - include: comments
     - match: '\s*\"*(({{identifier}})*(.mac)*)\"?\s*'
       captures:
-        1: import.file.mac
+        2: import.file.mac
+        3: import.file.ext.mac
     - match: (?=,)
       set: import-continue
     - match: '(?=\;)'

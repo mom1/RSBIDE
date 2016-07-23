@@ -1,4 +1,4 @@
-# coding=cp1251
+# -*- coding: cp1251 -*-
 # ------------------------------------------------------------------------------
 # RSBIDE Sublime Text Plugin
 # forked from https://github.com/eladyarkoni/MySignaturePlugin
@@ -28,8 +28,9 @@ IS_ST3 = sublime.version().startswith('3')
 
 global debug
 debug = False
-global already_im
+global already_im, done_im
 already_im = []
+done_im = []
 obj = []
 fields = []
 methods = []
@@ -132,7 +133,8 @@ class RSBIDE:
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
         # completion import files
-        if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac":
+        print(view.scope_name(view.sel()[0].a))
+        if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac ":
             currentImport = [os.path.splitext(basename(
                 view.substr(s).lower().strip()))[0] for s in view.find_by_selector('meta.import.mac import.file.mac')]
             pfiles = self.ffiles
@@ -614,7 +616,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
             menus = []
 
             # Title
-            menus.append("Документация для " + found["name"] + "\n" + "=" * max(len("Документация для " + found["name"]), 40) + "\n")
+            menus.append("Документация " + found["name"] + "\n" + "=" * max(len("Документация " + found["name"]), 40) + "\n")
 
             # Syntax
             menus.append(found["syntax"] + "\n")
@@ -664,6 +666,7 @@ def _get_case_sensitive_name(s):
 def get_declare_in_parent(view, classRegs, sel):
     window = sublime.active_window()
     select = []
+    pref = 'RSBIDE:Parse_'  # Префикс для панели парсинга
     regions_parent = [i for i in view.find_by_selector('entity.other.inherited-class.mac') for j in classRegs if j.contains(i)]
     if len(regions_parent) == 0:
         return []
@@ -674,7 +677,7 @@ def get_declare_in_parent(view, classRegs, sel):
     for item in result:
         file = normalize_to_system_style_path(item[0])
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
-        parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel='parse_' + item[1])
+        parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + item[1])
         reg_name_class = [i for i in parse_panel.find_by_selector('entity.name.class.mac') if word.lower() == parse_panel.substr(i).lower()]
         regions_class = [i for i in parse_panel.find_by_selector('meta.class.mac') for j in reg_name_class if i.contains(j)]
 
@@ -682,15 +685,29 @@ def get_declare_in_parent(view, classRegs, sel):
             region_class = regions_class[0]
             select += [
                 (item[0], item[1], (parse_panel.rowcol(i.a)[0] + 1, parse_panel.rowcol(i.a)[1] + 1))
-                for i in parse_panel.find_by_selector('source.mac meta.class.mac meta.variable.mac variable.declare.name.mac')
+                for i in parse_panel.find_by_selector('meta.class.mac variable.declare.name.mac - meta.macro.mac')
                 if sel.lower() == parse_panel.substr(i).lower() and region_class.contains(i)]
             if len(select) == 0:
                 select += get_declare_in_parent(parse_panel, regions_class, sel)
-        sublime.active_window().destroy_output_panel('parse_' + item[1])
+        sublime.active_window().destroy_output_panel(pref + item[1])
+    return select
+
+
+def get_globals_in_import(view, word, fName):
+    window = sublime.active_window()
+    select = []
+    pref = 'RSBIDE:Parse_'  # Префикс для панели парсинга
+    regions_global_vars = [i for i in view.find_by_selector('variable.declare.name.mac - meta.class.mac') if word.lower() == view.substr(i).lower()]
+    if len(regions_global_vars) > 0:
+        pass
+    else:
+        names_import = [view.substr(i).lower() for i in view.find_by_selector('import.file.mac') if view.substr(i).lower() not in done_im]
     return select
 
 
 def get_result(view):
+    global done_im
+    done_im = []
     sel = view.sel()[0]
     window = sublime.active_window()
     if sel.begin() == sel.end():
@@ -709,14 +726,7 @@ def get_result(view):
                         sfile = sfile.replace("/" + _get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
                         res.append((file, sfile, (0, 0)))
         return res
-    else:
-        for file, data in RSBIDE.files.items():
-            if basename(file).lower() not in list(map(str.lower, already_im)):
-                continue
-            for func in data:
-                if func[RSBIDE.NAME].lower() == word.lower():
-                    word = func[RSBIDE.NAME]
-                    break
+
     result = window.lookup_symbol_in_index(word)
     im_result = []
     if len(result) > 1:  # if found in index check location must by in import
@@ -737,8 +747,10 @@ def get_result(view):
         classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
         macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
         selections = [i for i in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(i)).lower()]
-        RegionMacroParam = view.find_by_selector('meta.macro.mac macro-param.mac variable.parameter.macro.mac')
-        RegionClassParam = view.find_by_selector('meta.class.mac class-param.mac variable.parameter.class.mac')
+        RegionMacroParam = view.find_by_selector('variable.parameter.macro.mac')
+        # g_macro = [view.substr(view.word(i)) for i in view.find_by_selector('variable.declare.name.mac - meta.class.mac')]
+        # print(g_macro)
+        RegionClassParam = view.find_by_selector('variable.parameter.class.mac')
 
         if len(classRegs) > 0 and len(selections) > 1:
             selections = [i for i in selections for j in classRegs if j.contains(i)]
@@ -756,6 +768,11 @@ def get_result(view):
             in_parent = get_declare_in_parent(view, classRegs, view.substr(sel))
             if len(in_parent) > 0:
                 vars = in_parent
+        if len(vars) == 0:
+            print(view.file_name())
+            var_globals = get_globals_in_import(view, word, view.file_name())
+            if len(var_globals) > 0:
+                vars = var_globals
 
         if len(vars) > 0:
             result = vars
@@ -778,13 +795,6 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 
         if len(self.result) == 0:
             sublime.status_message("Symbol not found in index")
-            # Здесь можно добавить переход на объяву переменных
-            # Сложность в том что
-            # переменные с одинаковым названием могут быть объявлены
-            # несколько раз (в каждой функции) и не понятно к какой переходить
-            # print(view.file_name())
-            # self.open_file(0)
-            # В get_result(view) реализован сбор переменных по тек. файлу без анализа области
             return
 
         self.window.show_quick_panel(["%s (%s)" % (r[1], r[2][0]) for r in self.result], self.open_file, 0, 0, lambda x: self.open_file(x, True))
