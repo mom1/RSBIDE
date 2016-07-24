@@ -19,6 +19,8 @@ contexts:
       push: macro
     - match: '(?i)(?=\bvar\b)'
       push: var
+    - match: '(?i)(?=\bconst\b)'
+      push: const
     - include: flow
     - include: string
     - include: language
@@ -104,6 +106,8 @@ contexts:
       push: macro
     - match: '(?i)(?=\bvar\b)'
       push: var
+    - match: '(?i)(?=\bconst\b)'
+      push: const
     - match: '(?i)(END)\s*(;)'
       captures:
         1: keyword.class.end.mac
@@ -155,6 +159,7 @@ contexts:
 
   macro:
     - include: modifier
+    - include: type-variable
     - meta_scope: meta.macro.mac
     - match: '(?i)\bmacro\b'
       scope: storage.type.macro.mac
@@ -166,6 +171,8 @@ contexts:
     - include: flow
     - match: '(?i)(?=\bvar\b)'
       push: var
+    - match: '(?i)(?=\bconst\b)'
+      push: const
     - match: '(?i)(END)\s*(;)'
       captures:
         1: keyword.macro.end.mac
@@ -282,6 +289,55 @@ contexts:
           scope: punctuation.definition.parameters.end.mac
           pop: true
 
+  const:
+    - include: comments
+    - include: modifier
+    - meta_scope: meta.const.mac
+    - match: '(?i)\bconst\b'
+      scope: storage.modifier.const.mac
+      push:
+        - include: comments
+        - match: '(?={{identifier}})'
+          set: const-declaration
+    - match: '\;'
+      pop: true
+
+  const-declaration:
+    - include: type-variable
+    - include: comments
+    - include: numeric
+    - match: '({{identifier}})'
+      scope: variable.declare.name.mac
+      push:
+        - include: type-variable
+        - include: comments
+        - match: (?!{{identifier}})
+          pop: true
+    - match: '(?i)(=|\*|\-|\+|==|!=|<=|>=|<>|<|>)'
+      scope: keyword.operator.mac
+      set:
+        - meta_scope: meta.const.value.mac
+        - include: comments
+        - include: numeric
+        - include: callmacro
+        - match: (?=,)
+          set: const-continue
+        - match: '(?=\;)'
+          pop: true
+        - include: simple
+    - match: (?=,)
+      set: const-continue
+    - match: '(?=\;)'
+      pop: true
+
+  const-continue:
+    - include: comments
+    - match: ','
+      scope: meta.delimiter.comma.mac
+      set: const-declaration
+    - match: '(?=\;)'
+      pop: true
+
   if:
     - meta_scope: meta.if.mac
     - include: simple
@@ -299,6 +355,8 @@ contexts:
           pop: true
         - match: '(?i)(?=\bvar\b)'
           push: var
+        - match: '(?i)(?=\bconst\b)'
+          push: const
     - match: '(?i)(END)\s*(;)?'
       captures:
         1: keyword.if.end.mac
@@ -431,64 +489,62 @@ contexts:
       scope: constant.language.boolean.true.mac
     - match: (?i)\b(false)\b
       scope: constant.language.boolean.false.mac
-    - match: (?i)\b(const)\b
-      scope: storage.modifier.mac
     - match: (?i)\b(this)\b
       scope: constant.language.mac
-    - comment: keyword operators that evaluate to True or False
-      match: (?i)\b(and|not|or)\b
+    # - comment: keyword operators that evaluate to True or False
+    - match: (?i)\b(and|not|or)\b
       scope: keyword.operator.logical.mac
-    - comment: magic variables which a class/module may have.
-      match: (?i)\b(private|local|debugbreak|file|weakref|cpwin)\b
+    # - comment: magic variables which a class/module may have.
+    - match: (?i)\b(private|local|debugbreak|file|weakref|cpwin)\b
       scope: keyword.control.mac
     - match: (?i)\*|\-|\+|==|=|!=|<=|>=|<>|<|>
       scope: keyword.operator.mac
     - match: \.
       scope: meta.delimiter.method.period.mac
-    - comment: "ключевые слова, которые формируют или прерывают цикл"
-      match: (?i)\b(elif|else|break|continue|return)\b
+    # - comment: "ключевые слова, которые формируют или прерывают цикл"
+    - match: (?i)\b(elif|else|break|continue|return)\b
       scope: keyword.control.flow.mac
-    - comment: "Стандартные процедуры ввода данных"
-      match: (?i)\b(GetInt|GetDouble|GetMoney|GetString|GetStringR|GetDate|GetTRUE|GetTime)\b
+    # - comment: "Стандартные процедуры ввода данных"
+    - match: (?i)\b(GetInt|GetDouble|GetMoney|GetString|GetStringR|GetDate|GetTRUE|GetTime)\b
       scope: support.function.in.mac
-    - comment: "Стандартные процедуры вывода"
-      match: (?i)\b(Print|Sprintf|PrintLn|Message|SetOutput|SetColumn|FlushColumn|ClearColumn|SetDefPrec|SetOutHandler|GetPRNInfo|SetPRNInfo|SetDefMoneyPrec)\b
+    # - comment: "Стандартные процедуры вывода"
+    - match: (?i)\b(Print|Sprintf|PrintLn|Message|SetOutput|SetColumn|FlushColumn|ClearColumn|SetDefPrec|SetOutHandler|GetPRNInfo|SetPRNInfo|SetDefMoneyPrec)\b
       scope: support.function.out.mac
-    - comment: "Процедуры преобразования типа"
-      match: (?i)\b(Asize|CurToStrAlt|Date|DateSplit|Decimal|Double|DoubleL|DtTm|DtTmSplit|Floor|Int|MkStr|Money|MonName|NumToStr|Round|RubToStr|RubToStrAlt|SetAutoMoneyFloor|String|Time|TimeSplit|ValType)\b
+    # - comment: "Процедуры преобразования типа"
+    - match: (?i)\b(Asize|CurToStrAlt|Date|DateSplit|Decimal|Double|DoubleL|DtTm|DtTmSplit|Floor|Int|MkStr|Money|MonName|NumToStr|Round|RubToStr|RubToStrAlt|SetAutoMoneyFloor|String|Time|TimeSplit|ValType)\b
       scope: support.function.exchange.type.mac
-    - comment: "Процедуры для работы со строками"
-      match: (?i)\b(CodeFor|Index|StrBrk|StrFor|StrLen|StrLwr|StrSet|StrSplit|StrSplit2|StrSubst|StrUpr|SubStr|ToANSI|ToOEM|Trim)\b
+    # - comment: "Процедуры для работы со строками"
+    - match: (?i)\b(CodeFor|Index|StrBrk|StrFor|StrLen|StrLwr|StrSet|StrSplit|StrSplit2|StrSubst|StrUpr|SubStr|ToANSI|ToOEM|Trim)\b
       scope: support.function.string.mac
-    - comment: "Параметры процедур"
-      match: (?i)\b(GetParm|SetParm|Parmcount)\b
+    # - comment: "Параметры процедур"
+    - match: (?i)\b(GetParm|SetParm|Parmcount)\b
       scope: support.function.param.mac
-    - comment: "Математические процедуры"
-      match: (?i)\b(Exp|Log|Log10|Pow|Sqrt|Abs|Min|Max|Mod)\b
+    # - comment: "Математические процедуры"
+    - match: (?i)\b(Exp|Log|Log10|Pow|Sqrt|Abs|Min|Max|Mod)\b
       scope: support.function.matematical.mac
-    - comment: "Процедуры управления файлами и каталогами"
-      match: (?i)\b(CopyFile|GetCurDir|GetFileInfo|GetIniFileValue|MakeDir|RemoveDir|RemoveFile|RenameFile)\b
+    # - comment: "Процедуры управления файлами и каталогами"
+    - match: (?i)\b(CopyFile|GetCurDir|GetFileInfo|GetIniFileValue|MakeDir|RemoveDir|RemoveFile|RenameFile)\b
       scope: support.function.file.mac
-    - comment: "Процедура запуска внешних программ Run"
-      match: (?i)\b(Run)\b
+    # - comment: "Процедура запуска внешних программ Run"
+    - match: (?i)\b(Run)\b
       scope: support.function.run.mac
-    - comment: "Процедура удаленного запуска макропрограмм CallRemoteRsl"
-      match: (?i)\b(CallRemoteRsl)\b
+    # - comment: "Процедура удаленного запуска макропрограмм CallRemoteRsl"
+    - match: (?i)\b(CallRemoteRsl)\b
       scope: support.function.remoterun.mac
-    - comment: "Процедуры для работы с классами и объектами"
-      match: (?i)\b(CallR2M|record|ClrRmtOnRelease|GenAttach|GenClassName|GenGetProp|GenNumProps|GenObject|GenPropID|GenRun|GenSetProp|GetNamedChanel|IsEqClass|R2M)\b
+    # - comment: "Процедуры для работы с классами и объектами"
+    - match: (?i)\b(CallR2M|record|ClrRmtOnRelease|GenAttach|GenClassName|GenGetProp|GenNumProps|GenObject|GenPropID|GenRun|GenSetProp|GetNamedChanel|IsEqClass|R2M)\b
       scope: support.function.calssobj.mac
-    - comment: "Прочие процедуры"
-      match: (?i)\b(AddEvent|BegAction|EndAction|CmdArgs|CurrentLine|ClassKind|CheckBits|DateShift|InstLoadModule|ErrBox|ErrPrint|ExecExp|ExecMacro|ExecMacro2|ExecMacroFile|ExecMacroModule|Exit|FindPath|GetEnv|GetLangId|GetLocaleInfo|GetUIMode|GetSysDir|GetUserName|GCollect|IsSQL|MemSize|MergeFile|ModuleFileName|ModuleName|MsgBox|MsgBoxEx|PrintModule|PrintSymModule|PrintFiles|PrintRefs|PrintProps|PrintGlobs|PrintLocs|PrintStack|Random|ReplaceMacro|RunError|SetExitFlag|SplitFile|StrongRef|StartProg|SysGetProperty|SysPutProperty|Trace|UnderRCWHost|Version|ZeroValue|OnError)\b
+    # - comment: "Прочие процедуры"
+    - match: (?i)\b(AddEvent|BegAction|EndAction|CmdArgs|CurrentLine|ClassKind|CheckBits|DateShift|InstLoadModule|ErrBox|ErrPrint|ExecExp|ExecMacro|ExecMacro2|ExecMacroFile|ExecMacroModule|Exit|FindPath|GetEnv|GetLangId|GetLocaleInfo|GetUIMode|GetSysDir|GetUserName|GCollect|IsSQL|MemSize|MergeFile|ModuleFileName|ModuleName|MsgBox|MsgBoxEx|PrintModule|PrintSymModule|PrintFiles|PrintRefs|PrintProps|PrintGlobs|PrintLocs|PrintStack|Random|ReplaceMacro|RunError|SetExitFlag|SplitFile|StrongRef|StartProg|SysGetProperty|SysPutProperty|Trace|UnderRCWHost|Version|ZeroValue|OnError)\b
       scope: support.function.other.mac
-    - comment: "Стандартные классы языка RSL"
-      match: (?i)\b(TArray|TDirList|TRslChanel|TRcwSite|TRslEvHandler|TRslEvSourse|TRcwHost|TRsAxServer|TClrHost|TStream|TDbError|RslTimer)\b
+    # - comment: "Стандартные классы языка RSL"
+    - match: (?i)\b(TArray|TDirList|TRslChanel|TRcwSite|TRslEvHandler|TRslEvSourse|TRcwHost|TRsAxServer|TClrHost|TStream|TDbError|RslTimer)\b
       scope: class.language.mac
-    - comment: "Конструктор ActiveX-объектов"
-      match: (?i)\b(activex)\b
+    # - comment: "Конструктор ActiveX-объектов"
+    - match: (?i)\b(activex)\b
       scope: class.language.activex.mac
-    - comment: "RS-Forms"
-      match: (?i)\b(TControl|addHandler)\b
+    # - comment: "RS-Forms"
+    - match: (?i)\b(TControl|addHandler)\b
       scope: support.function.rsforms.mac
 
   simple:

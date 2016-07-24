@@ -19,6 +19,13 @@ from os.path import basename, dirname, normpath, normcase, realpath
 from RSBIDE.tree import Tree
 from RSBIDE.RsbIde_print_panel import get_panel
 
+from RSBIDE.common.verbose import verbose, log
+from RSBIDE.project.ProjectManager import ProjectManager
+from RSBIDE.project.Project import Project
+import RSBIDE.common.settings as Settings
+from RSBIDE.common.config import config
+import RSBIDE.common.path as Path
+
 try:
     import thread
 except:
@@ -26,14 +33,18 @@ except:
 global IS_ST3
 IS_ST3 = sublime.version().startswith('3')
 
-global debug
-debug = False
-global already_im, done_im
-already_im = []
+
+global already_im
+global done_im
+global always_import
+always_import = ['CommonVariables', 'CommonDefines', 'CommonClasses', 'CommonFunctions', 'CoMainLite']
 done_im = []
+already_im = []
 obj = []
 fields = []
 methods = []
+ID = 'RSBIDE'
+scope_cache = {}
 
 
 class RSBIDE:
@@ -133,7 +144,7 @@ class RSBIDE:
     def get_completions(self, view, prefix):
         skip_deleted = Pref.forget_deleted_files
         # completion import files
-        print(view.scope_name(view.sel()[0].a))
+        verbose(ID, view.scope_name(view.sel()[0].a))
         if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac ":
             currentImport = [os.path.splitext(basename(
                 view.substr(s).lower().strip()))[0] for s in view.find_by_selector('meta.import.mac import.file.mac')]
@@ -170,8 +181,7 @@ class RSBIDE:
                             completions.append(completion)
             # current file
             location = basename(view.file_name()) if view.file_name() else ''
-            if debug:
-                print(view.file_name())
+            verbose(ID, view.file_name())
             # append functions from current view that yet have not been saved
             [completions.append(self.create_function_completion(
                 self.parse_line(view.substr(view.line(selection))), location))
@@ -241,8 +251,7 @@ class RSBIDE:
             already_im.extend(difflist)
             currdiff = list(set(self.filesimport[file_im]) - set([x.lower() for x in LInFile]))
             LInFile.extend(currdiff)
-        if debug:
-            print('Scan import done in ' + str(time.time() - t) + ' seconds')
+        verbose(ID, 'Scan import done in ' + str(time.time() - t) + ' seconds')
 
 
 RSBIDE = RSBIDE()
@@ -297,9 +306,8 @@ class RSBIDECollectorThread(threading.Thread):
                 _folders = deduplicate_crawl_folders(_folders, folder)
             folders = _folders
 
-            if debug:
-                print('Folders to scan:')
-                print("\n".join(folders))
+            verbose(ID, 'Folders to scan:')
+            verbose(ID, "\n".join(folders))
 
             # pasing
             files_seen = 0
@@ -371,28 +379,28 @@ class RSBIDECollectorThread(threading.Thread):
             RSBIDE.save_objs("Field", fields)
             RSBIDE.save_objs("Method", methods)
             RSBIDE.save_to_cache()
-            sublime.status_message('Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - ' + 'File scans ' + str(files_mac + files_xml))
-            if debug:
-                print('Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - Scan was aborted: ' + str(Pref.scan_aborted))
-                print(
-                    'Files Seen:' + str(files_seen) +
-                    ', Files MAC:' + str(files_mac) +
-                    ', Cache Miss:' + str(files_cache_miss) +
-                    ', Cache Hit:' + str(files_cache_hit) +
-                    ', Failed Parsing:' + str(files_failed_parsing))
-                print(
-                    'Files Seen:' + str(files_seen) +
-                    ', Files XML:' + str(files_xml) +
-                    ', Cache Miss:' + str(files_cache_miss_xml) +
-                    ', Cache Hit:' + str(files_cache_hit_xml) +
-                    ', Failed Parsing:' + str(files_failed_parsing))
+            sublime.status_message('Scan done ' + str(time.time() - Pref.scan_started) + ' seconds - ' + 'File scans ' + str(files_mac + files_xml))
+            verbose(ID, 'Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - Scan was aborted: ' + str(Pref.scan_aborted))
+            verbose(
+                ID,
+                'Files Seen:' + str(files_seen) +
+                ', Files MAC:' + str(files_mac) +
+                ', Cache Miss:' + str(files_cache_miss) +
+                ', Cache Hit:' + str(files_cache_hit) +
+                ', Failed Parsing:' + str(files_failed_parsing))
+            verbose(
+                ID,
+                'Files Seen:' + str(files_seen) +
+                ', Files XML:' + str(files_xml) +
+                ', Cache Miss:' + str(files_cache_miss_xml) +
+                ', Cache Hit:' + str(files_cache_hit_xml) +
+                ', Failed Parsing:' + str(files_failed_parsing))
 
             Pref.scan_running = False
             Pref.scan_aborted = False
 
     def parse_functions(self, file):
-        if debug:
-            print('\nParsing functions for file:\n' + file)
+        verbose(ID, '\nParsing functions for file:\n' + file)
         pattern = re.compile(r"^\s*(macro)\s+", re.I | re.S)
         lines = [
             line.rstrip('\r\n') + "\n"
@@ -406,8 +414,7 @@ class RSBIDECollectorThread(threading.Thread):
         RSBIDE.save_functions(file, functions)
 
     def parse_import(self, file):
-        if debug:
-            print('\nParsing import in file:\n' + file)
+        verbose(ID, '\nParsing import in file:\n' + file)
         pattern = re.compile(r"^\s*(import)\s+", re.I | re.S)
         lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
         matches = RSBIDE.parseimport("".join(lines))
@@ -428,26 +435,26 @@ class RSBIDECollectorThread(threading.Thread):
         self.get_name(root.findall("./object/Method"), methods)
 
 
-class RSBIDEEventListener(sublime_plugin.EventListener):
+# class RSBIDEEventListener(sublime_plugin.EventListener):
 
-    def on_post_save_async(self, view):
-        if is_RStyle_view(view):
-            RSBIDECollectorThread(view.file_name()).start()
+#     def on_post_save_async(self, view):
+#         if is_RStyle_view(view):
+#             RSBIDECollectorThread(view.file_name()).start()
 
-    def on_load_async(self, view):
-        if is_RStyle_view(view) and is_mac_file(view.file_name()):
-            if norm_path(view.file_name()) not in RSBIDE.files:
-                RSBIDECollectorThread(view.file_name()).start()
+#     def on_load_async(self, view):
+#         if is_RStyle_view(view) and is_mac_file(view.file_name()):
+#             if norm_path(view.file_name()) not in RSBIDE.files:
+#                 RSBIDECollectorThread(view.file_name()).start()
 
-    def on_activated_async(self, view):
-        update_folders()
-        if is_mac_file(view.file_name()):
-            RSBIDEImportCollectorThread(view.file_name()).start()
+#     def on_activated_async(self, view):
+#         update_folders()
+#         if is_mac_file(view.file_name()):
+#             RSBIDEImportCollectorThread(view.file_name()).start()
 
-    def on_query_completions(self, view, prefix, locations):
-        if is_RStyle_view(view, locations):
-            return (RSBIDE.get_completions(view, prefix), 0)
-        return ([], 0)
+#     def on_query_completions(self, view, prefix, locations):
+#         if is_RStyle_view(view, locations):
+#             return (RSBIDE.get_completions(view, prefix), 0)
+#         return ([], 0)
 
 global Pref, s
 
@@ -527,12 +534,10 @@ def deduplicate_crawl_folders(items, item):
 class Pref():
 
     def load(self):
-        if debug:
-            print('-----------------')
+        verbose(ID, '-----------------')
         Pref.excluded_files_or_folders = [norm_path_string(file) for file in s.get('excluded_files_or_folders', [])]
-        if debug:
-            print('excluded_files_or_folders')
-            print(Pref.excluded_files_or_folders)
+        verbose(ID, 'excluded_files_or_folders')
+        verbose(ID, Pref.excluded_files_or_folders)
 
         Pref.forget_deleted_files = s.get('forget_deleted_files', False)
 
@@ -667,6 +672,8 @@ def get_declare_in_parent(view, classRegs, sel):
     window = sublime.active_window()
     select = []
     pref = 'RSBIDE:Parse_'  # Префикс для панели парсинга
+    project = ProjectManager.get_current_project()
+    project_folder = project.get_directory()
     regions_parent = [i for i in view.find_by_selector('entity.other.inherited-class.mac') for j in classRegs if j.contains(i)]
     if len(regions_parent) == 0:
         return []
@@ -675,7 +682,7 @@ def get_declare_in_parent(view, classRegs, sel):
     word = view.substr(region_parent)
     result = window.lookup_symbol_in_index(word)
     for item in result:
-        file = normalize_to_system_style_path(item[0])
+        file = Path.posix(Path.get_absolute_path(project_folder, item[1]))
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
         parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + item[1])
         reg_name_class = [i for i in parse_panel.find_by_selector('entity.name.class.mac') if word.lower() == parse_panel.substr(i).lower()]
@@ -688,68 +695,109 @@ def get_declare_in_parent(view, classRegs, sel):
                 for i in parse_panel.find_by_selector('meta.class.mac variable.declare.name.mac - meta.macro.mac')
                 if sel.lower() == parse_panel.substr(i).lower() and region_class.contains(i)]
             if len(select) == 0:
+                verbose(ID, 'Found ' + sel + ' in', item[1])
                 select += get_declare_in_parent(parse_panel, regions_class, sel)
+            else:
+                verbose(ID, 'Not found ' + sel + ' in', item[1])
         sublime.active_window().destroy_output_panel(pref + item[1])
     return select
 
 
 def get_globals_in_import(view, word, fName):
-    window = sublime.active_window()
+    global done_im
+    global always_import
     select = []
     pref = 'RSBIDE:Parse_'  # Префикс для панели парсинга
-    regions_global_vars = [i for i in view.find_by_selector('variable.declare.name.mac - meta.class.mac') if word.lower() == view.substr(i).lower()]
+    project = ProjectManager.get_current_project()
+    project_folder = project.get_directory()
+    file = Path.posix(Path.get_absolute_path(project_folder, fName))
+    sfile = Path.posix(os.path.relpath(file, project_folder))
+    if sfile not in done_im:
+        done_im.append(sfile)
+    lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
+    parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + sfile)
+    regions_global_vars = [
+        i for i in parse_panel.find_by_selector(
+            'variable.declare.name.mac - meta.class.mac') if word.lower() == parse_panel.substr(i).lower()]
     if len(regions_global_vars) > 0:
-        pass
+        select += [(file, sfile, (parse_panel.rowcol(i.a)[0] + 1, parse_panel.rowcol(i.a)[1] + 1)) for i in regions_global_vars]
     else:
-        names_import = [view.substr(i).lower() for i in view.find_by_selector('import.file.mac') if view.substr(i).lower() not in done_im]
+        names_import = [
+            j for i in parse_panel.find_by_selector('import.file.mac')
+            for j in project.find_file('/' + parse_panel.substr(i) + '.mac') if j not in done_im]
+        names_import += [i for j in always_import for i in project.find_file('/' + j + '.mac') if i not in done_im]
+        done_im += names_import
+        for x in names_import:
+            select += get_globals_in_import(parse_panel, word, x)
+    sublime.active_window().destroy_output_panel(pref + sfile)
+    return select
+
+
+def get_imports(fName):
+    # get all import file
+    global done_im
+    global always_import
+    select = []
+    pref = 'RSBIDE:Parse_import_'  # Префикс для панели парсинга
+    project = ProjectManager.get_current_project()
+    project_folder = project.get_directory()
+    file = Path.posix(Path.get_absolute_path(project_folder, fName))
+    sfile = Path.posix(os.path.relpath(file, project_folder))
+    if sfile not in done_im:
+        done_im.append(sfile)
+    lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
+    parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + sfile)
+    names_import = [
+        j for i in parse_panel.find_by_selector('import.file.mac')
+        for j in project.find_file('/' + parse_panel.substr(i) + '.mac') if j not in done_im]
+    names_import += [i for j in always_import for i in project.find_file('/' + j + '.mac') if i not in done_im]
+    done_im += names_import
+    select += done_im
+    for x in names_import:
+        select += get_imports(x)
+    sublime.active_window().destroy_output_panel(pref + sfile)
     return select
 
 
 def get_result(view):
     global done_im
-    done_im = []
+    t = time.time()
     sel = view.sel()[0]
     window = sublime.active_window()
     if sel.begin() == sel.end():
         sel = view.word(sel)
 
+    project = ProjectManager.get_current_project()
+    project_folder = project.get_directory()
+
+    file = Path.posix(Path.get_absolute_path(project_folder, view.file_name()))
+    sfile = Path.posix(os.path.relpath(file, project_folder))
+    verbose('sfile', file, sfile)
     word = view.substr(sel)
+    log('Осн парам:', str(time.time() - t))
+    t = time.time()
+
     if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
-        res = []
-        for file in RSBIDE.ffiles:
-            if basename(file).lower() == word.lower() + ".mac":
-                file = _get_case_sensitive_name(normalize_to_system_style_path(file))
-                file = "/" + file.replace(":", "").replace('\\', '/')
-                sfile = file
-                for x in Pref.updated_folders:
-                    if "/" + x.lower().replace(":", "") in sfile.lower():
-                        sfile = sfile.replace("/" + _get_case_sensitive_name(normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
-                        res.append((file, sfile, (0, 0)))
-        return res
+        return [(Path.posix(Path.get_absolute_path(project_folder, i)), i, (0, 0)) for i in project.find_file('/' + word.lower() + '.mac')]
 
     result = window.lookup_symbol_in_index(word)
     im_result = []
-    if len(result) > 1:  # if found in index check location must by in import
+    if len(result) > 0:  # if found in index check location must by in import
+        already_im = get_imports(sfile)
         for item in result:
-            if basename(norm_path_string(item[0])) in already_im:
-                im_result.insert(already_im.index(basename(norm_path_string(item[0]))), item)
+            sfile = item[1]
+            if sfile in already_im:
+                im_result.insert(already_im.index(sfile), item)
         result = im_result
+        log('Есть результаты:', str(time.time() - t))
+        t = time.time()
     elif len(result) == 0:  # if not found in index try find variable in current file
         vars = []
-        file = _get_case_sensitive_name(view.file_name().lower())
-        file = "/" + file.replace(":", "").replace('\\', '/')
-        sfile = file
-        for x in Pref.updated_folders:
-            if "/" + x.lower().replace(":", "") in sfile.lower():
-                sfile = sfile.replace("/" + _get_case_sensitive_name(
-                    normalize_to_system_style_path(x)).replace(":", "").replace('\\', '/') + "/", "")
 
         classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
         macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
         selections = [i for i in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(i)).lower()]
         RegionMacroParam = view.find_by_selector('variable.parameter.macro.mac')
-        # g_macro = [view.substr(view.word(i)) for i in view.find_by_selector('variable.declare.name.mac - meta.class.mac')]
-        # print(g_macro)
         RegionClassParam = view.find_by_selector('variable.parameter.class.mac')
 
         if len(classRegs) > 0 and len(selections) > 1:
@@ -769,13 +817,17 @@ def get_result(view):
             if len(in_parent) > 0:
                 vars = in_parent
         if len(vars) == 0:
-            print(view.file_name())
+            verbose(ID, 'get_globals_in_import', view.file_name())
+            done_im = []
             var_globals = get_globals_in_import(view, word, view.file_name())
             if len(var_globals) > 0:
                 vars = var_globals
 
         if len(vars) > 0:
             result = vars
+        log('Нет результата:', str(time.time() - t))
+        t = time.time()
+    log('Конец get_result:', str(time.time() - t))
     return result
 
 
@@ -869,14 +921,29 @@ def RSBIDE_folder_change_watcher():
 def plugin_loaded():
     global Pref, s
     s = sublime.load_settings('RSBIDE.sublime-settings')
-    Pref = Pref()
-    Pref.load()
-    s.clear_on_change('reload')
-    s.add_on_change('reload', lambda: Pref.load())
+    # Pref = Pref()
+    # Pref.load()
+    # s.clear_on_change('reload')
+    # s.add_on_change('reload', lambda: Pref.load())
+    update_settings()
+    global_settings = sublime.load_settings(config["RSB_SETTINGS_FILE"])
+    global_settings.add_on_change("update", update_settings)
 
-    if 'running_RSBIDE_folder_change_watcher' not in globals():
-        running_RSBIDE_folder_change_watcher = True
-        thread.start_new_thread(RSBIDE_folder_change_watcher, ())
+    # if 'running_RSBIDE_folder_change_watcher' not in globals():
+    #     running_RSBIDE_folder_change_watcher = True
+    #     thread.start_new_thread(RSBIDE_folder_change_watcher, ())
+
+
+def update_settings():
+    """ restart projectFiles with new plugin and project settings """
+
+    # invalidate cache
+    global scope_cache
+    scope_cache = {}
+    # update settings
+    global_settings = Settings.update()
+    # update project settings
+    ProjectManager.initialize(Project, global_settings)
 
 if not IS_ST3:
     sublime.set_timeout(lambda: plugin_loaded(), 0)
