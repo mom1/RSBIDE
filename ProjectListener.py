@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sublime
 import sublime_plugin
 
@@ -14,7 +15,7 @@ class ProjectListener(sublime_plugin.EventListener):
     previous_project = None
     previous_window = None
 
-    def on_activated_async(self, view):
+    def on_activated(self, view):
         window = view.window()
         if not window:
             return False

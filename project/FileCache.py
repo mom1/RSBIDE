@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sublime
 import os
 import re
@@ -7,6 +8,10 @@ from RSBIDE.project.FileCacheWorker import FileCacheWorker
 
 ID = "search"
 ID_CACHE = "cache"
+
+
+def posix(path):
+    return path.replace("\\", "/")
 
 
 class FileCache:
@@ -21,15 +26,17 @@ class FileCache:
         self.exclude_folders = exclude_folders
         self.cache = None
 
-        self.rebuild()
+        # self.rebuild()
+
+    def __len__(self):
+        if self.cache and self.cache.files:
+            return len(self.cache.files)
+        else:
+            return 0
 
     def update_settings(self, file_extensions, exclude_folders):
-        """ DELETE """
-        settings_have_changed = self.valid_extensions != file_extensions or self.exclude_folders != exclude_folders
         self.valid_extensions = file_extensions
         self.exclude_folders = exclude_folders
-        if settings_have_changed:
-            self.rebuild()
 
     def search_completions(self, needle, project_folder, valid_extensions, base_path=False):
         """
@@ -85,15 +92,18 @@ class FileCache:
         return (result, sublime.INHIBIT_EXPLICIT_COMPLETIONS | sublime.INHIBIT_WORD_COMPLETIONS)
 
     def find_file(self, file_name):
-        project_files = self.cache.files
+        if self.cache:
+            project_files = self.cache.files
+        else:
+            return {}
         if (project_files is None):
             return False
 
-        result = []
+        result = {}
         file_name_query = ".*" + re.escape(file_name) + ".*"
-        for filepath in project_files:
+        for filepath, val in project_files.items():
             if re.match(file_name_query, filepath, re.IGNORECASE):
-                result.append(filepath)
+                result[filepath] = val
         return result
 
     def get_completion(self, target_path, path_display, base_path=False):

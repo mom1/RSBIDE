@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 import re
 import os
+
 
 def sanitize(path):
     # sanitize slashes (posix)
@@ -9,16 +11,20 @@ def sanitize(path):
     path = re.sub("^(\/)+", "/", path)
     return path
 
+
 def posix(path):
     if path is not None:
         path = path.replace("\\", "/")
     return path
 
+
 def is_relative(string):
     return bool(re.match("(\.?\.\/)", string))
 
+
 def is_absolute(string):
     return bool(re.match("\/[A-Za-z0-9\_\-\s\.$]*", string))
+
 
 def sanitize_base_directory(path):
     path = sanitize(path)
@@ -28,6 +34,7 @@ def sanitize_base_directory(path):
     path = re.sub("\/*$", "", path)
     return path
 
+
 def get_absolute_path(base_path, relative_path):
     # return absolute target of join(base_path, relative_path)
     # http://stackoverflow.com/questions/17295086/python-joining-current-directory-and-parent-directory-with-os-path-join?rq=1
@@ -35,16 +42,18 @@ def get_absolute_path(base_path, relative_path):
     path = os.path.abspath(path)
     return path
 
+
 def get_relative_folder(file_name, base_directory):
     folder = os.path.dirname(file_name)
     folder = os.path.relpath(folder, base_directory)
     folder = "" if folder == "." else folder
     return sanitize(folder)
 
-# return {string} path from base to target
-# !replace with `os.path.relpath(path[, start])`
-# => https://docs.python.org/2/library/os.path.html
+
 def trace(from_folder, to_folder):
+    # return {string} path from base to target
+    # !replace with `os.path.relpath(path[, start])`
+    # => https://docs.python.org/2/library/os.path.html
     if not from_folder:
         return sanitize("./" + to_folder)
 
@@ -70,6 +79,6 @@ def trace(from_folder, to_folder):
 
     result += "/".join(targets)
     # !Do Debug "//"
-    result = re.sub("//", "/", result);
+    result = re.sub("//", "/", result)
 
     return result

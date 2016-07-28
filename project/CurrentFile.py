@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 import re
 import os
 import copy
 
 from RSBIDE.common.verbose import verbose
+from RSBIDE.common.verbose import log
+import RSBIDE.common.parser as parser
 import RSBIDE.common.path as Path
 
 ID = "CurrentFile"
@@ -16,14 +19,19 @@ class CurrentFile:
     default = {
         "is_temp": False,               # file does not exist in filesystem
         "directory": False,             # directory relative to project
-        "project_directory": False      # project directory
+        "project_directory": False     # project directory
     }
 
-    def evaluate_current(view, project):
+    def evaluate_current(view, project=None):
         cache = CurrentFile.cache.get(view.id())
+        parser.done_im = []
         if cache:
             verbose(ID, "file cached", cache)
             CurrentFile.current = cache
+            if project is not None and view.file_name() is not None and 'imports' not in CurrentFile.current:
+                CurrentFile.current["imports"] = parser.get_imports_cache(Path.posix(view.file_name()), project)
+                log(ID, CurrentFile.current["imports"])
+                CurrentFile.cache[view.id()] = CurrentFile.current
             return cache
 
         if not project:
@@ -54,6 +62,10 @@ class CurrentFile:
         CurrentFile.current["directory"] = re.sub(project_directory, "", file_name)
         CurrentFile.current["directory"] = re.sub("^[\\\\/\.]*", "", CurrentFile.current["directory"])
         CurrentFile.current["directory"] = os.path.dirname(CurrentFile.current["directory"])
+        parser.done_im = []
+        if len(project.filecache) != 0:
+            CurrentFile.current["imports"] = parser.get_imports_cache(file_name, project)
+            log(ID, 'imports count', len(CurrentFile.current["imports"]))
 
         verbose(ID, "File cached", file_name)
         CurrentFile.cache[view.id()] = CurrentFile.current

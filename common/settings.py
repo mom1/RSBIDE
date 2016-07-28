@@ -1,7 +1,6 @@
 import sublime
 import RSBIDE.common.path as Path
 from RSBIDE.common.config import config
-from RSBIDE.common.verbose import verbose
 
 
 map_settings = {

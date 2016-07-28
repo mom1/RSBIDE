@@ -21,24 +21,25 @@ from RSBIDE.RsbIde_print_panel import get_panel
 
 from RSBIDE.common.verbose import verbose, log
 from RSBIDE.project.ProjectManager import ProjectManager
+import RSBIDE.common.parser as parser
 from RSBIDE.project.Project import Project
 import RSBIDE.common.settings as Settings
 from RSBIDE.common.config import config
 import RSBIDE.common.path as Path
+from RSBIDE.project.CurrentFile import CurrentFile
 
-try:
-    import thread
-except:
-    import _thread as thread
+
+# try:
+#     import thread
+# except:
+#     import _thread as thread
+
+
 global IS_ST3
 IS_ST3 = sublime.version().startswith('3')
 
 
 global already_im
-global done_im
-global always_import
-always_import = ['CommonVariables', 'CommonDefines', 'CommonClasses', 'CommonFunctions', 'CoMainLite']
-done_im = []
 already_im = []
 obj = []
 fields = []
@@ -704,64 +705,44 @@ def get_declare_in_parent(view, classRegs, sel):
 
 
 def get_globals_in_import(view, word, fName):
-    global done_im
-    global always_import
-    select = []
+    # global variable
     pref = 'RSBIDE:Parse_'  # Префикс для панели парсинга
     project = ProjectManager.get_current_project()
     project_folder = project.get_directory()
-    file = Path.posix(Path.get_absolute_path(project_folder, fName))
-    sfile = Path.posix(os.path.relpath(file, project_folder))
-    if sfile not in done_im:
-        done_im.append(sfile)
-    lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
-    parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + sfile)
-    regions_global_vars = [
-        i for i in parse_panel.find_by_selector(
-            'variable.declare.name.mac - meta.class.mac') if word.lower() == parse_panel.substr(i).lower()]
-    if len(regions_global_vars) > 0:
-        select += [(file, sfile, (parse_panel.rowcol(i.a)[0] + 1, parse_panel.rowcol(i.a)[1] + 1)) for i in regions_global_vars]
-    else:
-        names_import = [
-            j for i in parse_panel.find_by_selector('import.file.mac')
-            for j in project.find_file('/' + parse_panel.substr(i) + '.mac') if j not in done_im]
-        names_import += [i for j in always_import for i in project.find_file('/' + j + '.mac') if i not in done_im]
-        done_im += names_import
-        for x in names_import:
-            select += get_globals_in_import(parse_panel, word, x)
-    sublime.active_window().destroy_output_panel(pref + sfile)
+    select = []
+    t = time.time()
+    log('Не нашли в текущем ищем в импортах :' + fName, str(time.time() - t))
+    t = time.time()
+    already_im = get_imports(fName)
+    log('Получили список импортов :', len(already_im), fName, str(time.time() - t))
+    for rfile in already_im:
+        file = Path.posix(Path.get_absolute_path(project_folder, rfile))
+        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
+        parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + rfile)
+        region_name = [i for i in parse_panel.find_by_selector('variable.declare.name.mac - meta.class.mac') if word.lower() == parse_panel.substr(i).lower()]
+        for region in region_name:
+            select += [(file, rfile, (parse_panel.rowcol(region.a)[0] + 1, parse_panel.rowcol(region.a)[1] + 1))]
+        if len(select) > 0:
+            break
+        sublime.active_window().destroy_output_panel(pref + rfile)
+    log('Конец обработки файла :' + fName, str(time.time() - t))
     return select
 
 
 def get_imports(fName):
     # get all import file
-    global done_im
-    global always_import
-    select = []
-    pref = 'RSBIDE:Parse_import_'  # Префикс для панели парсинга
-    project = ProjectManager.get_current_project()
-    project_folder = project.get_directory()
-    file = Path.posix(Path.get_absolute_path(project_folder, fName))
-    sfile = Path.posix(os.path.relpath(file, project_folder))
-    if sfile not in done_im:
-        done_im.append(sfile)
-    lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
-    parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + sfile)
-    names_import = [
-        j for i in parse_panel.find_by_selector('import.file.mac')
-        for j in project.find_file('/' + parse_panel.substr(i) + '.mac') if j not in done_im]
-    names_import += [i for j in always_import for i in project.find_file('/' + j + '.mac') if i not in done_im]
-    done_im += names_import
-    select += done_im
-    for x in names_import:
-        select += get_imports(x)
-    sublime.active_window().destroy_output_panel(pref + sfile)
-    return select
+    if len(CurrentFile.current["imports"]) != 0:
+        log('Import from cache')
+        already_im = CurrentFile.current["imports"]
+    else:
+        log('Import from file')
+        parser.done_im = []
+        already_im = parser.get_imports_cache(fName, ProjectManager.get_current_project())
+    return already_im
 
 
 def get_result(view):
-    global done_im
-    t = time.time()
+    # global always_import
     sel = view.sel()[0]
     window = sublime.active_window()
     if sel.begin() == sel.end():
@@ -772,15 +753,13 @@ def get_result(view):
 
     file = Path.posix(Path.get_absolute_path(project_folder, view.file_name()))
     sfile = Path.posix(os.path.relpath(file, project_folder))
-    verbose('sfile', file, sfile)
     word = view.substr(sel)
-    log('Осн парам:', str(time.time() - t))
-    t = time.time()
 
     if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
-        return [(Path.posix(Path.get_absolute_path(project_folder, i)), i, (0, 0)) for i in project.find_file('/' + word.lower() + '.mac')]
+        return [(val[3].get('fullpath'), i, (0, 0)) for i, val in project.find_file('/' + word.lower() + '.mac').items()]
 
     result = window.lookup_symbol_in_index(word)
+
     im_result = []
     if len(result) > 0:  # if found in index check location must by in import
         already_im = get_imports(sfile)
@@ -789,8 +768,6 @@ def get_result(view):
             if sfile in already_im:
                 im_result.insert(already_im.index(sfile), item)
         result = im_result
-        log('Есть результаты:', str(time.time() - t))
-        t = time.time()
     elif len(result) == 0:  # if not found in index try find variable in current file
         vars = []
 
@@ -817,17 +794,11 @@ def get_result(view):
             if len(in_parent) > 0:
                 vars = in_parent
         if len(vars) == 0:
-            verbose(ID, 'get_globals_in_import', view.file_name())
-            done_im = []
-            var_globals = get_globals_in_import(view, word, view.file_name())
+            var_globals = get_globals_in_import(view, word, sfile)
             if len(var_globals) > 0:
                 vars = var_globals
-
         if len(vars) > 0:
             result = vars
-        log('Нет результата:', str(time.time() - t))
-        t = time.time()
-    log('Конец get_result:', str(time.time() - t))
     return result
 
 

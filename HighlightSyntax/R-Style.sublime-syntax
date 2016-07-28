@@ -165,6 +165,8 @@ contexts:
       scope: storage.type.macro.mac
       push:
         - include: comments
+        - match: '(?i)(?=\bmacro\b)'
+          push: macro
         - match: '(?={{identifier}})'
           set: macro-declaration
     - include: simple
@@ -495,8 +497,10 @@ contexts:
     - match: (?i)\b(and|not|or)\b
       scope: keyword.operator.logical.mac
     # - comment: magic variables which a class/module may have.
-    - match: (?i)\b(private|local|debugbreak|file|weakref|cpwin)\b
+    - match: (?i)\b(private|local|debugbreak|file|weakref)\b
       scope: keyword.control.mac
+    - match: (?i)\b(cpwin)\b
+      scope: keyword.control.cpwin.mac
     - match: (?i)\*|\-|\+|==|=|!=|<=|>=|<>|<|>
       scope: keyword.operator.mac
     - match: \.

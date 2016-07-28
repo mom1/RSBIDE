@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import copy
 from RSBIDE.project.FileCache import FileCache
