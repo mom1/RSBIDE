@@ -30,7 +30,6 @@ class CurrentFile:
             CurrentFile.current = cache
             if project is not None and view.file_name() is not None and 'imports' not in CurrentFile.current:
                 CurrentFile.current["imports"] = parser.get_imports_cache(Path.posix(view.file_name()), project)
-                log(ID, CurrentFile.current["imports"])
                 CurrentFile.cache[view.id()] = CurrentFile.current
             return cache
 
@@ -62,7 +61,6 @@ class CurrentFile:
         CurrentFile.current["directory"] = re.sub(project_directory, "", file_name)
         CurrentFile.current["directory"] = re.sub("^[\\\\/\.]*", "", CurrentFile.current["directory"])
         CurrentFile.current["directory"] = os.path.dirname(CurrentFile.current["directory"])
-        parser.done_im = []
         if len(project.filecache) != 0:
             CurrentFile.current["imports"] = parser.get_imports_cache(file_name, project)
             log(ID, 'imports count', len(CurrentFile.current["imports"]))

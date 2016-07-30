@@ -143,61 +143,123 @@ class RSBIDE:
         return result
 
     def get_completions(self, view, prefix):
-        skip_deleted = Pref.forget_deleted_files
+        # skip_deleted = Pref.forget_deleted_files
         # completion import files
+        completions = []
         verbose(ID, view.scope_name(view.sel()[0].a))
-        if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac ":
+        scope = view.scope_name(view.sel()[0].a)
+        if "source.mac meta.import.mac" in scope or 'punctuation.definition.import.mac' in scope:
             currentImport = [os.path.splitext(basename(
                 view.substr(s).lower().strip()))[0] for s in view.find_by_selector('meta.import.mac import.file.mac')]
-            pfiles = self.ffiles
+            project = ProjectManager.get_current_project()
+            pfiles = project.filecache.cache.files
             lfile = [self.create_var_completion(os.path.splitext(
                 basename(fil))[0], "File") for fil in pfiles if os.path.splitext(
                     basename(fil.lower()))[0] not in currentImport]
             lfile = self.without_duplicates(list(lfile))
             lfile.sort()
             return lfile
-        # start with default completions
-        completions = list(Pref.always_on_auto_completions)
-        # word completion from xml
-        if "string.quoted.double" in view.scope_name(view.sel()[0].a):
-            for stype, word in self.filesxml.items():
-                for x in word:
-                    completions.append(self.create_var_completion(x, stype))
+        sel = view.sel()[0]
+        # window = sublime.active_window()
+        if sel.begin() == sel.end():
+            sel = view.word(sel)
+
+        project = ProjectManager.get_current_project()
+        project_folder = project.get_directory()
+
+        classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
+        macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
+        sclass = 'meta.class.mac entity.name.class.mac'
+        smacro = 'meta.macro.mac entity.name.function.mac'
+        svaria = 'variable.declare.name.mac'
+        sismacro = ''
+        sparammacro = ''
+        sparamclass = ''
+        if len(classRegs) == 0:
+            smacro += ' - meta.class.mac'
+            svaria += ' - meta.class.mac'
         else:
-            self.get_files_import(view.file_name(), True)
-            # append these from indexed files
-            already_in = []
-            for file, data in self.files.items():
-                if basename(file).lower() not in already_im or norm_path_string(
-                    sublime.expand_variables(
-                        "$folder", sublime.active_window().extract_variables())) not in file.lower():
-                    continue
-                if not skip_deleted or (skip_deleted and os.path.lexists(file)):
-                    location = basename(file)
-                    for function in data:
-                        if prefix.lower() in function[self.NAME].lower():
-                            already_in.append(function[self.NAME])
-                            completion = self.create_function_completion(
-                                function, location)
-                            completions.append(completion)
-            # current file
-            location = basename(view.file_name()) if view.file_name() else ''
-            verbose(ID, view.file_name())
-            # append functions from current view that yet have not been saved
-            [completions.append(self.create_function_completion(
-                self.parse_line(view.substr(view.line(selection))), location))
-                for selection in view.find_by_selector('entity.name.function.mac')
-                if view.substr(selection) not in already_in and (already_in.append(view.substr(selection)) or True)]
-            # append "var" names from current file
-            vars = []
-            res = view.find_all('([var\s+]|\.|\()(\w+)\s*[=|:]', 0, '$2', vars)
-            [view.substr(selection) for selection in res]
-            [completions.append(self.create_var_completion(
-                var, location)) for var in list(set(vars)) if len(var) > 1 and var not in already_in and (already_in.append(var) or True)]
-            # append "globals from CommonVariables.mac"
-            [completions.append(self.create_var_completion(var, "Global"))
-                for var in list(set(self.get_globals(view))) if len(var) > 1 and var not in already_in]
-            completions = self.without_duplicates(completions)
+            sparamclass += ', variable.parameter.class.mac'
+        if len(macroRegs) == 0:
+            sismacro += ' - meta.macro.mac'
+        else:
+            sparammacro += ', variable.parameter.macro.mac%s' % (sismacro)
+            sparamclass = ''
+
+        svaria = 'variable.declare.name.mac%s%s%s' % (sismacro, sparammacro, sparamclass)
+
+        result = []
+        filename, extension = os.path.splitext((view.file_name()))
+        regions = [i for i in view.find_by_selector(sclass + ', ' + smacro + ', ' + svaria)]
+
+        if len(classRegs) > 0:
+            regions = [i for i in regions if classRegs[0].contains(i)]
+        for x in regions:
+            if 'entity.name.function.mac' in view.scope_name(x.a):
+                region = [i for i in view.find_by_selector('meta.macro.mac') if i.contains(x)]
+                name_param = [view.substr(i) for i in view.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
+                hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
+                result.append((view.substr(x) + '(...)\t' + basename(filename), view.substr(x) + '(' + hint + ')'))
+            elif'variable.parameter.macro.mac' in view.scope_name(x.a):
+                if macroRegs[0].contains(x):
+                    result.append((view.substr(x) + '\t' + 'param macro', view.substr(x)))
+            elif'variable.declare.name.mac' in view.scope_name(x.a):
+                    c = 0
+                    if len(macroRegs) > 0:
+                        if macroRegs[0].contains(x):
+                            result.append((view.substr(x) + '\t' + 'var in macro', view.substr(x)))
+                            c += 1
+                    if len(classRegs) > 0 and c == 0 and 'meta.macro.mac' not in view.scope_name(x.a):
+                        if classRegs[0].contains(x):
+                            result.append((view.substr(x) + '\t' + 'var in class', view.substr(x)))
+                            c += 1
+                    if c == 0 and ('meta.macro.mac' not in view.scope_name(x.a) or 'meta.class.mac' not in view.scope_name(x.a)):
+                        result.append((view.substr(x) + '\t' + 'var in global', view.substr(x)))
+
+            else:
+                result.append((view.substr(x) + '\t' + basename(filename), view.substr(x)))
+        completions += result
+        completions += get_declare_in_parent(view, classRegs, None)
+        completions = self.without_duplicates(completions)
+        RegionMacroParam = view.find_by_selector('variable.parameter.macro.mac')
+        RegionClassParam = view.find_by_selector('variable.parameter.class.mac')
+
+        # if len(classRegs) > 0 and len(selections) == 0:
+        #     # не нашли в текущем классе, ищем в родительских
+        #     in_parent = get_declare_in_parent(view, classRegs, view.substr(sel))
+        #     if len(in_parent) > 0:
+        #         vars = in_parent
+        # if len(vars) == 0:
+        #     # ни где не нашли, ищем в глобальных переменных
+        #     var_globals = get_globals_in_import(view, word, sfile)
+        #     if len(var_globals) > 0:
+        #         vars = var_globals
+        # if len(vars) > 0:
+        #     result = vars
+        #
+        #
+        # start with default completions
+        # completions = list(Pref.always_on_auto_completions)
+        # word completion from xml
+        # if "string.quoted.double" in view.scope_name(view.sel()[0].a):
+        #     for stype, word in self.filesxml.items():
+        #         for x in word:
+        #             completions.append(self.create_var_completion(x, stype))
+        # else:
+        #
+        #     for file, data in self.files.items():
+        #         if basename(file).lower() not in already_im or norm_path_string(
+        #             sublime.expand_variables(
+        #                 "$folder", sublime.active_window().extract_variables())) not in file.lower():
+        #             continue
+        #         # if not skip_deleted or (skip_deleted and os.path.lexists(file)):
+        #         #     location = basename(file)
+        #         #     for function in data:
+        #         #         if prefix.lower() in function[self.NAME].lower():
+        #         #             already_in.append(function[self.NAME])
+        #         #             completion = self.create_function_completion(
+        #         #                 function, location)
+        #         #             completions.append(completion)
         return completions
 
     def create_function_completion(self, function, location):
@@ -438,24 +500,10 @@ class RSBIDECollectorThread(threading.Thread):
 
 # class RSBIDEEventListener(sublime_plugin.EventListener):
 
-#     def on_post_save_async(self, view):
-#         if is_RStyle_view(view):
-#             RSBIDECollectorThread(view.file_name()).start()
-
 #     def on_load_async(self, view):
 #         if is_RStyle_view(view) and is_mac_file(view.file_name()):
 #             if norm_path(view.file_name()) not in RSBIDE.files:
 #                 RSBIDECollectorThread(view.file_name()).start()
-
-#     def on_activated_async(self, view):
-#         update_folders()
-#         if is_mac_file(view.file_name()):
-#             RSBIDEImportCollectorThread(view.file_name()).start()
-
-#     def on_query_completions(self, view, prefix, locations):
-#         if is_RStyle_view(view, locations):
-#             return (RSBIDE.get_completions(view, prefix), 0)
-#         return ([], 0)
 
 global Pref, s
 
@@ -638,6 +686,13 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         else:
             return None
 
+    def is_visible(self, paths=None):
+        view = self.window.active_view()
+        return ('R-Style' in view.settings().get('syntax'))
+
+    def description(self):
+        return 'RSBIDE: Показать область объявления\talt+s'
+
 
 def getShortPathName(path):
     import ctypes
@@ -684,6 +739,7 @@ def get_declare_in_parent(view, classRegs, sel):
     result = window.lookup_symbol_in_index(word)
     for item in result:
         file = Path.posix(Path.get_absolute_path(project_folder, item[1]))
+        filename, extension = os.path.splitext((file))
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
         parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + item[1])
         reg_name_class = [i for i in parse_panel.find_by_selector('entity.name.class.mac') if word.lower() == parse_panel.substr(i).lower()]
@@ -691,15 +747,29 @@ def get_declare_in_parent(view, classRegs, sel):
 
         if len(regions_class) > 0:
             region_class = regions_class[0]
-            select += [
-                (item[0], item[1], (parse_panel.rowcol(i.a)[0] + 1, parse_panel.rowcol(i.a)[1] + 1))
-                for i in parse_panel.find_by_selector('meta.class.mac variable.declare.name.mac - meta.macro.mac')
-                if sel.lower() == parse_panel.substr(i).lower() and region_class.contains(i)]
-            if len(select) == 0:
-                verbose(ID, 'Found ' + sel + ' in', item[1])
-                select += get_declare_in_parent(parse_panel, regions_class, sel)
+            if sel is not None:
+                select += [
+                    (item[0], item[1], (parse_panel.rowcol(i.a)[0] + 1, parse_panel.rowcol(i.a)[1] + 1))
+                    for i in parse_panel.find_by_selector('meta.class.mac variable.declare.name.mac - meta.macro.mac, meta.class.mac entity.name.function.mac')
+                    if region_class.contains(i) and sel.lower() == parse_panel.substr(i).lower()]
             else:
-                verbose(ID, 'Not found ' + sel + ' in', item[1])
+                words = [
+                    i
+                    for i in parse_panel.find_by_selector('meta.class.mac variable.declare.name.mac - meta.macro.mac, meta.class.mac entity.name.function.mac')
+                    if region_class.contains(i)]
+                result = []
+                for x in words:
+                    if 'entity.name.function.mac' in parse_panel.scope_name(x.a):
+                        region = [i for i in parse_panel.find_by_selector('meta.macro.mac') if i.contains(x)]
+                        name_param = [parse_panel.substr(i) for i in parse_panel.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
+                        hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
+                        result.append((parse_panel.substr(x) + '(...)\t' + basename(filename), parse_panel.substr(x) + '(' + hint + ')'))
+                    else:
+                        result.append((parse_panel.substr(x) + '\t' + basename(filename), parse_panel.substr(x)))
+                select += result
+                select += get_declare_in_parent(parse_panel, regions_class, None)
+            if len(select) == 0:
+                select += get_declare_in_parent(parse_panel, regions_class, sel)
         sublime.active_window().destroy_output_panel(pref + item[1])
     return select
 
@@ -719,7 +789,10 @@ def get_globals_in_import(view, word, fName):
         file = Path.posix(Path.get_absolute_path(project_folder, rfile))
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
         parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + rfile)
-        region_name = [i for i in parse_panel.find_by_selector('variable.declare.name.mac - meta.class.mac') if word.lower() == parse_panel.substr(i).lower()]
+        region_name = [
+            i for i in parse_panel.find_by_selector(
+                'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac')
+            if word.lower() == parse_panel.substr(i).lower()]
         for region in region_name:
             select += [(file, rfile, (parse_panel.rowcol(region.a)[0] + 1, parse_panel.rowcol(region.a)[1] + 1))]
         if len(select) > 0:
@@ -737,12 +810,12 @@ def get_imports(fName):
     else:
         log('Import from file')
         parser.done_im = []
-        already_im = parser.get_imports_cache(fName, ProjectManager.get_current_project())
+        project = ProjectManager.get_current_project()
+        already_im = parser.get_imports_cache(fName, project)
     return already_im
 
 
 def get_result(view):
-    # global always_import
     sel = view.sel()[0]
     window = sublime.active_window()
     if sel.begin() == sel.end():
@@ -757,48 +830,70 @@ def get_result(view):
 
     if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
         return [(val[3].get('fullpath'), i, (0, 0)) for i, val in project.find_file('/' + word.lower() + '.mac').items()]
+    elif view.scope_name(view.sel()[0].a) == "source.mac meta.class.mac inherited-class.mac entity.other.inherited-class.mac ":
+        return window.lookup_symbol_in_index(word)
 
-    result = window.lookup_symbol_in_index(word)
-
+    # result = window.lookup_symbol_in_index(word)
+    result = []
     im_result = []
-    if len(result) > 0:  # if found in index check location must by in import
-        already_im = get_imports(sfile)
-        for item in result:
-            sfile = item[1]
-            if sfile in already_im:
-                im_result.insert(already_im.index(sfile), item)
-        result = im_result
-    elif len(result) == 0:  # if not found in index try find variable in current file
-        vars = []
+    classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
+    macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
+    sclass = 'meta.class.mac entity.name.class.mac'
+    smacro = 'meta.macro.mac entity.name.function.mac'
+    svaria = 'variable.declare.name.mac'
+    sismacro = ''
+    sparammacro = ''
+    sparamclass = ''
+    if len(classRegs) == 0:
+        smacro += ' - meta.class.mac'
+        svaria += ' - meta.class.mac'
+    else:
+        sparamclass += ', variable.parameter.class.mac'
+    if len(macroRegs) == 0:
+        sismacro += ' - meta.macro.mac'
+    else:
+        sparammacro += ', variable.parameter.macro.mac%s' % (sismacro)
+        sparamclass = ''
 
-        classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
-        macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
-        selections = [i for i in view.find_by_selector('variable.declare.name.mac') if word.lower() == view.substr(view.word(i)).lower()]
-        RegionMacroParam = view.find_by_selector('variable.parameter.macro.mac')
-        RegionClassParam = view.find_by_selector('variable.parameter.class.mac')
+    svaria = 'variable.declare.name.mac%s%s%s' % (sismacro, sparammacro, sparamclass)
 
-        if len(classRegs) > 0 and len(selections) > 1:
-            selections = [i for i in selections for j in classRegs if j.contains(i)]
-        if len(macroRegs) > 0 and len(selections) > 1:
-            selections = [i for i in selections for j in macroRegs if j.contains(i)]
-        if len(macroRegs) > 0 and len(selections) == 0:
-            MacroParamRegs = [i for i in RegionMacroParam if word.lower() == view.substr(view.word(i)).lower()]
-            selections = [i for i in MacroParamRegs for j in macroRegs if j.contains(i)]
-        elif len(macroRegs) == 0 and len(classRegs) > 0 and len(selections) == 0:
-            ClassParamRegion = [i for i in RegionClassParam if word.lower() == view.substr(view.word(i)).lower()]
-            selections = [i for i in ClassParamRegion for j in classRegs if j.contains(i)]
-        for selection in selections:
-            vars.append((file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)))
-        if len(classRegs) > 0 and len(selections) == 0:
-            in_parent = get_declare_in_parent(view, classRegs, view.substr(sel))
-            if len(in_parent) > 0:
-                vars = in_parent
-        if len(vars) == 0:
-            var_globals = get_globals_in_import(view, word, sfile)
-            if len(var_globals) > 0:
-                vars = var_globals
-        if len(vars) > 0:
-            result = vars
+    vars = []
+    selections = [i for i in view.find_by_selector(sclass + ', ' + smacro + ', ' + svaria) if word.lower() == view.substr(view.word(i)).lower()]
+    RegionMacroParam = view.find_by_selector('variable.parameter.macro.mac')
+    RegionClassParam = view.find_by_selector('variable.parameter.class.mac')
+
+    if len(classRegs) > 0 and len(selections) > 1:
+        # Ищем в текущем классе
+        selections = [i for i in selections for j in classRegs if j.contains(i)]
+    if len(macroRegs) > 0 and len(selections) > 1:
+        # Нашли в текущем классе ищем  в текущем макро
+        selections = [i for i in selections for j in macroRegs if j.contains(i)]
+        for x in selections:
+            if 'entity.name.function.mac' in view.scope_name(x.a):
+                selections.remove(x)
+    if len(macroRegs) > 0 and len(selections) == 0:
+        # текущая позиция в макро но переменной в ней нет (ищем в параметрах текущего макро)
+        MacroParamRegs = [i for i in RegionMacroParam if word.lower() == view.substr(view.word(i)).lower()]
+        selections = [i for i in MacroParamRegs for j in macroRegs if j.contains(i)]
+    elif len(macroRegs) == 0 and len(classRegs) > 0 and len(selections) == 0:
+        # текущая позиция вне макро но в классе (ищем в параметрах класса)
+        ClassParamRegion = [i for i in RegionClassParam if word.lower() == view.substr(view.word(i)).lower()]
+        selections = [i for i in ClassParamRegion for j in classRegs if j.contains(i)]
+    for selection in selections:
+        # нашли в текущем классе, указываем где
+        vars.append((file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)))
+    if len(classRegs) > 0 and len(selections) == 0:
+        # не нашли в текущем классе, ищем в родительских
+        in_parent = get_declare_in_parent(view, classRegs, view.substr(sel))
+        if len(in_parent) > 0:
+            vars = in_parent
+    if len(vars) == 0:
+        # ни где не нашли, ищем в глобальных переменных
+        var_globals = get_globals_in_import(view, word, sfile)
+        if len(var_globals) > 0:
+            vars = var_globals
+    if len(vars) > 0:
+        result = vars
     return result
 
 
@@ -817,7 +912,7 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
             return
 
         if len(self.result) == 0:
-            sublime.status_message("Symbol not found in index")
+            sublime.status_message("RSBIDE: Symbol not found in index")
             return
 
         self.window.show_quick_panel(["%s (%s)" % (r[1], r[2][0]) for r in self.result], self.open_file, 0, 0, lambda x: self.open_file(x, True))
@@ -833,6 +928,13 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
             else:
                 self.window.focus_view(self.old_view)
                 self.old_view.show_at_center(self.current_file_location)
+
+    def is_visible(self, paths=None):
+        view = self.window.active_view()
+        return ('R-Style' in view.settings().get('syntax'))
+
+    def description(self):
+        return 'RSBIDE: Перейти к объявлению\talt+g'
 
 
 class PrintTreeImportCommand(sublime_plugin.WindowCommand):
@@ -879,7 +981,7 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
         for mrn in [k for k in functionRegsName for mr in functionRegs if mr.contains(k)]:
             MessStat += ' Macro: ' + view.substr(mrn)
             break
-        view.set_status('procedure', MessStat)
+        view.set_status('context', MessStat)
 
 
 def RSBIDE_folder_change_watcher():
@@ -892,17 +994,9 @@ def RSBIDE_folder_change_watcher():
 def plugin_loaded():
     global Pref, s
     s = sublime.load_settings('RSBIDE.sublime-settings')
-    # Pref = Pref()
-    # Pref.load()
-    # s.clear_on_change('reload')
-    # s.add_on_change('reload', lambda: Pref.load())
     update_settings()
     global_settings = sublime.load_settings(config["RSB_SETTINGS_FILE"])
     global_settings.add_on_change("update", update_settings)
-
-    # if 'running_RSBIDE_folder_change_watcher' not in globals():
-    #     running_RSBIDE_folder_change_watcher = True
-    #     thread.start_new_thread(RSBIDE_folder_change_watcher, ())
 
 
 def update_settings():

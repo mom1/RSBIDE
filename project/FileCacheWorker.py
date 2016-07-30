@@ -90,6 +90,7 @@ class FileCacheWorker(threading.Thread):
         # indexing
         self.files = self.read(self.folder)
         self.files['last_scan'] = time.ctime(time.time())
+        self.always_import = ['CommonVariables', 'CommonDefines', 'CommonClasses', 'CommonFunctions']
         # save to tempfile
         self.save_to_cache()
         log("Files in cache:", len(self.files),

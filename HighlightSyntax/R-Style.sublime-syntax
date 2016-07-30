@@ -77,7 +77,8 @@ contexts:
         3: import.file.ext.mac
     - match: (?=,)
       set: import-continue
-    - match: '(?=\;)'
+    - match: '(\;)'
+      scope: punctuation.definition.import.mac
       pop: true
 
   import-continue:

@@ -1,0 +1,5 @@
+[
+   { "caption": "-" },
+   {"command": "go_to_definition" },
+   {"command": "print_sign_to_panel" },
+]
