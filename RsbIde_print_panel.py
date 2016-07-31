@@ -55,7 +55,7 @@ def print_to_panel(view, text, b_overwrite=True, bLog=False, bDoc=False, showlin
     view.window().run_command("show_panel", {"panel": "output.%s" % name_panel})
 
 
-def get_panel(view, text, b_overwrite=True, bLog=False, name_panel='Rsb_parse_panel'):
+def get_panel(view, text, name_panel='Rsb_parse_panel'):
     panel = view.window().create_output_panel(name_panel, True)
     panel.set_read_only(False)
     panel.run_command('append', {'characters': text})
