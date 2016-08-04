@@ -12,6 +12,7 @@ import sublime
 from RSBIDE.common.verbose import verbose
 from RSBIDE.common.verbose import log
 from RSBIDE.common.config import config
+from RSBIDE.common.progress_bar import ProgressBar
 """
     Scans, parses and stores all files in the given folder to the dictionary `files`
 
@@ -48,6 +49,7 @@ class FileCacheWorker(threading.Thread):
         self.last_add = []
         self.files = None
         self.load_from_cache()
+        self.always_import = ['CommonVariables', 'CommonDefines', 'CommonClasses', 'CommonFunctions']
 
     def save_to_cache(self):
         if os.path.lexists(self.tmp_folder):
@@ -88,9 +90,11 @@ class FileCacheWorker(threading.Thread):
         # load from tempfile
         # self.load_from_cache()
         # indexing
+        progress_bar = ProgressBar("RSBIDE: Индексация файлов проекта")
+        progress_bar.start()
         self.files = self.read(self.folder)
+        progress_bar.stop()
         self.files['last_scan'] = time.ctime(time.time())
-        self.always_import = ['CommonVariables', 'CommonDefines', 'CommonClasses', 'CommonFunctions']
         # save to tempfile
         self.save_to_cache()
         log("Files in cache:", len(self.files),

@@ -26,7 +26,7 @@ class FileCache:
         self.exclude_folders = exclude_folders
         self.cache = None
 
-        # self.rebuild()
+        self.rebuild()
 
     def __len__(self):
         if self.cache and self.cache.files:

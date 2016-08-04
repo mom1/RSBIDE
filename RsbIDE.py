@@ -813,7 +813,7 @@ def get_globals_in_import(view, word, fName):
 
 def get_imports(fName):
     # get all import file
-    if len(CurrentFile.current["imports"]) != 0:
+    if "imports" in CurrentFile.current and len(CurrentFile.current["imports"]) != 0:
         log('Import from cache')
         already_im = CurrentFile.current["imports"]
     else:
