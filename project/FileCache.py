@@ -3,6 +3,7 @@ import sublime
 import os
 import re
 from RSBIDE.common.verbose import verbose
+from RSBIDE.common.verbose import log
 import RSBIDE.common.path as Path
 from RSBIDE.project.FileCacheWorker import FileCacheWorker
 
@@ -113,6 +114,20 @@ class FileCache:
         else:
             # create relative path
             return (target_path, Path.trace(base_path, target_path))
+
+    def get_all_list_metadate(self):
+        """ Return all types from metadata
+        """
+        if not self.cache:
+            return
+        result = []
+        for x, val in self.cache.meta_data.items():
+            result += [(x + '\t' + val['type'], x)]
+            result += [(i + '\t' + 'Field', i) for i in val['Fields']]  # if (i + '\t' + 'Field', i) not in result
+            result += [(i + '\t' + 'Method', i) for i in val['Methods']]  # if (i + '\t' + 'Method', i) not in result
+            result += [(i + '\t' + 'Key', i) for i in val['Keys']]  # if (i + '\t' + 'Key', i) not in result
+        log(ID, len(result))
+        return result
 
     def file_is_cached(self, file_name):
         """ returns False if the given file is not within cache

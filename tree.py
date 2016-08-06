@@ -14,30 +14,33 @@ class Tree:
     def nodes(self):
         return self.__nodes
 
-    def add_node(self, identifier, parent=None):
-        node = Node(identifier)
+    def add_node(self, identifier, parent=None, type_node=None):
+        node = Node(identifier, type_node)
         self[identifier] = node
 
-        if parent is not None:
-            self[parent].add_child(identifier)
+        if parent is None:
+            return node
+        if parent not in self.__nodes:
+            self[parent] = Node(parent, None)
 
+        self[parent].add_child(identifier)
         return node
 
     def display(self, identifier, depth=_ROOT, pathfile="C:\myfile"):
         children = self[identifier].children
-        f = open(pathfile,'a')
+        f = open(pathfile, 'a')
         if depth == _ROOT:
-            print("{0}".format(identifier),  file=f)
+            print("{0}".format(identifier), file=f)
         else:
-            print("\t"*depth, "{0}".format(identifier), file=f)
+            print("\t" * depth, "{0}".format(identifier), file=f)
         f.close()
         depth += 1
         for child in children:
             self.display(child, depth, pathfile)  # recursive call
 
     def traverse(self, identifier, mode=_DEPTH):
-        # Python generator. Loosly based on an algorithm from 
-        # 'Essential LISP' by John R. Anderson, Albert T. Corbett, 
+        # Python generator. Loosly based on an algorithm from
+        # 'Essential LISP' by John R. Anderson, Albert T. Corbett,
         # and Brian J. Reiser, page 239-241
         yield identifier
         queue = self[identifier].children

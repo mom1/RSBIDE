@@ -93,6 +93,9 @@ class Project():
     def find_file(self, file_name):
         return self.filecache.find_file(file_name)
 
+    def get_all_list_metadate(self):
+        return self.filecache.get_all_list_metadate()
+
 
 def get_valid_extensions(triggers):
     """ return all found extensions in scope triggers """

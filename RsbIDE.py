@@ -142,6 +142,10 @@ class RSBIDE:
                 result.append((w, v))
         return result
 
+    def get_from_metadata(self, view):
+        project = ProjectManager.get_current_project()
+        return project.get_all_list_metadate()
+
     def get_completions(self, view, prefix):
         # skip_deleted = Pref.forget_deleted_files
         # completion import files
@@ -162,6 +166,10 @@ class RSBIDE:
             lfile.sort()
             return lfile
         sel = view.sel()[0]
+        if "string.quoted.double" in scope:
+            completions += self.get_from_metadata(view)
+        log(ID, 'Из метаданных ' + str(time.time() - t) + ' sec')
+        t = time.time()
         # window = sublime.active_window()
         if sel.begin() == sel.end():
             sel = view.word(sel)
@@ -217,7 +225,6 @@ class RSBIDE:
                             c += 1
                     if c == 0 and ('meta.macro.mac' not in view.scope_name(x.a) or 'meta.class.mac' not in view.scope_name(x.a)):
                         result.append((view.substr(x) + '\t' + 'var in global', view.substr(x)))
-
             else:
                 result.append((view.substr(x) + '\t' + basename(filename), view.substr(x)))
         completions += result
@@ -230,9 +237,11 @@ class RSBIDE:
         # completions += get_globals_in_import(view, None, view.file_name())
         # log(ID, 'Из глобала ' + str(time.time() - t) + ' sec')
         # t = time.time()
+
         completions = self.without_duplicates(completions)
         log(ID, 'Дубли ' + str(time.time() - t) + ' sec')
         t = time.time()
+
         # if len(vars) == 0:
         #     # ни где не нашли, ищем в глобальных переменных
         #     var_globals = get_globals_in_import(view, word, sfile)
@@ -244,12 +253,6 @@ class RSBIDE:
         #
         # start with default completions
         # completions = list(Pref.always_on_auto_completions)
-        # word completion from xml
-        # if "string.quoted.double" in view.scope_name(view.sel()[0].a):
-        #     for stype, word in self.filesxml.items():
-        #         for x in word:
-        #             completions.append(self.create_var_completion(x, stype))
-        # else:
 
         return completions
 
