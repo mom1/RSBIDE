@@ -14,7 +14,7 @@ from RSBIDE.common.verbose import log
 from RSBIDE.common.config import config
 from RSBIDE.common.progress_bar import ProgressBar
 import xml.etree.ElementTree as ET
-from RSBIDE import tree
+from os.path import basename
 """
     Scans, parses and stores all files in the given folder to the dictionary `files`
 
@@ -49,6 +49,7 @@ class FileCacheWorker(threading.Thread):
         self.m.update(self.folder.encode('utf-8'))
         self.files_cache = self.m.hexdigest() + '.' + ID
         self.last_add = []
+        self.not_delete = []
         self.files = None
         self.meta_data = None
         self.load_from_cache()
@@ -75,18 +76,29 @@ class FileCacheWorker(threading.Thread):
 
     def parse_import(self, relative_path, fName, extension):
         pref = 'RSBIDE:Parse_import_'  # Префикс для панели парсинга
-        # for x, val in self.files.items():
         if extension != 'mac':
-            return []
+            return [], []
         if not fName or not relative_path:
             verbose(ID, 'Нет файла для анализа')
-            return []
+            return [], []
         names_import = []
+        names_global = []
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(fName, encoding='cp1251', errors='replace')]
         parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + relative_path)
         names_import = [parse_panel.substr(i) + '.mac' for i in parse_panel.find_by_selector('import.file.mac')]
+        for x in parse_panel.find_by_selector(
+                'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac'):
+            if 'entity.name.function.mac' in parse_panel.scope_name(x.a):
+                region = [i for i in parse_panel.find_by_selector('meta.macro.mac') if i.contains(x)]
+                name_param = [parse_panel.substr(i) for i in parse_panel.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
+                hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
+                names_global.append((parse_panel.substr(x) + '(...)\t' + basename(fName), parse_panel.substr(x) + '(' + hint + ')'))
+            else:
+                names_global.append((parse_panel.substr(x) + '\t' + basename(fName), parse_panel.substr(x)))
+        if relative_path == 'Mac/System/CO/CommonVariables.mac':
+            log(ID, names_global)
         sublime.active_window().destroy_output_panel(pref + relative_path)
-        return names_import
+        return names_import, names_global
 
     def parse_xml(self, file, extension):
         """ Кэшируем метаданные
@@ -117,7 +129,11 @@ class FileCacheWorker(threading.Thread):
         progress_bar.start()
         self.files = self.read(self.folder)
         progress_bar.stop()
-        self.files['last_scan'] = time.ctime(time.time())
+        # self.files['last_scan'] = time.ctime(time.time())
+        deleted = list(set(self.files.keys()) - set(self.not_delete))
+        for key in deleted:
+            self.files.pop(key, True)
+            log(ID, 'delete', key)
         # save to tempfile
         self.save_to_cache()
         log("Files in cache:", len(self.files),
@@ -146,17 +162,18 @@ class FileCacheWorker(threading.Thread):
                 extension = extension[1:]
                 if extension not in self.extensions:
                     continue
-
+                self.not_delete += [relative_path]
                 if folder_cache.get(relative_path, False) and folder_cache[relative_path][3].get(
                         'mtime', time.ctime(time.time())) == time.ctime(os.path.getmtime(current_path)):
                     continue
                 self.last_add.append(posix(relative_path))
                 log(ID, len(self.last_add), relative_path)
                 imp = []
+                glob = []
                 if extension == 'xml' and 'TI/' in relative_path:
                     self.parse_xml(posix(current_path), extension)
                 else:
-                    imp = self.parse_import(relative_path, posix(current_path), extension)
+                    imp, glob = self.parse_import(relative_path, posix(current_path), extension)
                 folder_cache[relative_path] = [
                     # modified filepath. $ hack is reversed in post_commit_completion
                     re.sub("\$", config["ESCAPE_DOLLAR"], posix(filename)),
@@ -167,7 +184,8 @@ class FileCacheWorker(threading.Thread):
                     {
                         'fullpath': posix(current_path),
                         'mtime': time.ctime(os.path.getmtime(current_path)),
-                        'imports': imp
+                        'imports': imp,
+                        'globals': glob
                     }
                 ]
 

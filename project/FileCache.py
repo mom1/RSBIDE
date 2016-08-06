@@ -5,6 +5,7 @@ import re
 from RSBIDE.common.verbose import verbose
 from RSBIDE.common.verbose import log
 import RSBIDE.common.path as Path
+from collections import OrderedDict
 from RSBIDE.project.FileCacheWorker import FileCacheWorker
 
 ID = "search"
@@ -105,6 +106,7 @@ class FileCache:
         for filepath, val in project_files.items():
             if re.match(file_name_query, filepath, re.IGNORECASE):
                 result[filepath] = val
+        result = OrderedDict(sorted(result.items(), key=lambda t: t[0]))
         return result
 
     def get_completion(self, target_path, path_display, base_path=False):

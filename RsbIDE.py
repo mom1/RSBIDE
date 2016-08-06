@@ -147,10 +147,10 @@ class RSBIDE:
         return project.get_all_list_metadate()
 
     def get_completions(self, view, prefix):
-        # skip_deleted = Pref.forget_deleted_files
         # completion import files
         completions = []
         t = time.time()
+        t1 = time.time()
         verbose(ID, view.scope_name(view.sel()[0].a))
         scope = view.scope_name(view.sel()[0].a)
         if "source.mac meta.import.mac" in scope or 'punctuation.definition.import.mac' in scope:
@@ -234,26 +234,17 @@ class RSBIDE:
         completions += get_declare_in_parent(view, classRegs, None)
         log(ID, 'Из родителя ' + str(time.time() - t) + ' sec')
         t = time.time()
-        # completions += get_globals_in_import(view, None, view.file_name())
-        # log(ID, 'Из глобала ' + str(time.time() - t) + ' sec')
+        completions += parser.get_globals_completion(get_imports(view.file_name()), project)
+        log(ID, 'Из глобала ' + str(time.time() - t) + ' sec')
         # t = time.time()
 
         completions = self.without_duplicates(completions)
         log(ID, 'Дубли ' + str(time.time() - t) + ' sec')
         t = time.time()
 
-        # if len(vars) == 0:
-        #     # ни где не нашли, ищем в глобальных переменных
-        #     var_globals = get_globals_in_import(view, word, sfile)
-        #     if len(var_globals) > 0:
-        #         vars = var_globals
-        # if len(vars) > 0:
-        #     result = vars
-        #
-        #
         # start with default completions
         # completions = list(Pref.always_on_auto_completions)
-
+        log(ID, 'Автокомплит ' + str(time.time() - t1) + ' sec')
         return completions
 
     def create_function_completion(self, function, location):

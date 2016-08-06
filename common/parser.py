@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mom1
 # @Date:   2016-07-28 12:47:41
-# @Last Modified by:   mom1
-# @Last Modified time: 2016-07-31 19:27:51
+# @Last Modified by:   MOM
+# @Last Modified time: 2016-08-06 23:02:35
 import os
 import time
 import RSBIDE.common.path as Path
@@ -47,3 +47,11 @@ def get_import_tree(fName, project, parent=None):
         log(ID, 'Долгая обработка файла:', sfile, len(all_imports), str(time.time() - t))
     all_imports.extend(always_import)
     return all_imports
+
+
+def get_globals_completion(imports, project, prefix=None):
+    result = []
+    for x in imports:
+        filecache = project.filecache.cache.files.get(x, {})
+        result += filecache[3].get('globals', [])
+    return result
