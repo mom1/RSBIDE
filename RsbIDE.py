@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   MOM
-# @Last Modified time: 2016-08-07 18:47:03
+# @Last Modified time: 2016-08-07 18:58:53
 
 
 import sublime
@@ -40,10 +40,9 @@ scope_cache = {}
 class RSBIDE:
 
     def rebuild_cache(self):
-        pass
-        # if not Pref.scan_running:
-        #     self.clear()
-        #     RSBIDECollectorThread().start()
+        project = ProjectManager.get_current_project()
+        os.remove(os.path.join(os.path.expandvars(r'%TEMP%'), project.filecache.cache.files_cache))
+        project.rebuild_filecache()
 
     def without_duplicates(self, words):
         result = []
