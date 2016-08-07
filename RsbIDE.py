@@ -2,16 +2,14 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   MOM
-# @Last Modified time: 2016-08-07 17:18:44
+# @Last Modified time: 2016-08-07 18:22:25
 
 
 import sublime
 import sublime_plugin
 import os
 import json
-import pickle
 import re
-import threading
 import codecs
 import time
 import xml.etree.ElementTree as ET

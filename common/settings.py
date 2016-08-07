@@ -52,8 +52,8 @@ def merge(settings, overwrite):
     for key in settings:
         settings[key] = overwrite.get(key.lower(), settings[key])
     # support old config schema
-    for key in map_settings:
-        mappedKey = map_settings[key]
-        settings[key] = overwrite.get(mappedKey, settings[key])
+    # for key in map_settings:
+    #     mappedKey = map_settings[key]
+    #     settings[key] = overwrite.get(mappedKey, settings[key])
 
     return settings

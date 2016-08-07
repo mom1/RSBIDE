@@ -1,6 +1,6 @@
 {
     "debug": false,
     "log": false,
-    "exclude_folders": ["Web", "lbr", "DBFiles", "Script", "upgrader", "Template"],
+    "exclude_folders": ["DBFiles", "Help", "Html", "Lbr", "template", "upgrader", "Web", "script"],
     "always_import": ["CommonVariables", "CommonDefines", "CommonClasses", "CommonFunctions", "CommonCallReference"],
 }

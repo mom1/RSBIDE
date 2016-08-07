@@ -19,7 +19,7 @@ config = {
                 "base_directory": False,
                 "extensions": ["mac", "xml"],
                 }],
-    "EXCLUDE_FOLDERS": ["node\\_modules", "bower\\_components/.*/bower\\_components", "Web", "lbr", "DBFiles", "Script", "upgrader", "Template"],
+    "EXCLUDE_FOLDERS": ["node\\_modules", "DBFiles", "Help", "Html", "Lbr", "template", "upgrader", "Web", "script"],
     "ALWAYS_IMPORT": ["CommonVariables", "CommonDefines", "CommonClasses", "CommonFunctions", "CommonCallReference"],
 
     "POST_INSERT_MOVE_CHARACTERS": "^[\"\'\);]*"
