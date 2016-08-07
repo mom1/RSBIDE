@@ -19,14 +19,14 @@ Features
 * **Go to declaration and back again**
     * Go to Definition `macro name(param)`, `class(...) name (param)`, `var name` taking into account the scope default keys <kbd>Alt + G</kbd>
     * Go to the definition of the selected functions by <kbd>Alt + G</kbd>
-    * Go to the file from the import <kbd> Alt + G </kbd>
-    * Go to the parent class
+    * Go to the file from the import <kbd>Alt + G</kbd>
+    * Go to the parent class <kbd>Alt + G</kbd>
     ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
     * Print Signature `macro` or `class` or `var` To Panel <kbd>Alt + S</kbd> 
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **Viewing documents**
-    * If <kbd> Alt + S </kbd> word under the cursor is not found in the index, then try to find documentation (Beta)
+    * If <kbd>Alt + S</kbd> word under the cursor is not found in the index, then try to find documentation (Beta)
     ![DocPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/DocPanel.jpg)
 * **DllRegister RS-Balance 3 from project folder**
     * Folder context menu "DllRegister RS-Balance 3"
