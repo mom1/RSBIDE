@@ -26,7 +26,7 @@ global ChilkatFtp2
 global ChilkatMail_v7_9
 global ChilkatUtil
 
-FastReport3 = r'FastReport3.dll'
+FastReport3 = r'frxCOM.dll'
 FieldControl = r'FieldControl.dll'
 RSBarCode = r'RSBarCode.dll'
 RSBlobDriver = r'RSBlobDriver.dll'
@@ -76,11 +76,11 @@ class RsbRegCommand(sublime_plugin.WindowCommand):
                 os.path.expandvars("%SystemRoot%"), "syswow64", regsvr32)
 
         print(self.ok_false(call(
-            [regsvr32,     FastReport3,      FieldControl, RSBarCode,
-             RSBlobDriver, RSCmnCtl,         RSComProvider,
-             RSFileRunner, RSFM, RSFMDT,     RSFUtils,
-             RSGrid,       RSOleDBProvider,  TreeControl,  RSBControls,
-             ChilkatFtp2,  ChilkatMail_v7_9, ChilkatUtil,
+            [regsvr32, FastReport3, FieldControl, RSBarCode,
+             RSBlobDriver, RSCmnCtl, RSComProvider,
+             RSFileRunner, RSFM, RSFMDT, RSFUtils,
+             RSGrid, RSOleDBProvider, TreeControl, RSBControls,
+             ChilkatFtp2, ChilkatMail_v7_9, ChilkatUtil,
               "-s"])))
 
     def ok_false(self, iRet):
@@ -119,23 +119,23 @@ class RsbRegCommand(sublime_plugin.WindowCommand):
         currfolder = sublime.expand_variables(
             "$folder", sublime.active_window().extract_variables())
         return (
-            os.path.lexists(currfolder + '\\' + FastReport3)
-            and os.path.lexists(currfolder + '\\' + FieldControl)
-            and os.path.lexists(currfolder + '\\' + RSBarCode)
-            and os.path.lexists(currfolder + '\\' + RSBlobDriver)
-            and os.path.lexists(currfolder + '\\' + RSCmnCtl)
-            and os.path.lexists(currfolder + '\\' + RSComProvider)
-            and os.path.lexists(currfolder + '\\' + RSFileRunner)
-            and os.path.lexists(currfolder + '\\' + RSFM)
-            and os.path.lexists(currfolder + '\\' + RSFMDT)
-            and os.path.lexists(currfolder + '\\' + RSFUtils)
-            and os.path.lexists(currfolder + '\\' + RSGrid)
-            and os.path.lexists(currfolder + '\\' + RSOleDBProvider)
-            and os.path.lexists(currfolder + '\\' + TreeControl)
-            and os.path.lexists(currfolder + '\\' + RSBControls)
-            and os.path.lexists(currfolder + '\\' + ChilkatFtp2)
-            and os.path.lexists(currfolder + '\\' + ChilkatMail_v7_9)
-            and os.path.lexists(currfolder + '\\' + ChilkatUtil)
+            os.path.lexists(currfolder + '\\' + FastReport3) and
+            os.path.lexists(currfolder + '\\' + FieldControl) and
+            os.path.lexists(currfolder + '\\' + RSBarCode) and
+            os.path.lexists(currfolder + '\\' + RSBlobDriver) and
+            os.path.lexists(currfolder + '\\' + RSCmnCtl) and
+            os.path.lexists(currfolder + '\\' + RSComProvider) and
+            os.path.lexists(currfolder + '\\' + RSFileRunner) and
+            os.path.lexists(currfolder + '\\' + RSFM) and
+            os.path.lexists(currfolder + '\\' + RSFMDT) and
+            os.path.lexists(currfolder + '\\' + RSFUtils) and
+            os.path.lexists(currfolder + '\\' + RSGrid) and
+            os.path.lexists(currfolder + '\\' + RSOleDBProvider) and
+            os.path.lexists(currfolder + '\\' + TreeControl) and
+            os.path.lexists(currfolder + '\\' + RSBControls) and
+            os.path.lexists(currfolder + '\\' + ChilkatFtp2) and
+            os.path.lexists(currfolder + '\\' + ChilkatMail_v7_9) and
+            os.path.lexists(currfolder + '\\' + ChilkatUtil)
         )
 
     def is_enabled(self):
@@ -169,4 +169,3 @@ def norm_path_string(file):
 
 if int(sublime.version()) < 3000:
     sublime.set_timeout(lambda: plugin_loaded(), 0)
-# dll.DllUnregisterServer( )
