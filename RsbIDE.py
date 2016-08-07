@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   MOM
-# @Last Modified time: 2016-08-07 18:22:25
+# @Last Modified time: 2016-08-07 18:47:03
 
 
 import sublime
@@ -163,6 +163,9 @@ class RSBIDE:
         # completions = list(Pref.always_on_auto_completions)
         log(ID, 'Автокомплит ' + str(time.time() - t1) + ' sec')
         return completions
+
+
+RSBIDE = RSBIDE()
 
 
 def is_RStyle_view(view, locations=None):
