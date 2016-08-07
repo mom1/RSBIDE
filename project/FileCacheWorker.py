@@ -14,7 +14,7 @@ from RSBIDE.common.verbose import log
 from RSBIDE.common.config import config
 from RSBIDE.common.progress_bar import ProgressBar
 import xml.etree.ElementTree as ET
-from os.path import basename
+# from os.path import basename
 """
     Scans, parses and stores all files in the given folder to the dictionary `files`
 
@@ -53,7 +53,7 @@ class FileCacheWorker(threading.Thread):
         self.files = None
         self.meta_data = None
         self.load_from_cache()
-        self.always_import = ['CommonVariables', 'CommonDefines', 'CommonClasses', 'CommonFunctions', 'CommonCallReference']
+        self.always_import = config['ALWAYS_IMPORT']
 
     def save_to_cache(self):
         if os.path.lexists(self.tmp_folder):
@@ -69,7 +69,7 @@ class FileCacheWorker(threading.Thread):
                         verbose(ID, 'cache load from ' + os.path.join(self.tmp_folder, self.files_cache))
                     except Exception:
                         pass
-                        os.remove(cache_file)
+                        # os.remove(cache_file)
         else:
             self.files = {}
             self.meta_data = {}
@@ -145,14 +145,11 @@ class FileCacheWorker(threading.Thread):
     def run(self):
         verbose(ID, "START adding files in", self.folder)
         t = time.time()
-        # load from tempfile
-        # self.load_from_cache()
         # indexing
         progress_bar = ProgressBar("RSBIDE: Индексация файлов проекта")
         progress_bar.start()
         self.files = self.read(self.folder)
         progress_bar.stop()
-        # self.files['last_scan'] = time.ctime(time.time())
         deleted = list(set(self.files.keys()) - set(self.not_delete))
         for_del = []
         for key in deleted:

@@ -6,7 +6,7 @@ import RSBIDE.project.validate as Validate
 import RSBIDE.common.settings as Settings
 import RSBIDE.common.path as Path
 from RSBIDE.common.verbose import warn
-from RSBIDE.common.verbose import verbose
+from RSBIDE.common.verbose import verbose, log
 
 ID = "PROJECT"
 

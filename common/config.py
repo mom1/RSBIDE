@@ -1,6 +1,6 @@
 config = {
     "DEBUG": False,
-    "LOG": True,
+    "LOG": False,
     "RSB_SETTINGS_FILE": "RSBIDE.sublime-settings",
     "ESCAPE_DOLLAR": '\$',
     "TRIGGER_ACTION": ["auto_complete", "insert_path"],
@@ -20,6 +20,7 @@ config = {
                 "extensions": ["mac", "xml"],
                 }],
     "EXCLUDE_FOLDERS": ["node\\_modules", "bower\\_components/.*/bower\\_components", "Web", "lbr", "DBFiles", "Script", "upgrader", "Template"],
+    "ALWAYS_IMPORT": ["CommonVariables", "CommonDefines", "CommonClasses", "CommonFunctions", "CommonCallReference"],
 
     "POST_INSERT_MOVE_CHARACTERS": "^[\"\'\);]*"
 }

@@ -42,9 +42,9 @@ class ProjectManager(sublime_plugin.EventListener):
 
             if ProjectManager.has_current_project():
                 # update project settings
-                # project_settings = Settings.project(window)
-                # ProjectManager.get_current_project().update_settings(
-                #     ProjectManager.rsb_settings, project_settings)
+                project_settings = Settings.project(window)
+                ProjectManager.get_current_project().update_settings(
+                    ProjectManager.rsb_settings, project_settings)
                 verbose(ID, "activate project", ProjectManager.get_current_project().get_directory())
         else:
             verbose(ID, "this is not a project")

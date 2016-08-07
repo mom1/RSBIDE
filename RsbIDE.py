@@ -1,10 +1,10 @@
 # -*- coding: cp1251 -*-
-# ------------------------------------------------------------------------------
-# RSBIDE Sublime Text Plugin
-# forked from https://github.com/eladyarkoni/MySignaturePlugin
-# 09.09.2015
-# FOR RS BALANCE Programmed by MOM
-# ------------------------------------------------------------------------------
+# @Author: MOM
+# @Date:   2015-09-09 21:44:10
+# @Last Modified by:   MOM
+# @Last Modified time: 2016-08-07 17:18:44
+
+
 import sublime
 import sublime_plugin
 import os
@@ -29,109 +29,23 @@ import RSBIDE.common.path as Path
 from RSBIDE.project.CurrentFile import CurrentFile
 
 
-# try:
-#     import thread
-# except:
-#     import _thread as thread
-
-
 global IS_ST3
 IS_ST3 = sublime.version().startswith('3')
 
 
 global already_im
 already_im = []
-obj = []
-fields = []
-methods = []
 ID = 'RSBIDE'
 scope_cache = {}
 
 
 class RSBIDE:
 
-    files = dict()
-    filesxml = dict()
-    filesimport = dict()
-    ffiles = []
-
-    NAME = 'name'
-    SIGN = 'sign'
-    COMPLETION = 'completion'
-
-    EMPTY = ''
-    tmp_folder = os.path.expandvars(r'%TEMP%')
-
-    def clear(self):
-        self.files = dict()
-        self.filesxml = dict()
-        self.filesimport = dict()
-        self.ffiles = []
-
     def rebuild_cache(self):
-        if not Pref.scan_running:
-            self.clear()
-            RSBIDECollectorThread().start()
-
-    def save_functions(self, file, data):
-        self.files[file] = data
-
-    def save_objs(self, stype, data):
-        self.filesxml[stype] = data
-
-    def save_imports(self, file, data):
-        self.filesimport[file] = data
-
-    def save_ff(self, file):
-        lfile = normalize_to_system_style_path(file.lower())
-        file = normalize_to_system_style_path(file)
-        if file in self.ffiles:
-            return
-        for x in self.ffiles:
-            if lfile == x.lower():
-                self.ffiles.remove(x)
-        self.ffiles.append(file)
-
-    def save_to_cache(self):
-        if os.path.lexists(self.tmp_folder):
-            with open(os.path.join(self.tmp_folder, 'files_cache.obj'), 'wb') as cache_file:
-                pickle.dump(self.files, cache_file)
-            with open(os.path.join(self.tmp_folder, 'filesxml_cache.obj'), 'wb') as cache_file:
-                pickle.dump(self.filesxml, cache_file)
-            with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'wb') as cache_file:
-                pickle.dump(self.filesimport, cache_file)
-            with open(os.path.join(self.tmp_folder, 'ffiles_cache.obj'), 'wb') as cache_file:
-                pickle.dump(self.ffiles, cache_file)
-
-    def load_from_cache(self):
-        if os.path.lexists(os.path.join(self.tmp_folder, 'files_cache.obj')):
-            with open(os.path.join(self.tmp_folder, 'files_cache.obj'), 'rb') as cache_file:
-                    try:
-                        self.files = pickle.load(cache_file)
-                    except Exception:
-                        os.remove(cache_file)
-                        self.files = dict()
-        if os.path.lexists(os.path.join(self.tmp_folder, 'filesxml_cache.obj')):
-            with open(os.path.join(self.tmp_folder, 'filesxml_cache.obj'), 'rb') as cache_file:
-                    try:
-                        self.filesxml = pickle.load(cache_file)
-                    except Exception:
-                        os.remove(cache_file)
-                        self.filesxml = dict()
-        if os.path.lexists(os.path.join(self.tmp_folder, 'filesimport_cache.obj')):
-            with open(os.path.join(self.tmp_folder, 'filesimport_cache.obj'), 'rb') as cache_file:
-                    try:
-                        self.filesimport = pickle.load(cache_file)
-                    except Exception:
-                        os.remove(cache_file)
-                        self.filesimport = dict()
-        if os.path.lexists(os.path.join(self.tmp_folder, 'ffiles_cache.obj')):
-            with open(os.path.join(self.tmp_folder, 'ffiles_cache.obj'), 'rb') as cache_file:
-                    try:
-                        self.ffiles = pickle.load(cache_file)
-                    except Exception:
-                        os.remove(cache_file)
-                        self.ffiles = []
+        pass
+        # if not Pref.scan_running:
+        #     self.clear()
+        #     RSBIDECollectorThread().start()
 
     def without_duplicates(self, words):
         result = []
@@ -252,254 +166,6 @@ class RSBIDE:
         log(ID, 'Автокомплит ' + str(time.time() - t1) + ' sec')
         return completions
 
-    def create_function_completion(self, function, location):
-        if self.COMPLETION not in function:
-            name = function[self.NAME] + '(' + function[self.SIGN] + ')'
-            if function[self.SIGN].strip() == self.EMPTY:
-                hint = self.EMPTY
-            else:
-                hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(function[self.SIGN].split(','))])
-            function[self.COMPLETION] = (name + '\t' + location, function[self.NAME] + '(' + hint + ')')
-            del function[self.SIGN]  # no longer needed
-        return function[self.COMPLETION]
-
-    def create_var_completion(self, var, location):
-        return (var + '\t' + location, var)
-
-    def parse_line(self, line):
-        for regexp in Pref.expressions:
-            matches = regexp(line)
-            if matches:
-                return matches.groupdict()
-
-    def get_globals(self, view):
-        gvars = []
-        if view is None:
-            return gvars
-        pfile = [sfile for sfile in self.files if basename(sfile).lower() == "CommonVariables.mac".lower()][0]
-        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(pfile, encoding='cp1251', errors='replace') if len(line) < 300]
-        parse_panel = get_panel(view, "".join(lines))
-        gvars = [parse_panel.substr(parse_panel.word(selection)) for selection in parse_panel.find_by_selector('variable.declare.name.mac')]
-        return gvars
-
-    def parseimport(self, total):
-        sregexp2 = r'(\"?((([\w\d])*)(?:.mac)*)\"?)\s*(?:(,|;))'
-        imstrip = re.compile(re.escape('import '), re.IGNORECASE)
-        return [imstrip.sub('', x[2].strip("\r\n")) for x in re.findall(sregexp2, total, re.I)]
-
-    def get_files_import(self, file, isReset):
-        global already_im
-        if isReset:
-            already_im = []
-        t = time.time()
-        LInFile = []
-        bfile = basename(norm_path_string(file))
-        if bfile.lower() not in [x.lower() for x in already_im]:
-                LInFile.append(bfile)
-                already_im.append(bfile)
-        for file_im in LInFile:
-            if file_im not in self.filesimport.keys():
-                continue
-            difflist = list(set(self.filesimport[file_im]) - set([x.lower() for x in already_im]))
-            already_im.extend(difflist)
-            currdiff = list(set(self.filesimport[file_im]) - set([x.lower() for x in LInFile]))
-            LInFile.extend(currdiff)
-        verbose(ID, 'Scan import done in ' + str(time.time() - t) + ' seconds')
-
-
-RSBIDE = RSBIDE()
-
-
-class RSBIDEImportCollectorThread(threading.Thread):
-
-    def __init__(self, file=None):
-        self.file = file
-        threading.Thread.__init__(self)
-
-    def run(self):
-        if self.file:
-            try:
-                RSBIDE.get_files_import(norm_path(self.file), True)
-            except:
-                pass
-
-
-class RSBIDECollectorThread(threading.Thread):
-    # the thread will parse or reparse a file if the file argument is present
-    # if the "file" argument is not present, then will rescan the folders
-    def __init__(self, file=None):
-        self.file = file
-        threading.Thread.__init__(self)
-
-    def run(self):
-        if self.file:
-            try:
-                self.parse_functions(norm_path(self.file))
-                RSBIDE.filesimport[norm_path(self.file)] = []
-                self.parse_import(norm_path(self.file))
-                RSBIDE.save_ff(self.file)
-                RSBIDE.save_to_cache()
-            except:
-                pass
-        elif not Pref.scan_running:
-            sublime.status_message('Scaning Run')
-            Pref.scan_running = True
-            Pref.scan_started = time.time()
-            # the list of opened files in all the windows
-            files = list(Pref.updated_files)
-            # the list of opened folders in all the windows
-            folders = list(Pref.updated_folders)
-            Pref.folders = list(folders)
-            # add also as folders, the dirname of the current opened files
-            folders += [norm_path(dirname(file)) for file in files]
-            # deduplicate
-            folders = list(set(folders))
-            _folders = []
-            for folder in folders:
-                _folders = deduplicate_crawl_folders(_folders, folder)
-            folders = _folders
-
-            verbose(ID, 'Folders to scan:')
-            verbose(ID, "\n".join(folders))
-
-            # pasing
-            files_seen = 0
-            files_mac = 0
-            files_xml = 0
-            files_cache_miss = 0
-            files_cache_miss_xml = 0
-            files_cache_hit = 0
-            files_cache_hit_xml = 0
-            files_failed_parsing = 0
-            files_failed_parsing_xml = 0
-
-            # parse files with priority
-            for file in files:
-                if should_abort():
-                    break
-                files_seen += 1
-                files_mac += 1
-                if file not in RSBIDE.files:
-                    try:
-                        self.parse_functions(file)
-                        self.parse_import(file)
-                        files_cache_miss += 1
-                    except:
-                        files_failed_parsing += 1
-                else:
-                    files_cache_hit += 1
-
-            # now parse folders
-            for folder in folders:
-                if should_abort():
-                    break
-                for dir, dnames, files in os.walk(folder):
-                    if should_abort():
-                        break
-                    for f in files:
-                        if should_abort():
-                            break
-                        files_seen += 1
-                        file = os.path.join(dir, f)
-                        if not should_exclude(file.lower()) and is_mac_file(file.lower()):
-                            files_mac += 1
-                            RSBIDE.save_ff(file)
-                            file = norm_path(file)
-                            if file not in RSBIDE.files:
-                                try:
-                                    self.parse_functions(file)
-                                    self.parse_import(file)
-                                    files_cache_miss += 1
-                                except:
-                                    files_failed_parsing += 1
-                            else:
-                                files_cache_hit += 1
-                        elif not should_exclude(file.lower()) and is_xml_file(file.lower()):
-                            files_xml += 1
-                            file = norm_path(file)
-                            if file not in RSBIDE.filesxml:
-                                try:
-                                    self.parse_xml(file)
-                                    files_cache_miss_xml += 1
-                                except:
-                                    files_failed_parsing_xml += 1
-                            else:
-                                files_cache_hit_xml += 1
-            obj.sort()
-            fields.sort()
-            methods.sort()
-            RSBIDE.save_objs("Object", obj)
-            RSBIDE.save_objs("Field", fields)
-            RSBIDE.save_objs("Method", methods)
-            RSBIDE.save_to_cache()
-            sublime.status_message('Scan done ' + str(time.time() - Pref.scan_started) + ' seconds - ' + 'File scans ' + str(files_mac + files_xml))
-            verbose(ID, 'Scan done in ' + str(time.time() - Pref.scan_started) + ' seconds - Scan was aborted: ' + str(Pref.scan_aborted))
-            verbose(
-                ID,
-                'Files Seen:' + str(files_seen) +
-                ', Files MAC:' + str(files_mac) +
-                ', Cache Miss:' + str(files_cache_miss) +
-                ', Cache Hit:' + str(files_cache_hit) +
-                ', Failed Parsing:' + str(files_failed_parsing))
-            verbose(
-                ID,
-                'Files Seen:' + str(files_seen) +
-                ', Files XML:' + str(files_xml) +
-                ', Cache Miss:' + str(files_cache_miss_xml) +
-                ', Cache Hit:' + str(files_cache_hit_xml) +
-                ', Failed Parsing:' + str(files_failed_parsing))
-
-            Pref.scan_running = False
-            Pref.scan_aborted = False
-
-    def parse_functions(self, file):
-        verbose(ID, '\nParsing functions for file:\n' + file)
-        pattern = re.compile(r"^\s*(macro)\s+", re.I | re.S)
-        lines = [
-            line.rstrip('\r\n') + "\n"
-            for line in codecs.open(file, encoding='cp1251', errors='replace')
-            if len(line) < 300 and pattern.match(line.lower())]
-        functions = []
-        for line in lines:
-            matches = RSBIDE.parse_line(line)
-            if matches and matches not in functions:
-                functions.append(matches)
-        RSBIDE.save_functions(file, functions)
-
-    def parse_import(self, file):
-        verbose(ID, '\nParsing import in file:\n' + file)
-        pattern = re.compile(r"^\s*(import)\s+", re.I | re.S)
-        lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace') if len(line) < 300 and pattern.match(line.lower())]
-        matches = RSBIDE.parseimport("".join(lines))
-        imporFiles = list(set([mort.strip() + ".mac" for mort in [it.lower() for it in matches]]))
-        RSBIDE.save_imports(basename(file), imporFiles)
-
-    def get_name(self, elem, lelem=None):
-        for i in elem:
-            sname = i.get('Name')
-            if sname not in lelem:
-                lelem.append(sname)
-
-    def parse_xml(self, file):
-        lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace')]
-        root = ET.fromstring("".join(lines))
-        self.get_name(root.findall("./object"), obj)
-        self.get_name(root.findall("./object/Field"), fields)
-        self.get_name(root.findall("./object/Method"), methods)
-
-
-# class RSBIDEEventListener(sublime_plugin.EventListener):
-
-#     def on_load_async(self, view):
-#         if is_RStyle_view(view) and is_mac_file(view.file_name()):
-#             if norm_path(view.file_name()) not in RSBIDE.files:
-#                 RSBIDECollectorThread(view.file_name()).start()
-
-global Pref, s
-
-Pref = {}
-s = {}
-
 
 def is_RStyle_view(view, locations=None):
     return (
@@ -510,10 +176,6 @@ def is_RStyle_view(view, locations=None):
 
 def is_mac_file(file):
     return file and file.endswith('.mac') and '.min.' not in file
-
-
-def is_xml_file(file):
-    return file and file.endswith('.xml') and '.min.' not in file
 
 
 def norm_path(file):
@@ -529,74 +191,6 @@ def normalize_to_system_style_path(path):
         path = re.sub(r"/([A-Za-z])/(.+)", r"\1:/\2", path)
         path = re.sub(r"/", r"\\", path)
     return path
-
-
-def should_exclude(file):
-    return len([1 for exclusion in Pref.excluded_files_or_folders if exclusion in norm_path_string(file).split('/')])
-
-
-def update_folders():
-    folders = list(set([norm_path(folder) for w in sublime.windows() for folder in w.folders() if folder and not should_exclude(norm_path(folder))]))
-    _folders = []
-    for folder in folders:
-        _folders = deduplicate_crawl_folders(_folders, folder)
-    _folders.sort()
-    Pref.updated_folders = _folders
-    Pref.updated_files = [
-        norm_path(v.file_name())
-        for w in sublime.windows()
-        for v in w.views() if v.file_name() and is_mac_file(v.file_name()) and not should_exclude(norm_path(v.file_name()))]
-
-
-def should_abort():
-    if time.time() - Pref.scan_started > Pref.scan_timeout:
-        Pref.scan_aborted = True
-    return Pref.scan_aborted
-
-
-def deduplicate_crawl_folders(items, item):
-    # returns folders without child subfolders
-    new_list = []
-    add = True
-    for i in items:
-        if i.find(item + '\\') == 0 or i.find(item + '/') == 0:
-            continue
-        else:
-            new_list.append(i)
-        if (item + '\\').find(i + '\\') == 0 or (item + '/').find(i + '/') == 0:
-            add = False
-    if add:
-        new_list.append(item)
-    return new_list
-
-
-class Pref():
-
-    def load(self):
-        verbose(ID, '-----------------')
-        Pref.excluded_files_or_folders = [norm_path_string(file) for file in s.get('excluded_files_or_folders', [])]
-        verbose(ID, 'excluded_files_or_folders')
-        verbose(ID, Pref.excluded_files_or_folders)
-
-        Pref.forget_deleted_files = s.get('forget_deleted_files', False)
-
-        Pref.expressions = [re.compile(v, re.I).search for v in [
-            r'macro\s*(?P<name>\w+)\s*\((?P<sign>[^\)]*)(\)|\n)',
-            r'macro\s*(?P<name>\w+)\s*(?P<sign>)'
-        ]]
-        Pref.folders = []
-
-        Pref.always_on_auto_completions = [(re.sub('\${[^}]+}', 'aSome', w), w) for w in s.get('always_on_auto_completions', [])]
-
-        Pref.scan_running = False  # to avoid multiple scans at the same time
-        Pref.scan_aborted = False  # for debuging purposes
-        Pref.scan_started = 0
-        Pref.scan_timeout = 60  # seconds
-
-        update_folders()
-
-        RSBIDE.load_from_cache()
-        RSBIDECollectorThread().start()
 
 
 class RebuildCacheCommand(sublime_plugin.WindowCommand):
@@ -682,36 +276,6 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
 
     def description(self):
         return 'RSBIDE: Показать область объявления\talt+s'
-
-
-def getShortPathName(path):
-    import ctypes
-    from ctypes.wintypes import MAX_PATH
-    buf = ctypes.create_unicode_buffer(MAX_PATH)
-    GetShortPathName = ctypes.windll.kernel32.GetShortPathNameW
-    rv = GetShortPathName(path, buf, MAX_PATH)
-    if rv == 0 or rv > MAX_PATH:
-        return path
-    else:
-        return buf.value
-
-
-def getLongPathName(path):
-    import ctypes
-    from ctypes.wintypes import MAX_PATH
-    buf = ctypes.create_unicode_buffer(MAX_PATH)
-    GetLongPathName = ctypes.windll.kernel32.GetLongPathNameW
-    rv = GetLongPathName(path, buf, MAX_PATH)
-    if rv == 0 or rv > MAX_PATH:
-        return path
-    else:
-        return buf.value
-
-
-def _get_case_sensitive_name(s):
-    """ Returns long name in case sensitive format """
-    path = getLongPathName(getShortPathName(s))
-    return path
 
 
 def get_declare_in_parent(view, classRegs, sel):
@@ -925,11 +489,8 @@ class PrintTreeImportCommand(sublime_plugin.WindowCommand):
         tree.add_node(bfile)  # root node
 
         for file_im in LInFile:
-            # print("Analiz file: ", file_im)
             if file_im not in RSBIDE.filesimport.keys():
                 continue
-            # print("In Cashe: \n", list(set(RSBIDE.filesimport[file_im])))
-            # print("In Tree: ")
             for i in list(set(RSBIDE.filesimport[file_im])):
                 if i not in tree[file_im].children:
                     if i not in LInFile:
@@ -961,16 +522,7 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
         view.set_status('context', MessStat)
 
 
-def RSBIDE_folder_change_watcher():
-    while True:
-        time.sleep(5)
-        if not Pref.scan_running and Pref.updated_folders != Pref.folders:
-            RSBIDECollectorThread().start()
-
-
 def plugin_loaded():
-    global Pref, s
-    s = sublime.load_settings('RSBIDE.sublime-settings')
     update_settings()
     global_settings = sublime.load_settings(config["RSB_SETTINGS_FILE"])
     global_settings.add_on_change("update", update_settings)
