@@ -19,7 +19,7 @@ Features
 * **Go to declaration and back again**
     * Go to Definition `macro name(param)`, `class(...) name (param)`, `var name` taking into account the scope default keys <kbd>Alt + G</kbd>
     * Go to the definition of the selected functions by <kbd>Alt + G</kbd>
-    * Go to the file from the import <kbd> Alt + G </ kbd>
+    * Go to the file from the import <kbd> Alt + G </kbd>
     * Go to the parent class
     ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
     * Print Signature `macro` or `class` or `var` To Panel <kbd>Alt + S</kbd> 
