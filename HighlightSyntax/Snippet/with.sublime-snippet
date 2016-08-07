@@ -5,6 +5,6 @@ with (${1:obj})
    $0
 end;]]></content>
     <tabTrigger>with</tabTrigger>
-    <scope>source.mac</scope>
+    <scope>source.mac - (class-param.mac, macro-param.mac, variable.declare.name.mac, string, entity.name, meta.import.mac, storage.type)</scope>
     <description>with</description>
 </snippet>

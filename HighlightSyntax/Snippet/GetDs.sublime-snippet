@@ -1,5 +1,0 @@
-<snippet>
-    <content><![CDATA[GetDs("${0:sObject}").RSObject;]]></content>
-    <tabTrigger>GetDs</tabTrigger>
-    <scope>source.mac - (class-param.mac, macro-param.mac, variable.declare.name.mac, string, entity.name, meta.import.mac, storage.type)</scope>
-</snippet>

@@ -10,17 +10,19 @@ Features
 ------------
 
 * **auto-completions** 
-    * Functions according environment (import files)
-    * Autocomplete Object/Field/Method from *.xml (RSTypeInfo)
-    * Case insensitive completions
-    * Parameter hints
-    * Auto-completion in the field of import (prompts only files from the project)
+    * The variables / functions / classes / class options / parameters functions are complemented in view of visibility obalsti
+    * Together with the name of the function substituted its possible parameters
+    * auto-completions Object/Field/Method/Key from *.xml (RSTypeInfo)
+    * auto-completions are not case sensitive
+    * Auto-completion in the import (not only tells the imported files from the project)
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
 * **Go to declaration and back again**
-    * Go To Definition  `macro(...)` and `class(...) name (...)` according environment (import files) default key <kbd>Alt + G</kbd>
-    * go to the declaration of the currently selected functions via <kbd>Alt + G</kbd>, <kbd>Ctrl + left click</kbd>
+    * Go to Definition `macro name(param)`, `class(...) name (param)`, `var name` taking into account the scope default keys <kbd>Alt + G</kbd>
+    * Go to the definition of the selected functions by <kbd>Alt + G</kbd>
     * Go to the file from the import <kbd> Alt + G </ kbd>
-    * Print Signature `macro` and `class` To Panel <kbd>Alt + S</kbd> 
+    * Go to the parent class
+    ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
+    * Print Signature `macro` or `class` or `var` To Panel <kbd>Alt + S</kbd> 
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **Viewing documents**
@@ -42,10 +44,13 @@ Features
         - RSInit - $file_name -rsldebug
         - RSInit - client
         - RSInit - RPCserv.exe -c -cfg RPCServ.exe.rsconfig
+        - RSInit - TerminalClient -rsldebug
+        - RSInit - TypeInfo
+        - RSInit - RSAdmin
 * **Various useful Snippets**
-    * predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
+    * Predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Other commands**
-    * Print Tree Import - Printing in file *.treeimport tree import files from current and open in new tab
+    * Print Tree Import - It displays the current file tree imports. It opens in a new tab
     ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
 
 See Packages/RSBIDE/RSBIDE.sublime-settings for options. As with all ST packages, copy this file into your Packages/User folder and editing the copy there.

@@ -1,5 +1,0 @@
-<snippet>
-    <content><![CDATA[GetFullDs("${0:Имя Объекта}").RSObject;]]></content>
-    <tabTrigger>GetFullDs</tabTrigger>
-    <scope>source.mac</scope>
-</snippet>

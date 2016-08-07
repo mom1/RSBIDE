@@ -10,30 +10,29 @@
 ------------
 
 * **Авто-дополнение** 
-    * Функции дополняются с учетом импортируемых файлов
+    * Переменные/Функции/Классы/Параметры класса/параметры функций дополняются с учетом обалсти видимости
     * Вместе с именем функции подставляются ее возможные параметры
-    * Авто-дополнение Object/Field/Method из *.xml (RSTypeInfo)
+    * Авто-дополнение Object/Field/Method/Key из *.xml (RSTypeInfo)
     * Авто-дополнение не чувствительно к регистру
-    * Авто-дополнение в области import (подсказываются только файлы из проекта)
-    
-        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
+    * Авто-дополнение в области import (подсказываются только не импортированные файлы из проекта)
+    ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
 * **Перейти к объявлению и обратно**
-    * Перейти к определению  `macro(...)` и `class(...) name (...)` с учетом импортируемых файлов (import files) клавиши по умолчанию <kbd>Alt + G</kbd>
-    * Перейти к определению выделенных функций через <kbd>Alt + G</kbd>, <kbd>Ctrl + left click</kbd>
+    * Перейти к определению  `macro name(param)`, `class(...) name (param)`, `var name`  с учетом области видимости клавиши по умолчанию <kbd>Alt + G</kbd>
+    * Перейти к определению выделенных функций через <kbd>Alt + G</kbd>
     * Перейти к файлу из области import <kbd>Alt + G</kbd>
-    * Посмотреть структуру `macro` или `class` в нижней панели <kbd>Alt + S</kbd> 
-
-        ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
+    * Перейти к родительскому классу <kbd>Alt + G</kbd>
+    ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
+    * Посмотреть структуру `macro` или `class` или `var` в нижней панели <kbd>Alt + S</kbd>
+    ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * При просмотре в определениях вы всегда можете вернуться к исходной позиции с помощью <kbd>Esc</kbd>
 * **Просмотр документации**
     * Если по <kbd>Alt + S</kbd> слово под курсором не найденно в индексе, то пытаемся найти в документации (Бета)
-        ![DocPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/DocPanel.jpg)
+    ![DocPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/DocPanel.jpg)
 * **DllRegister RS-Balance 3 для проектной папки**
     * Пункт контекстного меню "DllRegister RS-Balance 3" на папке, регистрирует dll
     * Выключена если в папке нет dll для регистрации RS-Balance 3
     * Отображает результат попытки регистрации в строке статуса
-        
-        ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
+    ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
 * **Подсветка синтаксиса**
     * Для .mac файлов
 * **Запуск RS-Balance 3**
@@ -45,10 +44,13 @@
         - RSInit - $file_name -rsldebug
         - RSInit - client
         - RSInit - RPCserv.exe -c -cfg RPCServ.exe.rsconfig
+        - RSInit - TerminalClient -rsldebug
+        - RSInit - TypeInfo
+        - RSInit - RSAdmin
 * **Различные полезные Snippets**
-    * Предопределенные языковые конструкции и часть из `commonfunctions.mac`. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
+    * Предопределенные языковые конструкции. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Другие команды**
-    * RSBIDE: Print Tree Import - Выводит в файл `"полное_имя_текущего_файла" + .treeimport` дерево импортов начиная из текущего файла. Открывает в новой закладке
+    * RSBIDE: Print Tree Import - Выводит дерево импортов текущего файла. Открывает в новой закладке
     
         ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
 

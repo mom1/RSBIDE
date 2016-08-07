@@ -5,6 +5,6 @@ for (${1:val}, ${2:1}, ${3:100})
     ${0:$TM_SELECTED_TEXT}
 end;]]></content>
     <tabTrigger>for</tabTrigger>
-    <scope>source.mac</scope>
+    <scope>source.mac - (class-param.mac, macro-param.mac, variable.declare.name.mac, string, entity.name, meta.import.mac, storage.type)</scope>
     <description>For</description>
 </snippet>

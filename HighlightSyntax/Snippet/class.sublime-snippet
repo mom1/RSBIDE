@@ -1,11 +1,10 @@
 <snippet>
     <content><![CDATA[
-class T${1:${TM_FILENAME/(.*?)(\..+)/$1/}} (${3:ParametrClass})       
+class T${1:${TM_FILENAME/(.*?)(\..+)/$1/}} (${3:ParamClass})
 //Оставь коммент для класса
-    InitT$1 ($3);
     ${0:$TM_SELECTED_TEXT}
 END;
 ]]></content>
     <tabTrigger>class</tabTrigger>
-    <scope>source.mac</scope>
+    <scope>source.mac - (meta.class.mac, meta.macro.mac)</scope>
 </snippet>

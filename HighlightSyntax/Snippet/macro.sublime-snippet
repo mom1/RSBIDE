@@ -6,5 +6,5 @@ macro ${1:NameMacro} (${2:Sender:Object})
 End;
 ]]></content>
     <tabTrigger>macro</tabTrigger>
-    <scope>source.mac</scope>
+    <scope>source.mac - meta.macro.mac</scope>
 </snippet>
