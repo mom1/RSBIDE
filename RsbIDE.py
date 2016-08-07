@@ -147,7 +147,7 @@ class RSBIDE:
         return project.get_all_list_metadate()
 
     def get_completions(self, view, prefix):
-        # completion import files
+        # completion from cache
         completions = []
         t = time.time()
         t1 = time.time()
@@ -170,7 +170,6 @@ class RSBIDE:
             completions += self.get_from_metadata(view)
         log(ID, 'Из метаданных ' + str(time.time() - t) + ' sec')
         t = time.time()
-        # window = sublime.active_window()
         if sel.begin() == sel.end():
             sel = view.word(sel)
 
@@ -209,10 +208,10 @@ class RSBIDE:
                 region = [i for i in view.find_by_selector('meta.macro.mac') if i.contains(x)]
                 name_param = [view.substr(i) for i in view.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
                 hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
-                result.append((view.substr(x) + '(...)\t' + basename(filename), view.substr(x) + '(' + hint + ')'))
+                result.append((view.substr(x) + '(...)\t' + 'macro', view.substr(x) + '(' + hint + ')'))
             elif'variable.parameter.macro.mac' in view.scope_name(x.a):
                 if macroRegs[0].contains(x):
-                    result.append((view.substr(x) + '\t' + 'param macro', view.substr(x)))
+                    result.append((view.substr(x) + '\t' + 'macro param', view.substr(x)))
             elif'variable.declare.name.mac' in view.scope_name(x.a):
                     c = 0
                     if len(macroRegs) > 0:
@@ -224,14 +223,20 @@ class RSBIDE:
                             result.append((view.substr(x) + '\t' + 'var in class', view.substr(x)))
                             c += 1
                     if c == 0 and ('meta.macro.mac' not in view.scope_name(x.a) or 'meta.class.mac' not in view.scope_name(x.a)):
-                        result.append((view.substr(x) + '\t' + 'var in global', view.substr(x)))
+                        result.append((view.substr(x) + '\t' + 'global', view.substr(x)))
             else:
-                result.append((view.substr(x) + '\t' + basename(filename), view.substr(x)))
+                result.append((view.substr(x) + '\t' + 'current file', view.substr(x)))
         completions += result
         log(ID, 'Текущ. файл ' + str(time.time() - t) + ' sec')
         t = time.time()
         # from parent comletion
-        completions += get_declare_in_parent(view, classRegs, None)
+        # completions += get_declare_in_parent(view, classRegs, None)
+        regions_parent = [i for i in view.find_by_selector('entity.other.inherited-class.mac') for j in classRegs if j.contains(i)]
+        if len(regions_parent) == 0:
+            class_word = None
+        else:
+            class_word = view.substr(regions_parent[0])
+        completions += parser.get_parent_completion(class_word, project)
         log(ID, 'Из родителя ' + str(time.time() - t) + ' sec')
         t = time.time()
         completions += parser.get_globals_completion(get_imports(view.file_name()), project)
@@ -741,23 +746,6 @@ def get_declare_in_parent(view, classRegs, sel):
                 if region_class.contains(i) and sel.lower() == parse_panel.substr(i).lower()]
             if len(select) == 0:
                 select += get_declare_in_parent(parse_panel, regions_class, sel)
-        else:
-            result = []
-            t = time.time()
-            for x in parse_panel.find_by_selector('meta.class.mac variable.declare.name.mac - meta.macro.mac, meta.class.mac entity.name.function.mac'):
-                if not region_class.contains(x):
-                    continue
-                if 'entity.name.function.mac' in parse_panel.scope_name(x.a):
-                    region = [i for i in parse_panel.find_by_selector('meta.macro.mac') if i.contains(x)]
-                    name_param = [parse_panel.substr(i) for i in parse_panel.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
-                    hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
-                    result.append((parse_panel.substr(x) + '(...)\t' + basename(filename), parse_panel.substr(x) + '(' + hint + ')'))
-                else:
-                    result.append((parse_panel.substr(x) + '\t' + basename(filename), parse_panel.substr(x)))
-            log('Родитель:', basename(filename), str(time.time() - t))
-            t = time.time()
-            select += result
-            select += get_declare_in_parent(parse_panel, regions_class, None)
         sublime.active_window().destroy_output_panel(pref + item[1])
     return select
 
@@ -778,28 +766,15 @@ def get_globals_in_import(view, word, fName):
         filename, extension = os.path.splitext((file))
         lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
         parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + rfile)
-        result = []
-        if word is not None:
-            region_name = [
-                i for i in parse_panel.find_by_selector(
-                    'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac')
-                if word.lower() == parse_panel.substr(i).lower()]
-            for region in region_name:
-                select += [(file, rfile, (parse_panel.rowcol(region.a)[0] + 1, parse_panel.rowcol(region.a)[1] + 1))]
-        else:
-            for x in parse_panel.find_by_selector(
-                    'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac'):
-                if 'entity.name.function.mac' in parse_panel.scope_name(x.a):
-                    region = [i for i in parse_panel.find_by_selector('meta.macro.mac') if i.contains(x)]
-                    name_param = [parse_panel.substr(i) for i in parse_panel.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
-                    hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
-                    result.append((parse_panel.substr(x) + '(...)\t' + basename(filename), parse_panel.substr(x) + '(' + hint + ')'))
-                else:
-                    result.append((parse_panel.substr(x) + '\t' + basename(filename), parse_panel.substr(x)))
-        if len(select) > 0 and word is not None:
+        region_name = [
+            i for i in parse_panel.find_by_selector(
+                'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac')
+            if word.lower() == parse_panel.substr(i).lower()]
+        for region in region_name:
+            select += [(file, rfile, (parse_panel.rowcol(region.a)[0] + 1, parse_panel.rowcol(region.a)[1] + 1))]
+        if len(select) > 0:
             break
-        else:
-            select += result
+
         sublime.active_window().destroy_output_panel(pref + rfile)
     log('Конец обработки файла :' + fName, str(time.time() - t))
     return select
@@ -812,7 +787,6 @@ def get_imports(fName):
         already_im = CurrentFile.current["imports"]
     else:
         log('Import from file')
-        parser.done_im = []
         project = ProjectManager.get_current_project()
         already_im = parser.get_import_tree(fName, project)
     return already_im

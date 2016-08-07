@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-07-28 12:47:41
 # @Last Modified by:   MOM
-# @Last Modified time: 2016-08-06 23:02:35
+# @Last Modified time: 2016-08-07 14:51:56
 import os
 import time
 import RSBIDE.common.path as Path
@@ -10,8 +10,6 @@ from RSBIDE.common.verbose import log
 
 
 ID = 'Parser'
-global done_im
-done_im = []
 
 
 def get_imp2(i, project, all_imports):
@@ -53,5 +51,21 @@ def get_globals_completion(imports, project, prefix=None):
     result = []
     for x in imports:
         filecache = project.filecache.cache.files.get(x, {})
-        result += filecache[3].get('globals', [])
+        if len(filecache) > 3:
+            result += filecache[3].get('globals', [])
+    return result
+
+
+def get_parent_completion(s_class, project, prefix=None):
+    result = []
+    l_class = []
+    if s_class is None or s_class == '':
+        return []
+    l_class.append(s_class)
+    for x in l_class:
+        filecache = project.filecache.cache.class_struct.get(x, {})
+        if filecache.get('parent', None) is not None:
+            l_class.append(filecache.get('parent'))
+        result += filecache.get('variable', [])
+        result += filecache.get('macro', [])
     return result

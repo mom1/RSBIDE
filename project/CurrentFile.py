@@ -24,7 +24,6 @@ class CurrentFile:
 
     def evaluate_current(view, project=None):
         cache = CurrentFile.cache.get(view.id())
-        parser.done_im = []
         if cache:
             verbose(ID, "file cached", cache)
             CurrentFile.current = cache
