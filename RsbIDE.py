@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   MOM
-# @Last Modified time: 2016-08-07 18:58:53
+# @Last Modified time: 2016-08-07 20:40:53
 
 
 import sublime
@@ -481,25 +481,31 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 class PrintTreeImportCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
+        project = ProjectManager.get_current_project()
+        project_folder = project.get_directory()
+        file = Path.posix(Path.get_absolute_path(project_folder, view.file_name()))
+        sfile = Path.posix(os.path.relpath(file, project_folder))
         (_ROOT, _DEPTH, _BREADTH) = range(3)
         LInFile = []
         tree = Tree()
         bfile = basename(norm_path_string(view.file_name()))
-        LInFile.append(bfile)
-        tree.add_node(bfile)  # root node
-
+        LInFile.append(sfile)
+        tree.add_node(sfile)  # root node
         for file_im in LInFile:
-            if file_im not in RSBIDE.filesimport.keys():
-                continue
-            for i in list(set(RSBIDE.filesimport[file_im])):
-                if i not in tree[file_im].children:
-                    if i not in LInFile:
-                        LInFile.append(i)
-                        tree.add_node(i, file_im)
-                    else:
-                        tree.add_node(i + "_" + str(len(LInFile)), file_im)
-        tree.display(bfile, pathfile=norm_path_string(view.file_name()) + ".treeimport")
-        self.window.open_file("%s:%s:%s" % (view.file_name() + ".treeimport", 0, 0), sublime.ENCODED_POSITION)
+            for x, val in project.find_file(file_im).items():
+                for i in val[3].get('imports', []):
+                    for rf in project.find_file('/' + i):
+                        if not rf:
+                            continue
+                        if rf in LInFile:
+                            continue
+                        log('add ' + rf)
+                        LInFile.append(rf)
+                        tree.add_node(rf, file_im)
+        log(len(LInFile))
+        v = self.window.new_file()
+        tree.display(sfile, view=v)
+        v.run_command('append', {'characters': "\n"})
 
 
 class StatusBarFunctionCommand(sublime_plugin.TextCommand):

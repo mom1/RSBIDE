@@ -1,5 +1,4 @@
 # coding=utf8
-
 from RSBIDE.node import Node
 
 (_ROOT, _DEPTH, _BREADTH) = range(3)
@@ -26,17 +25,18 @@ class Tree:
         self[parent].add_child(identifier)
         return node
 
-    def display(self, identifier, depth=_ROOT, pathfile="C:\myfile"):
+    def display(self, identifier, depth=_ROOT, view=None, pathfile="C:\myfile"):
+        if view is None:
+            print('non view')
+            return
         children = self[identifier].children
-        f = open(pathfile, 'a')
         if depth == _ROOT:
-            print("{0}".format(identifier), file=f)
+            view.run_command('append', {'characters': "{0}".format(identifier)})
         else:
-            print("\t" * depth, "{0}".format(identifier), file=f)
-        f.close()
+            view.run_command('append', {'characters': '\n' + "\t" * depth + "{0}".format(identifier)})
         depth += 1
         for child in children:
-            self.display(child, depth, pathfile)  # recursive call
+            self.display(child, depth, view)  # recursive call
 
     def traverse(self, identifier, mode=_DEPTH):
         # Python generator. Loosly based on an algorithm from
