@@ -1,8 +1,8 @@
 # -*- coding: cp1251 -*-
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
-# @Last Modified by:   MOM
-# @Last Modified time: 2016-08-07 20:40:53
+# @Last Modified by:   mom1
+# @Last Modified time: 2016-08-09 18:57:31
 
 
 import sublime
@@ -517,14 +517,26 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
         classRegsName = view.find_by_selector('meta.class.mac entity.name.class.mac')
         functionRegs = [n for n in view.find_by_selector('meta.macro.mac') if n.contains(region)]
         functionRegsName = view.find_by_selector('meta.macro.mac entity.name.function.mac')
+        mess_list = []
         MessStat = ''
-
-        for crn in [j for j in classRegsName for cr in classRegs if cr.contains(j)]:
-            MessStat += ' Class: ' + view.substr(crn)
-            break
-        for mrn in [k for k in functionRegsName for mr in functionRegs if mr.contains(k)]:
-            MessStat += ' Macro: ' + view.substr(mrn)
-            break
+        sep = ';'
+        lint_regions = [(i, 'Слишком длинная строка') for i in view.get_regions('LongLines')]
+        lint_regions += [(i, 'Закомментированный код') for i in view.get_regions('comment_code')]
+        lint_regions += [(i, 'Не используемая переменная') for i in view.get_regions('vare_unused')]
+        if len(lint_regions) > 0:
+            MessStat = 'Есть замечания'
+            for x in lint_regions:
+                if x[0].intersects(region):
+                    mess_list += [x[1]]
+            if len(mess_list) > 0:
+                MessStat = sep.join(mess_list)
+        else:
+            for crn in [j for j in classRegsName for cr in classRegs if cr.contains(j)]:
+                MessStat += ' Class: ' + view.substr(crn)
+                break
+            for mrn in [k for k in functionRegsName for mr in functionRegs if mr.contains(k)]:
+                MessStat += ' Macro: ' + view.substr(mrn)
+                break
         view.set_status('context', MessStat)
 
 

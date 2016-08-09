@@ -1,6 +1,8 @@
 config = {
     "DEBUG": False,
     "LOG": False,
+    "MAXLENGTH": 151,
+    "LINT": False,
     "RSB_SETTINGS_FILE": "RSBIDE.sublime-settings",
     "ESCAPE_DOLLAR": '\$',
     "TRIGGER_ACTION": ["auto_complete", "insert_path"],

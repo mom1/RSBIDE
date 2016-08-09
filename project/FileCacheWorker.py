@@ -148,7 +148,10 @@ class FileCacheWorker(threading.Thread):
         # indexing
         progress_bar = ProgressBar("RSBIDE: Индексация файлов проекта")
         progress_bar.start()
-        self.files = self.read(self.folder)
+        try:
+            self.files = self.read(self.folder)
+        except Exception:
+            progress_bar.stop()
         progress_bar.stop()
         deleted = list(set(self.files.keys()) - set(self.not_delete))
         for_del = []
