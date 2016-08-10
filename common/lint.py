@@ -2,12 +2,12 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-10 12:45:03
+# @Last Modified time: 2016-08-10 20:12:25
 import sublime
 import re
 # import RSBIDE.common.path as Path
-from RSBIDE.common.verbose import log
-from RSBIDE.common.config import config
+# from RSBIDE.common.verbose import log
+# from RSBIDE.common.config import config
 from RSBIDE.RsbIde_print_panel import get_panel
 
 ID = 'Linter'
@@ -24,9 +24,9 @@ def run_all_lint(view, ProjectManager):
     comment_code(view, ProjectManager)
     vare_unused(view, ProjectManager)
     if project.get_setting("SHOW_SAVE", True):
-        all_regions = [['Слишком длинная строка', view.rowcol(i.a)] for i in view.get_regions('LongLines')]
-        all_regions += [['Закомментированный код', view.rowcol(i.a)] for i in view.get_regions('comment_code')]
-        all_regions += [['Не используемая переменная ' + view.substr(i), view.rowcol(i.a)] for i in view.get_regions('vare_unused')]
+        all_regions = [[get_text_lint('LongLines'), view.rowcol(i.a)] for i in view.get_regions('LongLines')]
+        all_regions += [[get_text_lint('comment_code'), view.rowcol(i.a)] for i in view.get_regions('comment_code')]
+        all_regions += [[get_text_lint('vare_unused') + ' ' + view.substr(i), view.rowcol(i.a)] for i in view.get_regions('vare_unused')]
         all_regions = sorted(all_regions, key=lambda x: x[1][0])
         all_regions = [[i[0], str([j + 1 for j in i[1]])] for i in all_regions]
         window.show_quick_panel(all_regions, _on_done, 0, 0, lambda x: _on_done(x))
@@ -43,8 +43,19 @@ def _on_done(item):
     pt = view.text_point(row, col)
     view.sel().clear()
     view.sel().add(sublime.Region(pt))
-    # view.show_at_center(pt)
-    view.show(pt)
+    view.show_at_center(pt)
+    # view.show(pt)
+
+
+def get_text_lint(key):
+    if key is None:
+        return ''
+    lint_mess = {
+        'LongLines': 'Слишком длинная строка',
+        'comment_code': 'Закомментированный код',
+        'vare_unused': 'Не используемая переменная'
+    }
+    return lint_mess.get(key, '')
 
 
 def erase_all_regions(view):

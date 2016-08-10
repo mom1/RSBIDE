@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-10 19:17:46
+# @Last Modified time: 2016-08-10 20:03:51
 
 
 import sublime
@@ -548,9 +548,9 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
         mess_list = []
         MessStat = ''
         sep = ';'
-        lint_regions = [(i, 'Слишком длинная строка') for i in view.get_regions('LongLines')]
-        lint_regions += [(i, 'Закомментированный код') for i in view.get_regions('comment_code')]
-        lint_regions += [(i, 'Не используемая переменная') for i in view.get_regions('vare_unused')]
+        lint_regions = [(i, Linter.get_text_lint('LongLines')) for i in view.get_regions('LongLines')]
+        lint_regions += [(i, Linter.get_text_lint('comment_code')) for i in view.get_regions('comment_code')]
+        lint_regions += [(i, Linter.get_text_lint('vare_unused')) for i in view.get_regions('vare_unused')]
         if len(lint_regions) > 0:
             MessStat = 'Есть замечания: %s всего' % (len(lint_regions))
             for x in lint_regions:
