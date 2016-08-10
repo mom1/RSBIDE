@@ -1,8 +1,8 @@
 # -*- coding: cp1251 -*-
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
-# @Last Modified by:   mom1
-# @Last Modified time: 2016-08-10 20:03:51
+# @Last Modified by:   MOM
+# @Last Modified time: 2016-08-11 00:08:00
 
 
 import sublime
@@ -25,7 +25,7 @@ import RSBIDE.common.settings as Settings
 from RSBIDE.common.config import config
 import RSBIDE.common.path as Path
 from RSBIDE.project.CurrentFile import CurrentFile
-import RSBIDE.common.lint as Linter
+from RSBIDE.common.lint import Linter
 
 
 global IS_ST3
@@ -496,7 +496,8 @@ class LintThisViewCommand(sublime_plugin.WindowCommand):
         view = self.window.active_view()
         if not is_RStyle_view(view):
             return
-        Linter.run_all_lint(view, ProjectManager)
+        lint = Linter(view, ProjectManager)
+        lint.start()
 
     def is_visible(self):
         view = self.window.active_view()
@@ -540,6 +541,9 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         view = self.view
+        if not is_RStyle_view(view):
+            return
+        lint = Linter(view, ProjectManager)
         region = view.sel()[0]
         classRegs = [i for i in view.find_by_selector('meta.class.mac') if i.contains(region)]
         classRegsName = view.find_by_selector('meta.class.mac entity.name.class.mac')
@@ -548,9 +552,7 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
         mess_list = []
         MessStat = ''
         sep = ';'
-        lint_regions = [(i, Linter.get_text_lint('LongLines')) for i in view.get_regions('LongLines')]
-        lint_regions += [(i, Linter.get_text_lint('comment_code')) for i in view.get_regions('comment_code')]
-        lint_regions += [(i, Linter.get_text_lint('vare_unused')) for i in view.get_regions('vare_unused')]
+        lint_regions = [(j, lint.get_text_lint(i)) for i in lint.all_lint_regions() for j in view.get_regions(i)]
         if len(lint_regions) > 0:
             MessStat = 'Есть замечания: %s всего' % (len(lint_regions))
             for x in lint_regions:
@@ -581,7 +583,8 @@ def update_settings():
     global scope_cache
     scope_cache = {}
     # update settings
-    global_settings = Settings.update()
+    if Settings:
+        global_settings = Settings.update()
     # update project settings
     ProjectManager.initialize(Project, global_settings)
 

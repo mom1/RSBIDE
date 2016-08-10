@@ -6,4 +6,6 @@
     "lint": true,
     "show_save": true,
     "maxlength": 160,
+    "scop_error": "invalid.mac",
+    "max_empty_line": 2,
 }
