@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-10 00:20:55
+# @Last Modified time: 2016-08-10 12:45:03
 import sublime
 import re
 # import RSBIDE.common.path as Path
@@ -37,12 +37,14 @@ def _on_done(item):
     if item == -1:
         return
     window = sublime.active_window()
+    view = window.active_view()
     row = int(all_regions[item][1].split(', ')[0].strip('[')) - 1
     col = int(all_regions[item][1].split(', ')[1].strip(']')) - 1
-    pt = window.active_view().text_point(row, col)
-    window.active_view().sel().clear()
-    window.active_view().sel().add(sublime.Region(pt))
-    window.active_view().show_at_center(pt)
+    pt = view.text_point(row, col)
+    view.sel().clear()
+    view.sel().add(sublime.Region(pt))
+    # view.show_at_center(pt)
+    view.show(pt)
 
 
 def erase_all_regions(view):
@@ -116,10 +118,16 @@ def vare_unused(view, ProjectManager):
     # pref = 'RSBIDE:Lint_'
     scope = "invalid.mac"
     invalidRegions = []
-    l_all_vare = [(
+    l_all_vare_macro = [(
         view.substr(i).rstrip('\r\n'), i) for i in view.find_by_selector('source.mac meta.macro.mac meta.variable.mac variable.declare.name.mac')]
+    l_all_vare_class = [(
+        view.substr(i).rstrip('\r\n'), i)
+        for i in view.find_by_selector('source.mac meta.class.mac meta.variable.mac variable.declare.name.mac - meta.macro.mac')]
+
     l_all_meta_macro = view.find_by_selector('meta.macro.mac')
-    for x in l_all_vare:
+    l_all_meta_class = view.find_by_selector('meta.class.mac')
+    l_all_meta_class = [c for c in l_all_meta_class for m in l_all_meta_macro if c.contains(m)]
+    for x in l_all_vare_macro:
         extract = []
         for j in l_all_meta_macro:
             if j.contains(x[1].a):
@@ -129,5 +137,16 @@ def vare_unused(view, ProjectManager):
         m = re.findall(pattern, view.substr(extract), re.I)
         if not (len(m) - 1) > 0:
             invalidRegions.append(x[1])
+    for x in l_all_vare_class:
+        extract = []
+        for j in l_all_meta_class:
+            if j.contains(x[1].a) and 'esc' not in view.substr(x[1]).lower():
+                extract = j
+                break
+        pattern = r'(\b%s\b)' % (x[0])
+        if len(extract) > 0:
+            m = re.findall(pattern, view.substr(extract), re.I)
+            if not (len(m) - 1) > 0:
+                invalidRegions.append(x[1])
     if len(invalidRegions) > 0:
         view.add_regions("vare_unused", invalidRegions, scope)

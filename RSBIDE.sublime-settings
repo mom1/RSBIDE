@@ -3,4 +3,7 @@
     "log": false,
     "exclude_folders": ["DBFiles", "Help", "Html", "Lbr", "template", "upgrader", "Web", "script"],
     "always_import": ["CommonVariables", "CommonDefines", "CommonClasses", "CommonFunctions", "CommonCallReference"],
+    "lint": true,
+    "show_save": true,
+    "maxlength": 160,
 }

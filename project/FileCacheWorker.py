@@ -68,7 +68,7 @@ class FileCacheWorker(threading.Thread):
                         self.files, self.meta_data, self.class_struct = pickle.load(cache_file)
                         verbose(ID, 'cache load from ' + os.path.join(self.tmp_folder, self.files_cache))
                     except Exception:
-                        pass
+                        verbose(ID, 'Error load cache')
                         # os.remove(cache_file)
         else:
             self.files = {}

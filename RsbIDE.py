@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-09 18:57:31
+# @Last Modified time: 2016-08-10 19:17:46
 
 
 import sublime
@@ -25,6 +25,7 @@ import RSBIDE.common.settings as Settings
 from RSBIDE.common.config import config
 import RSBIDE.common.path as Path
 from RSBIDE.project.CurrentFile import CurrentFile
+import RSBIDE.common.lint as Linter
 
 
 global IS_ST3
@@ -369,6 +370,18 @@ def get_result(view):
     sfile = Path.posix(os.path.relpath(file, project_folder))
     word = view.substr(sel)
 
+    if word.lower() == 'end' and (
+        'keyword.macro.end.mac' in view.scope_name(view.sel()[0].a) or
+        'keyword.class.end.mac' in view.scope_name(view.sel()[0].a) or
+        'keyword.if.end.mac' in view.scope_name(view.sel()[0].a) or
+        'keyword.for.end.mac' in view.scope_name(view.sel()[0].a) or
+        'keyword.while.end.mac' in view.scope_name(view.sel()[0].a)
+    ):
+        meta = view.extract_scope(sel.a - 1)
+        row, col = view.rowcol(meta.a)
+        return [(file, sfile, (row + 1, col + 1))]
+        # log(view.substr())
+
     if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
         return [(val[3].get('fullpath'), i, (0, 0)) for i, val in project.find_file('/' + word.lower() + '.mac').items()]
     elif view.scope_name(view.sel()[0].a) == "source.mac meta.class.mac inherited-class.mac entity.other.inherited-class.mac ":
@@ -478,6 +491,21 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
         return 'RSBIDE: Перейти к объявлению\talt+g'
 
 
+class LintThisViewCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        view = self.window.active_view()
+        if not is_RStyle_view(view):
+            return
+        Linter.run_all_lint(view, ProjectManager)
+
+    def is_visible(self):
+        view = self.window.active_view()
+        return ('R-Style' in view.settings().get('syntax'))
+
+    def description(self):
+        return 'RSBIDE: Проверить по соглашениям'
+
+
 class PrintTreeImportCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
@@ -524,7 +552,7 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
         lint_regions += [(i, 'Закомментированный код') for i in view.get_regions('comment_code')]
         lint_regions += [(i, 'Не используемая переменная') for i in view.get_regions('vare_unused')]
         if len(lint_regions) > 0:
-            MessStat = 'Есть замечания'
+            MessStat = 'Есть замечания: %s всего' % (len(lint_regions))
             for x in lint_regions:
                 if x[0].intersects(region):
                     mess_list += [x[1]]

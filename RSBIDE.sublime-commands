@@ -18,5 +18,9 @@
     {
         "caption": "RSBIDE: Print Tree Import",
         "command": "print_tree_import"
+    },
+    {
+        "caption": "RSBIDE: Lint This View",
+        "command": "lint_this_view"
     }
 ]
