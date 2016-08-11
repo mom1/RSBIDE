@@ -102,7 +102,7 @@ class FileCache:
             return False
 
         result = {}
-        file_name_query = ".*" + re.escape(file_name) + ".*"
+        file_name_query = r".*\b" + re.escape(file_name) + ".*"
         for filepath, val in project_files.items():
             if re.match(file_name_query, filepath, re.IGNORECASE):
                 result[filepath] = val

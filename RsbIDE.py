@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-11 14:00:56
+# @Last Modified time: 2016-08-11 19:34:48
 
 
 import sublime
@@ -27,7 +27,7 @@ from RSBIDE.common.config import config
 import RSBIDE.common.path as Path
 from RSBIDE.project.CurrentFile import CurrentFile
 from RSBIDE.common.lint import Linter
-
+import Default.history_list as History
 
 global already_im
 already_im = []
@@ -388,7 +388,7 @@ def get_result(view):
         # log(view.substr())
 
     if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
-        return [(val[3].get('fullpath'), i, (0, 0)) for i, val in project.find_file('/' + word.lower() + '.mac').items()]
+        return [(val[3].get('fullpath'), i, (0, 0)) for i, val in project.find_file(word.lower() + '.mac').items()]
     elif view.scope_name(view.sel()[0].a) == "source.mac meta.class.mac inherited-class.mac entity.other.inherited-class.mac ":
         return window.lookup_symbol_in_index(word)
 
@@ -462,8 +462,9 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
         if not is_RStyle_view(view):
             return
         self.old_view = self.window.active_view()
-        self.current_file_location = view.sel()[0].end()
+        self.current_file_location = view.sel()[0].begin()
 
+        History.get_jump_history(self.window.id()).push_selection(view)
         self.result = get_result(view)
 
         if len(self.result) == 1:
@@ -478,7 +479,6 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 
     def open_file(self, idx, transient=False):
             flags = sublime.ENCODED_POSITION
-
             if transient:
                 flags |= sublime.TRANSIENT
 
@@ -532,7 +532,7 @@ class PrintTreeImportCommand(sublime_plugin.WindowCommand):
         for file_im in LInFile:
             for x, val in project.find_file(file_im).items():
                 for i in val[3].get('imports', []):
-                    for rf in project.find_file('/' + i):
+                    for rf in project.find_file(i):
                         if not rf:
                             continue
                         if rf in LInFile:
@@ -574,6 +574,8 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
                 MessStat += ' Class: ' + view.substr(crn)
                 break
             for mrn in [k for k in functionRegsName for mr in functionRegs if mr.contains(k)]:
+                if len(MessStat) > 0:
+                    MessStat += ','
                 MessStat += ' Macro: ' + view.substr(mrn)
                 break
         view.set_status('context', MessStat)

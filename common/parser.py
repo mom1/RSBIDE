@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mom1
 # @Date:   2016-07-28 12:47:41
-# @Last Modified by:   MOM
-# @Last Modified time: 2016-08-07 14:51:56
+# @Last Modified by:   mom1
+# @Last Modified time: 2016-08-11 19:46:52
 import os
 import time
 import RSBIDE.common.path as Path
@@ -13,7 +13,7 @@ ID = 'Parser'
 
 
 def get_imp2(i, project, all_imports):
-    for rf in project.find_file('/' + i):
+    for rf in project.find_file(i):
         if not rf:
             continue
         if rf in all_imports:
@@ -29,7 +29,7 @@ def get_imp(find_files, project, all_imports):
     return all_imports
 
 
-def get_import_tree(fName, project, parent=None):
+def get_import_tree(fName, project, add_self=False):
     t = time.time()
     all_imports = []
     always_import = []
@@ -37,8 +37,11 @@ def get_import_tree(fName, project, parent=None):
     file = Path.posix(Path.get_absolute_path(project_folder, fName))
     sfile = Path.posix(os.path.relpath(file, project_folder))
     always_import += project.filecache.cache.always_import
-    always_import = [i for j in always_import for i in project.find_file('/' + j + '.mac')]
-    all_imports.append(sfile)
+    always_import = [i for j in always_import for i in project.find_file(j + '.mac')]
+    if add_self:
+        all_imports.append(sfile)
+    else:
+        all_imports += get_imp(project.find_file(sfile), project, all_imports)
     for i in all_imports:
         all_imports = get_imp(project.find_file(i), project, all_imports)
     if (time.time() - t) > 0.5:
