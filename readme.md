@@ -45,6 +45,7 @@ Features
         - RSInit (RSInit.exe)
         - RSInit - client -rsldebug
         - RSInit - $file_name -rsldebug
+        - RSInit - $file_name -rsldebug -windowsauth
         - RSInit - client
         - RSInit - RPCserv.exe -c -cfg RPCServ.exe.rsconfig
         - RSInit - TerminalClient -rsldebug
