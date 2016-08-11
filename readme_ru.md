@@ -9,7 +9,7 @@
 Особенности
 ------------
 
-* **Авто-дополнение** 
+* **Авто-дополнение**
     * Переменные/Функции/Классы/Параметры класса/параметры функций дополняются с учетом обалсти видимости
     * Вместе с именем функции подставляются ее возможные параметры
     * Авто-дополнение Object/Field/Method/Key из *.xml (RSTypeInfo)
@@ -35,6 +35,9 @@
     ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
 * **Подсветка синтаксиса**
     * Для .mac файлов
+* **Подсветка замечаний из соглашения по разработке**
+    * Все основные параметры вынесенны в настройки
+    ![Linter](https://raw.github.com/mom1/RSBIDE/master/screenshot/Linter.jpg)
 * **Запуск RS-Balance 3**
     * Быстрый запуск Клиентского приложения из проекта
     * Для быстрого запуска клиента с отладкой используйте <kbd>Ctrl + B</kbd>, <kbd>F7</kbd>
@@ -51,7 +54,7 @@
     * Предопределенные языковые конструкции. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Другие команды**
     * RSBIDE: Print Tree Import - Выводит дерево импортов текущего файла. Открывает в новой закладке
-    
+
         ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
 
 Установка

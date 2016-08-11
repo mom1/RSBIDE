@@ -9,7 +9,7 @@ This plugin adds RS-Balance 3 completions and some IDE-like functions to Sublime
 Features
 ------------
 
-* **auto-completions** 
+* **auto-completions**
     * The variables / functions / classes / class options / parameters functions are complemented in view of visibility obalsti
     * Together with the name of the function substituted its possible parameters
     * auto-completions Object/Field/Method/Key from *.xml (RSTypeInfo)
@@ -22,7 +22,7 @@ Features
     * Go to the file from the import <kbd>Alt + G</kbd>
     * Go to the parent class <kbd>Alt + G</kbd>
     ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
-    * Print Signature `macro` or `class` or `var` To Panel <kbd>Alt + S</kbd> 
+    * Print Signature `macro` or `class` or `var` To Panel <kbd>Alt + S</kbd>
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **Viewing documents**
@@ -35,6 +35,9 @@ Features
     ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
 * **Syntax highlighting**
     * For .mac files
+* **Highlighting comments on the development of the agreement**
+    * All the main parameters in settings
+    ![Linter](https://raw.github.com/mom1/RSBIDE/master/screenshot/Linter.jpg)
 * **Launch RS-Balance 3**
     * quickly open the Client with your Reg configuration
     * to Run Client use <kbd>Ctrl + B</kbd>, <kbd>F7</kbd> or search for it in the command palette.

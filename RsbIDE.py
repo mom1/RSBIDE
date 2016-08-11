@@ -1,8 +1,8 @@
 # -*- coding: cp1251 -*-
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
-# @Last Modified by:   MOM
-# @Last Modified time: 2016-08-11 00:08:00
+# @Last Modified by:   mom1
+# @Last Modified time: 2016-08-11 14:00:56
 
 
 import sublime
@@ -16,6 +16,7 @@ import xml.etree.ElementTree as ET
 from os.path import basename, dirname, normpath, normcase, realpath
 from RSBIDE.tree import Tree
 from RSBIDE.RsbIde_print_panel import get_panel
+from RSBIDE.RsbIde_print_panel import print_to_panel
 
 from RSBIDE.common.verbose import verbose, log
 from RSBIDE.project.ProjectManager import ProjectManager
@@ -28,14 +29,21 @@ from RSBIDE.project.CurrentFile import CurrentFile
 from RSBIDE.common.lint import Linter
 
 
-global IS_ST3
-IS_ST3 = sublime.version().startswith('3')
-
-
 global already_im
 already_im = []
 ID = 'RSBIDE'
-scope_cache = {}
+
+
+ST2 = int(sublime.version()) < 3000
+
+if ST2:
+    try:
+        sublime.error_message("RSBIDE Package Message:\n\nЭтот Пакет НЕ РАБОТАЕТ в Sublime Text 2 \n\n Используйте Sublime Text 3.")
+    except:
+        try:
+            sublime.message_dialog("RSBIDE Package Message:\n\nЭтот Пакет НЕ РАБОТАЕТ в Sublime Text 2 \n\n Используйте Sublime Text 3.")
+        except:
+            pass
 
 
 class RSBIDE:
@@ -207,9 +215,6 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
     cache = {}
 
     def run(self):
-        global IS_ST3
-        if IS_ST3:
-            from RSBIDE.RsbIde_print_panel import print_to_panel
         view = self.window.active_view()
         sel = view.sel()[0]
         if sel.begin() == sel.end():
@@ -273,7 +278,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self, paths=None):
         view = self.window.active_view()
-        return ('R-Style' in view.settings().get('syntax'))
+        return is_RStyle_view(view)
 
     def description(self):
         return 'RSBIDE: Показать область объявления\talt+s'
@@ -485,7 +490,7 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self, paths=None):
         view = self.window.active_view()
-        return ('R-Style' in view.settings().get('syntax'))
+        return is_RStyle_view(view)
 
     def description(self):
         return 'RSBIDE: Перейти к объявлению\talt+g'
@@ -501,7 +506,11 @@ class LintThisViewCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self):
         view = self.window.active_view()
-        return ('R-Style' in view.settings().get('syntax'))
+        project = ProjectManager.get_current_project()
+        isvis = False
+        if is_RStyle_view(view) and project.get_setting("LINT", True):
+            isvis = True
+        return isvis
 
     def description(self):
         return 'RSBIDE: Проверить по соглашениям'
@@ -579,14 +588,8 @@ def plugin_loaded():
 def update_settings():
     """ restart projectFiles with new plugin and project settings """
 
-    # invalidate cache
-    global scope_cache
-    scope_cache = {}
     # update settings
     if Settings:
         global_settings = Settings.update()
     # update project settings
     ProjectManager.initialize(Project, global_settings)
-
-if not IS_ST3:
-    sublime.set_timeout(lambda: plugin_loaded(), 0)
