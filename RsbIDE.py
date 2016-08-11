@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-11 19:34:48
+# @Last Modified time: 2016-08-11 21:46:10
 
 
 import sublime
@@ -554,10 +554,6 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
             return
         lint = Linter(view, ProjectManager)
         region = view.sel()[0]
-        classRegs = [i for i in view.find_by_selector('meta.class.mac') if i.contains(region)]
-        classRegsName = view.find_by_selector('meta.class.mac entity.name.class.mac')
-        functionRegs = [n for n in view.find_by_selector('meta.macro.mac') if n.contains(region)]
-        functionRegsName = view.find_by_selector('meta.macro.mac entity.name.function.mac')
         mess_list = []
         MessStat = ''
         sep = ';'
@@ -570,15 +566,32 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
             if len(mess_list) > 0:
                 MessStat = sep.join(mess_list)
         else:
+            if not ProjectManager.get_current_project().get_setting("SHOW_CLASS_IN_STATUS", False):
+                return
+            classRegs = [i for i in view.find_by_selector('meta.class.mac') if i.contains(region)]
+            classRegsName = [
+                i for i in view.find_by_selector(
+                    'meta.class.mac & (storage.type.class.mac, inherited-class.mac, entity.name.class.mac, variable.parameter.class.mac)')]
+            param = []
+            functionRegs = [n for n in view.find_by_selector('meta.macro.mac') if n.contains(region)]
+            functionRegsName = view.find_by_selector('meta.macro.mac entity.name.function.mac')
             for crn in [j for j in classRegsName for cr in classRegs if cr.contains(j)]:
-                MessStat += ' Class: ' + view.substr(crn)
-                break
+                if view.substr(crn).lower() == 'class':
+                    MessStat += '\nclass'
+                else:
+                    if 'variable.parameter.class.mac' in view.scope_name(crn.a):
+                        param += [view.substr(crn)]
+                    else:
+                        MessStat += ' ' + view.substr(crn)
+            if len(param) > 0:
+                MessStat += '(' + ', '.join(param) + ')'
+                param = []
             for mrn in [k for k in functionRegsName for mr in functionRegs if mr.contains(k)]:
                 if len(MessStat) > 0:
                     MessStat += ','
-                MessStat += ' Macro: ' + view.substr(mrn)
+                MessStat += ' macro: ' + view.substr(mrn)
                 break
-        view.set_status('context', MessStat)
+        view.set_status('rsbide_stat', MessStat)
 
 
 def plugin_loaded():

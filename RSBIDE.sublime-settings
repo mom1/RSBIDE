@@ -8,4 +8,5 @@
     "maxlength": 160,
     "scop_error": "invalid.mac",
     "max_empty_line": 2,
+    "show_class_in_status": false,
 }
