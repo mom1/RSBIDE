@@ -20,6 +20,13 @@
             }
         },
         {
+            "name": "$file_name -rsldebug -windowsauth",
+            "windows":
+            {
+                "cmd": ["RSInit.exe", "$file_name", "-rsldebug", "-windowsauth"]
+            }
+        },
+        {
             "name": "client",
             "windows":
             {
