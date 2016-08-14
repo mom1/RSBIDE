@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-11 09:45:44
+# @Last Modified time: 2016-08-14 19:46:04
 import sublime
 import re
 import threading
@@ -36,6 +36,9 @@ class Linter(threading.Thread):
         self.comment_code()
         self.vare_unused()
         self.empty_line()
+        self.many_param()
+        self.many_dept_loop()
+        self.cpwin()
         if project.get_setting("SHOW_SAVE", True):
             self.all_regions = [[self.get_text_lint(i), self.view.rowcol(j.a)] for i in self.all_lint_regions() for j in self.view.get_regions(i)]
             self.all_regions = sorted(self.all_regions, key=lambda x: x[1][0])
@@ -61,12 +64,17 @@ class Linter(threading.Thread):
             'LongLines': 'Слишком длинная строка',
             'comment_code': 'Закомментированный код',
             'vare_unused': 'Не используемая переменная',
-            'empty_line': 'Много предшествующих пустых строк'
+            'empty_line': 'Много предшествующих пустых строк',
+            'not_empty_line': 'Ожидается 1 пустая строка',
+            'many_param': 'У функции слишком много параметров',
+            'reg_loop': 'Большая вложенность циков и условий',
+            'reg_loop_for': 'Критическая вложенность for',
+            'cpwin': 'Не указана cpwin'
         }
         return lint_mess.get(key, '')
 
     def all_lint_regions(self):
-        return ['LongLines', 'comment_code', 'vare_unused', 'empty_line']
+        return ['LongLines', 'comment_code', 'vare_unused', 'empty_line', 'not_empty_line', 'many_param', 'reg_loop_for', 'reg_loop', 'cpwin']
 
     def erase_all_regions(self):
         for i in self.all_lint_regions():
@@ -79,14 +87,10 @@ class Linter(threading.Thread):
             (locations and len(locations) and '.mac' in view.scope_name(locations[0])))
 
     def LongLines(self):
-            #  Settings  #
             project = self.ProjectManager.get_current_project()
             maxLength = project.get_setting("MAXLENGTH", 150)
-            islint = project.get_setting("LINT", False)
             scope = self.scope
             firstCharacter_Only = False
-            if not islint:
-                return
 
             if 'R-Style' not in self.view.settings().get('syntax'):
                 return
@@ -115,10 +119,6 @@ class Linter(threading.Thread):
                 self.view.add_regions("LongLines", invalidRegions, scope, flags=self.flags)
 
     def comment_code(self):
-        project = self.ProjectManager.get_current_project()
-        islint = project.get_setting("LINT", False)
-        if not islint:
-            return
         pref = 'RSBIDE:Lint_'
         l_comment = [
             (self.view.substr(i).rstrip('\r\n') + "\n", i) for i in self.view.find_by_selector('source.mac comment. - punctuation.definition.comment.mac')]
@@ -134,11 +134,6 @@ class Linter(threading.Thread):
             self.view.add_regions("comment_code", invalidRegions, scope, flags=self.flags)
 
     def vare_unused(self):
-        project = self.ProjectManager.get_current_project()
-        islint = project.get_setting("LINT", False)
-        if not islint:
-            return
-        # pref = 'RSBIDE:Lint_'
         scope = self.scope
         invalidRegions = []
         l_all_vare_macro = [(
@@ -175,11 +170,51 @@ class Linter(threading.Thread):
             self.view.add_regions("vare_unused", invalidRegions, scope, flags=self.flags)
 
     def empty_line(self):
-        mr = self.view.find_all(r'^(\s)*$')
         max_eline = self.ProjectManager.get_current_project().get_setting("MAX_EMPTY_LINE", 2)
+        mr = self.view.find_all(r'^(\s)*$')
         invalidRegions = []
+        invalidExpect = []
         for x in mr:
             if len(self.view.lines(self.view.full_line(x))) > max_eline:
                 invalidRegions += [self.view.line(x.b + 1)]
+        cm = self.view.find_by_selector('storage.type.class.mac, storage.type.macro.mac')
+        for x in cm:
+            prev_line = self.view.line(self.view.line(x.a).a - 1)
+            if not re.match(r'^(\s)*$', self.view.substr(prev_line), re.IGNORECASE):
+                invalidExpect += [self.view.line(x.a)]
         if len(invalidRegions) > 0:
             self.view.add_regions("empty_line", invalidRegions, self.scope, flags=self.flags)
+        if len(invalidExpect) > 0:
+            self.view.add_regions("not_empty_line", invalidExpect, self.scope, flags=self.flags)
+
+    def many_param(self):
+        max_count_param = self.ProjectManager.get_current_project().get_setting("MAX_COUNT_MACRO_PARAM", 5)
+        macroRegsName = self.view.find_by_selector('meta.macro.mac & (storage.type.macro.mac, entity.name.function.mac, variable.parameter.macro.mac)')
+        invalidRegions = []
+        param = []
+        for x in macroRegsName:
+            if self.view.substr(x).lower() == 'macro':
+                if len(param) > max_count_param:
+                    lines = self.view.lines(param[-1])
+                    invalidRegions += [sublime.Region(param[0].a, lines[-1].b)]
+                param = []
+            elif 'variable.parameter.macro.mac' in self.view.scope_name(x.a):
+                    param += [x]
+        if len(invalidRegions) > 0:
+            self.view.add_regions("many_param", invalidRegions, self.scope, flags=self.flags)
+
+    def many_dept_loop(self):
+        max_depth = self.ProjectManager.get_current_project().get_setting("MAX_DEPTH_LOOP", 3)
+        reg_loop = self.view.find_by_selector('source.mac' + ' meta.if.mac' * max_depth)
+        reg_loop += self.view.find_by_selector('source.mac' + ' meta.while.mac' * max_depth)
+        reg_loop_for = self.view.find_by_selector('source.mac' + ' meta.for.mac' * 2)
+        if len(reg_loop_for) > 0:
+            self.view.add_regions("reg_loop_for", reg_loop_for, self.scope, flags=self.flags)
+        if len(reg_loop) > 0:
+            self.view.add_regions("reg_loop", reg_loop, self.scope, flags=self.flags)
+
+    def cpwin(self):
+        l_cpwin = self.view.find_by_selector('keyword.control.cpwin.mac')
+        if len(l_cpwin) == 0:
+            invalidRegions = [self.view.line(sublime.Region(0, 0))]
+            self.view.add_regions("cpwin", invalidRegions, self.scope, flags=self.flags)

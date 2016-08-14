@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-13 01:03:51
+# @Last Modified time: 2016-08-14 14:58:23
 
 
 import sublime
@@ -75,13 +75,16 @@ class RSBIDE:
         scope = view.scope_name(view.sel()[0].a)
         if "source.mac meta.import.mac" in scope or 'punctuation.definition.import.mac' in scope:
             # completion for import
-            currentImport = [os.path.splitext(basename(
-                view.substr(s).lower().strip()))[0] for s in view.find_by_selector('meta.import.mac import.file.mac')]
+            currentImport = [view.substr(s).lower().strip() for s in view.find_by_selector('meta.import.mac import.file.mac')]
+            currentImport += [os.path.splitext(basename(view.file_name().lower()))[0]]
             project = ProjectManager.get_current_project()
             pfiles = project.filecache.cache.files
-            lfile = [self.create_var_completion(os.path.splitext(
-                basename(fil))[0], "File") for fil in pfiles if os.path.splitext(
-                    basename(fil.lower()))[0] not in currentImport]
+            lfile = [
+                (
+                    os.path.splitext(basename(fil))[0] + "\tFile", os.path.splitext(basename(fil))[0]
+                )
+                for fil in pfiles if os.path.splitext(basename(fil.lower()))[0] not in currentImport
+            ]
             lfile = self.without_duplicates(list(lfile))
             lfile.sort()
             return lfile

@@ -7,6 +7,8 @@ config = {
     "SCOP_ERROR": "invalid.mac",
     "MAX_EMPTY_LINE": 2,
     "SHOW_CLASS_IN_STATUS": False,
+    "MAX_DEPTH_LOOP": 5,
+    "MAX_COUNT_MACRO_PARAM": 5,
     "RSB_SETTINGS_FILE": "RSBIDE.sublime-settings",
     "ESCAPE_DOLLAR": '\$',
     "TRIGGER_ACTION": ["auto_complete", "insert_path"],
