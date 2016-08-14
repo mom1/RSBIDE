@@ -100,7 +100,9 @@ class FileCache:
             return {}
         if (project_files is None):
             return False
-
+        fast_ret = project_files.get(file_name, [])
+        if len(fast_ret) > 0:
+            return {file_name: fast_ret}
         result = {}
         file_name_query = r".*\b" + re.escape(file_name) + ".*"
         for filepath, val in project_files.items():

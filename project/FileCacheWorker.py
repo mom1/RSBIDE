@@ -10,11 +10,10 @@ from RSBIDE.RsbIde_print_panel import get_panel
 import sublime
 # import inspect
 from RSBIDE.common.verbose import verbose
-from RSBIDE.common.verbose import log
+from RSBIDE.common.verbose import log, warn
 from RSBIDE.common.config import config
 from RSBIDE.common.progress_bar import ProgressBar
 import xml.etree.ElementTree as ET
-# from os.path import basename
 """
     Scans, parses and stores all files in the given folder to the dictionary `files`
 
@@ -28,7 +27,7 @@ import xml.etree.ElementTree as ET
             imports  : file impors from this file
         }
 """
-ID = "cache"
+IDc = "cache"
 
 
 def posix(path):
@@ -47,9 +46,10 @@ class FileCacheWorker(threading.Thread):
         self.tmp_folder = os.path.expandvars(r'%TEMP%')
         self.m = hashlib.md5()
         self.m.update(self.folder.encode('utf-8'))
-        self.files_cache = self.m.hexdigest() + '.' + ID
+        self.files_cache = self.m.hexdigest() + '.' + IDc
+        self.folder_cachew = self.m.hexdigest()
         self.last_add = []
-        self.not_delete = []
+        self.is_delete = False
         self.files = None
         self.meta_data = None
         self.load_from_cache()
@@ -59,17 +59,16 @@ class FileCacheWorker(threading.Thread):
         if os.path.lexists(self.tmp_folder):
             with open(posix(os.path.join(self.tmp_folder, self.files_cache)), 'wb') as cache_file:
                 pickle.dump((self.files, self.meta_data, self.class_struct), cache_file)
-            verbose(ID, 'cache save to ' + os.path.join(self.tmp_folder, self.files_cache))
+            verbose(IDc, 'cache save to ' + os.path.join(self.tmp_folder, self.files_cache))
 
     def load_from_cache(self):
         if os.path.lexists(os.path.join(self.tmp_folder, self.files_cache)):
             with open(posix(os.path.join(self.tmp_folder, self.files_cache)), 'rb') as cache_file:
                     try:
                         self.files, self.meta_data, self.class_struct = pickle.load(cache_file)
-                        verbose(ID, 'cache load from ' + os.path.join(self.tmp_folder, self.files_cache))
-                    except Exception:
-                        verbose(ID, 'Error load cache')
-                        # os.remove(cache_file)
+                        verbose(IDc, 'cache load from ' + os.path.join(self.tmp_folder, self.files_cache))
+                    except Exception as e:
+                        warn(IDc, e)
         else:
             self.files = {}
             self.meta_data = {}
@@ -80,7 +79,7 @@ class FileCacheWorker(threading.Thread):
         if extension != 'mac':
             return [], []
         if not fName or not relative_path:
-            verbose(ID, 'Нет файла для анализа')
+            verbose(IDc, 'Нет файла для анализа')
             return [], []
         names_import = []
         names_global = []
@@ -129,7 +128,7 @@ class FileCacheWorker(threading.Thread):
         if extension != 'xml':
             return []
         if not file or not relative_path:
-            verbose(ID, 'Нет файла для анализа')
+            verbose(IDc, 'Нет файла для анализа')
             return []
         lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace')]
         root = ET.fromstring("".join(lines))
@@ -143,89 +142,120 @@ class FileCacheWorker(threading.Thread):
                 self.meta_data[o.get('Name')]['Keys'] += [k.get('Name')]
 
     def run(self):
-        verbose(ID, "START adding files in", self.folder)
+        verbose(IDc, "START adding files in", self.folder)
         t = time.time()
         # indexing
         progress_bar = ProgressBar("RSBIDE: Индексация файлов проекта")
         progress_bar.start()
         try:
-            self.files = self.read(self.folder)
-        except Exception:
+            # self.files =
+            self.read(self.folder)
+        except Exception as e:
+            warn(IDc, e)
             progress_bar.stop()
-        progress_bar.stop()
-        deleted = list(set(self.files.keys()) - set(self.not_delete))
-        for_del = []
-        for key in deleted:
-            self.files.pop(key, True)
-            for x, val in self.meta_data.items():
-                if val['file'] != key:
-                    continue
-                for_del.append(x)
-            for x in for_del:
-                self.meta_data.pop(x, True)
-            for_del = []
-            for x, val in self.class_struct.items():
-                if val['file'] != key:
-                    continue
-                for_del.append(x)
-            for x in for_del:
-                self.class_struct.pop(x, True)
-            log(ID, 'delete', key)
-        # save to tempfile
-        self.save_to_cache()
+        finally:
+            progress_bar.stop()
+
+        if len(self.last_add) > 0 or self.is_delete:
+            self.save_to_cache()
         log("Files in cache:", len(self.files),
             "Scan Time:", str(time.time() - t),
             "Add to cache:", len(self.last_add)
             )
 
-    def read(self, folder, base=None):
+    def all_files_in_folders(self, folder, base=None):
+        all_files = []
+        base = base if base is not None else folder
+        for test in self.exclude_folders:
+            if re.search('(?i)' + test, folder) is not None:
+                return all_files
+        for x in os.listdir(folder):
+            current_path = os.path.join(folder, x)
+            if (os.path.isfile(current_path)):
+                extension = os.path.splitext(current_path)[1]
+                if extension[1:] not in self.extensions:
+                    continue
+                all_files.append(posix(current_path))
+            elif (not x.startswith('.') and os.path.isdir(current_path)):
+                all_files += self.all_files_in_folders(current_path, base)
+        return all_files
+
+    def add_file(self, path, base):
+        relative_path = os.path.relpath(path, base)
+        filename, extension = os.path.splitext(relative_path)
+        relative_path = re.sub("\$", config["ESCAPE_DOLLAR"], posix(relative_path))
+        self.last_add.append(posix(relative_path))
+        log(IDc, len(self.last_add), relative_path)
+        imp = []
+        glob = []
+        extension = extension[1:]
+        if extension == 'xml' and 'TI/' in relative_path:
+            self.parse_xml(posix(path), extension, relative_path)
+        else:
+            imp, glob = self.parse_file(relative_path, posix(path), extension)
+        self.files[relative_path] = [
+            # modified filepath. $ hack is reversed in post_commit_completion
+            re.sub("\$", config["ESCAPE_DOLLAR"], posix(filename)),
+            # extension of file
+            extension,
+            # sublime completion text
+            posix(filename) + "\t" + extension,
+            {
+                'fullpath': posix(path),
+                'mtime': time.ctime(os.path.getmtime(path)),
+                'imports': imp,
+                'globals': glob
+            }
+        ]
+
+    def read(self, folder):
         """return all files in folder"""
         folder_cache = self.files
-        base = base if base is not None else folder
         # test ignore expressions on current path
         for test in self.exclude_folders:
             if re.search('(?i)' + test, folder) is not None:
-                verbose(ID, "skip " + folder)
-                return folder_cache
-
-        # ressources = os.listdir(folder)
-        for ressource in os.listdir(folder):
-            current_path = os.path.join(folder, ressource)
-            if (os.path.isfile(current_path)):
-                relative_path = os.path.relpath(current_path, base)
-                filename, extension = os.path.splitext(relative_path)
-                # posix required for windows, else absolute paths are wrong: /asd\ads\
-                relative_path = re.sub("\$", config["ESCAPE_DOLLAR"], posix(relative_path))
-                extension = extension[1:]
-                if extension not in self.extensions:
+                verbose(IDc, "skip " + folder)
+                return {}
+        # The set of all paths in the index
+        indexed_paths = set()
+        # The set of all paths we need to re-index
+        to_index = set()
+        # Loop over the stored fields in the index
+        for key, val in folder_cache.items():
+            indexed_path = val[3].get('fullpath')
+            indexed_paths.add(indexed_path)
+            if not os.path.exists(indexed_path):
+                # This file was deleted since it was indexed
+                self.files.pop(key, True)
+                self.is_delete = True
+                for_del = set()
+                for x, val in self.meta_data.items():
+                    if val['file'] != key:
+                        continue
+                    for_del.add(x)
+                for x in for_del:
+                    self.meta_data.pop(x, True)
+                for_del = set()
+                for x, val in self.class_struct.items():
+                    if val['file'] != key:
+                        continue
+                    for_del.add(x)
+                for x in for_del:
+                    self.class_struct.pop(x, True)
+                log(IDc, 'delete', key)
+            else:
+                # Check if this file was changed since it
+                # was indexed
+                indexed_time = val[3].get('mtime', time.ctime(time.time()))
+                mtime = time.ctime(os.path.getmtime(indexed_path))
+                if mtime == indexed_time:
                     continue
-                self.not_delete += [relative_path]
-                if folder_cache.get(relative_path, False) and folder_cache[relative_path][3].get(
-                        'mtime', time.ctime(time.time())) == time.ctime(os.path.getmtime(current_path)):
-                    continue
-                self.last_add.append(posix(relative_path))
-                log(ID, len(self.last_add), relative_path)
-                imp = []
-                glob = []
-                if extension == 'xml' and 'TI/' in relative_path:
-                    self.parse_xml(posix(current_path), extension, relative_path)
-                else:
-                    imp, glob = self.parse_file(relative_path, posix(current_path), extension)
-                folder_cache[relative_path] = [
-                    # modified filepath. $ hack is reversed in post_commit_completion
-                    re.sub("\$", config["ESCAPE_DOLLAR"], posix(filename)),
-                    # extension of file
-                    extension,
-                    # sublime completion text
-                    posix(filename) + "\t" + extension,
-                    {
-                        'fullpath': posix(current_path),
-                        'mtime': time.ctime(os.path.getmtime(current_path)),
-                        'imports': imp,
-                        'globals': glob
-                    }
-                ]
-
-            elif (not ressource.startswith('.') and os.path.isdir(current_path)):
-                folder_cache.update(self.read(current_path, base))
-        return folder_cache
+                    # The file has changed, delete it and add it to the list of
+                    # files to reindex
+                to_index.add(indexed_path)
+        # Loop over the files in the filesystem
+        for path in self.all_files_in_folders(folder):
+            if path in to_index or path not in indexed_paths:
+                # This is either a file that's changed, or a new file
+                # that wasn't indexed before. So index it!
+                self.add_file(path, folder)

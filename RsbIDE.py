@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-11 21:46:10
+# @Last Modified time: 2016-08-13 01:03:51
 
 
 import sublime
@@ -278,7 +278,10 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self, paths=None):
         view = self.window.active_view()
-        return is_RStyle_view(view)
+        isvis = False
+        if is_RStyle_view(view):
+            isvis = True
+        return isvis
 
     def description(self):
         return 'RSBIDE: ѕоказать область объ€влени€\talt+s'
@@ -490,7 +493,10 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self, paths=None):
         view = self.window.active_view()
-        return is_RStyle_view(view)
+        isvis = False
+        if is_RStyle_view(view):
+            isvis = True
+        return isvis
 
     def description(self):
         return 'RSBIDE: ѕерейти к объ€влению\talt+g'
