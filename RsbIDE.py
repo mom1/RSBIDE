@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-14 14:58:23
+# @Last Modified time: 2016-08-15 21:17:47
 
 
 import sublime
@@ -76,7 +76,8 @@ class RSBIDE:
         if "source.mac meta.import.mac" in scope or 'punctuation.definition.import.mac' in scope:
             # completion for import
             currentImport = [view.substr(s).lower().strip() for s in view.find_by_selector('meta.import.mac import.file.mac')]
-            currentImport += [os.path.splitext(basename(view.file_name().lower()))[0]]
+            if view.file_name():
+                currentImport += [os.path.splitext(basename(view.file_name().lower()))[0]]
             project = ProjectManager.get_current_project()
             pfiles = project.filecache.cache.files
             lfile = [
@@ -376,9 +377,12 @@ def get_result(view):
 
     project = ProjectManager.get_current_project()
     project_folder = project.get_directory()
-
-    file = Path.posix(Path.get_absolute_path(project_folder, view.file_name()))
-    sfile = Path.posix(os.path.relpath(file, project_folder))
+    if view.file_name():
+        file = Path.posix(Path.get_absolute_path(project_folder, view.file_name()))
+        sfile = Path.posix(os.path.relpath(file, project_folder))
+    else:
+        file = ''
+        sfile = ''
     word = view.substr(sel)
 
     if word.lower() == 'end' and (
@@ -510,7 +514,7 @@ class LintThisViewCommand(sublime_plugin.WindowCommand):
         view = self.window.active_view()
         if not is_RStyle_view(view):
             return
-        lint = Linter(view, ProjectManager)
+        lint = Linter(view, ProjectManager, force=True)
         lint.start()
 
     def is_visible(self):
@@ -574,9 +578,7 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
                     mess_list += [x[1]]
             if len(mess_list) > 0:
                 MessStat = sep.join(mess_list)
-        else:
-            if not ProjectManager.get_current_project().get_setting("SHOW_CLASS_IN_STATUS", False):
-                return
+        elif ProjectManager.get_current_project().get_setting("SHOW_CLASS_IN_STATUS", False):
             classRegs = [i for i in view.find_by_selector('meta.class.mac') if i.contains(region)]
             classRegsName = [
                 i for i in view.find_by_selector(
@@ -606,12 +608,12 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
 def plugin_loaded():
     update_settings()
     global_settings = sublime.load_settings(config["RSB_SETTINGS_FILE"])
-    global_settings.add_on_change("update", update_settings)
+    global_settings.clear_on_change('RSBIDE_settings')
+    global_settings.add_on_change("RSBIDE_settings", update_settings)
 
 
 def update_settings():
     """ restart projectFiles with new plugin and project settings """
-
     # update settings
     if Settings:
         global_settings = Settings.update()

@@ -9,6 +9,7 @@ config = {
     "SHOW_CLASS_IN_STATUS": False,
     "MAX_DEPTH_LOOP": 5,
     "MAX_COUNT_MACRO_PARAM": 5,
+    "LINT_ON_SAVE": True,
     "RSB_SETTINGS_FILE": "RSBIDE.sublime-settings",
     "ESCAPE_DOLLAR": '\$',
     "TRIGGER_ACTION": ["auto_complete", "insert_path"],

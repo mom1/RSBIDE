@@ -2,13 +2,14 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-14 19:46:04
+# @Last Modified time: 2016-08-16 00:27:33
 import sublime
 import re
 import threading
 from RSBIDE.RsbIde_print_panel import get_panel
 from RSBIDE.project.ProjectManager import ProjectManager
 # from RSBIDE.common.verbose import log
+# import Default.symbol as navigate
 
 ID = 'Linter'
 
@@ -16,7 +17,7 @@ ID = 'Linter'
 class Linter(threading.Thread):
     """docstring for Linter"""
 
-    def __init__(self, view, ProjectManager=ProjectManager):
+    def __init__(self, view, ProjectManager=ProjectManager, force=False):
         threading.Thread.__init__(self)
 
         self.view = view
@@ -24,6 +25,7 @@ class Linter(threading.Thread):
         self.ProjectManager = ProjectManager
         self.scope = self.ProjectManager.get_current_project().get_setting("SCOP_ERROR", "invalid.mac")
         self.flags = sublime.DRAW_NO_FILL
+        self.force = force
 
     def run(self):
         project = self.ProjectManager.get_current_project()
@@ -39,7 +41,9 @@ class Linter(threading.Thread):
         self.many_param()
         self.many_dept_loop()
         self.cpwin()
-        if project.get_setting("SHOW_SAVE", True):
+        count_comment = len([j.a for i in self.all_lint_regions() for j in self.view.get_regions(i)])
+        sublime.status_message("Проверка на замечания выполнена: найденно %s" % (count_comment))
+        if project.get_setting("SHOW_SAVE", True) or self.force:
             self.all_regions = [[self.get_text_lint(i), self.view.rowcol(j.a)] for i in self.all_lint_regions() for j in self.view.get_regions(i)]
             self.all_regions = sorted(self.all_regions, key=lambda x: x[1][0])
             self.all_regions = [[i[0], str([j + 1 for j in i[1]])] for i in self.all_regions]

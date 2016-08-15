@@ -11,4 +11,5 @@
     "show_class_in_status": false,
     "max_depth_loop": 5,
     "max_count_macro_param": 5,
+    "lint_on_save": true,
 }

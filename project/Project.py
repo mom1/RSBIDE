@@ -7,6 +7,7 @@ import RSBIDE.common.settings as Settings
 import RSBIDE.common.path as Path
 from RSBIDE.common.verbose import warn
 from RSBIDE.common.verbose import verbose
+# import inspect
 
 ID = "PROJECT"
 
@@ -27,7 +28,7 @@ class Project():
         """
         self.window = window
         self.directory = directory
-        self.update_settings(rsb_settings, project_settings)
+        # self.update_settings(rsb_settings, project_settings)
 
     def update_settings(self, global_settings, project_settings):
         # create final settings object, by merging project specific settings with base settings
@@ -50,7 +51,7 @@ class Project():
         triggers = self.settings.get("scopes", self.get_setting("TRIGGER"))
         valid_file_extensions = get_valid_extensions(triggers)
         folders_to_exclude = self.get_setting("EXCLUDE_FOLDERS")
-
+        # log('STACK', inspect.stack())
         self.filecache = FileCache(valid_file_extensions, folders_to_exclude, self.project_directory)
 
         # evaluate base directory

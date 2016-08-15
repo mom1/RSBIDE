@@ -20,9 +20,11 @@ class CurrentFileListener(sublime_plugin.EventListener):
         if CurrentFile.is_temp():
             verbose(ID, "temp file saved, reevaluate")
             CurrentFile.cache[view.id()] = None
-        ProjectManager.rebuild_filecache()
-        lint = Linter(view, ProjectManager)
-        lint.start()
+        if ProjectManager.get_current_project().get_setting("LINT_ON_SAVE", True):
+            lint = Linter(view, ProjectManager)
+            lint.start()
+        if CurrentFile.is_valid():
+            ProjectManager.rebuild_filecache()
         self.on_activated_async(view)
 
     def on_activated_async(self, view):
