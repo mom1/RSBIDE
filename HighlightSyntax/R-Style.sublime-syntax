@@ -25,15 +25,10 @@ contexts:
     - include: string
     - include: language
 
+
   comments:
-    - match: /\*
-      scope: punctuation.definition.comment.mac
-      push:
-        - meta_scope: comment.block.mac
-        - match: \*/
-          scope: punctuation.definition.comment.mac
-          pop: true
-        - include: special-title-comments
+    - match: (?=/\*)
+      push: comment-block
     - match: \*/
       scope: invalid.illegal.stray-comment-end.source.mac
     - match: //!
@@ -49,6 +44,20 @@ contexts:
         - match: \n
           pop: true
         - include: special-title-comments
+
+  comment-block:
+    - meta_scope: comment.block.mac
+    - match: /\*
+      scope: punctuation.definition.comment.mac
+      push:
+        - match: '(?=/\*)'
+          push: comment-block
+        - match: '(?=\*/)'
+          pop: true
+        - include: special-title-comments
+    - match: \*/
+      scope: punctuation.definition.comment.mac
+      pop: true
 
   special-title-comments:
     - match: '(FILE|COPYRIGHT|DESCRIPTION|PROGRAMMED
