@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-16 00:27:33
+# @Last Modified time: 2016-08-17 10:38:12
 import sublime
 import re
 import threading
@@ -16,6 +16,8 @@ ID = 'Linter'
 
 class Linter(threading.Thread):
     """docstring for Linter"""
+
+    _request_id_lock = threading.Lock()
 
     def __init__(self, view, ProjectManager=ProjectManager, force=False):
         threading.Thread.__init__(self)
@@ -130,6 +132,9 @@ class Linter(threading.Thread):
         invalidRegions = []
         for x in l_comment:
             parse_panel = get_panel(sublime.active_window().active_view(), "".join(x[0]), name_panel=pref + 'comment_code')
+            region_example = parse_panel.find_all(r'^\s*(example|пример)', flags=sublime.IGNORECASE)
+            if len(region_example) > 0:
+                continue
             if len(parse_panel.find_by_selector(
                     'meta.class.mac, meta.macro.mac, meta.variable.mac, meta.if.mac, meta.while.mac, meta.for.mac, meta.const.mac')) > 0:
                 invalidRegions.append(x[1])

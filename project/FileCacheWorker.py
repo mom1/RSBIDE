@@ -37,6 +37,8 @@ def posix(path):
 class FileCacheWorker(threading.Thread):
     # stores all files and its fragments within property files
 
+    _request_id_lock = threading.Lock()
+
     def __init__(self, exclude_folders, extensions, folder):
         threading.Thread.__init__(self)
 
