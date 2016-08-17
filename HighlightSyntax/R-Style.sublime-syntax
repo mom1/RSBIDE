@@ -461,7 +461,9 @@ contexts:
         - match: ">"
           scope: punctuation.definition.tag.end.mac
         - match: '(?=<)'
-          push: "Packages/XML/XML.sublime-syntax"
+          push:
+            - meta_scope: string.quoted.xml.mac
+            - include: scope:text.xml
           with_prototype:
             - match: '(?=("|“|”))'
               pop: true
@@ -472,10 +474,10 @@ contexts:
             - match: ">"
               scope: punctuation.definition.tag.end.mac
               pop: true
-            # - match: "<"
-            #   scope: punctuation.definition.tag.begin.mac
         - match: '(?!<)'
-          push: "Packages/SQL/SQL.sublime-syntax"
+          push:
+            - meta_scope: string.quoted.sql.mac
+            - include: scope:source.sql
           with_prototype:
             - match: '(?=("|“|”))'
               pop: true
