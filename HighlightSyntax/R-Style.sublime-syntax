@@ -474,6 +474,10 @@ contexts:
             - match: ">"
               scope: punctuation.definition.tag.end.mac
               pop: true
+            - match: '(<)(-)'
+              captures:
+                1: keyword.operator.comparison.sql
+                2: keyword.operator.math.sql
         - match: '(?!<)'
           push:
             - meta_scope: string.quoted.sql.mac
