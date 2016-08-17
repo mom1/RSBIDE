@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-17 10:38:12
+# @Last Modified time: 2016-08-17 18:33:35
 import sublime
 import re
 import threading
@@ -132,8 +132,12 @@ class Linter(threading.Thread):
         invalidRegions = []
         for x in l_comment:
             parse_panel = get_panel(sublime.active_window().active_view(), "".join(x[0]), name_panel=pref + 'comment_code')
-            region_example = parse_panel.find_all(r'^\s*(example|пример)', flags=sublime.IGNORECASE)
-            if len(region_example) > 0:
+            not_empty_line = sublime.Region(0, 0)
+            for l in parse_panel.lines(sublime.Region(0, parse_panel.size())):
+                if not re.match(r'^(\s)*$', parse_panel.substr(l), re.IGNORECASE):
+                    not_empty_line = l
+                    break
+            if re.match(r'^\s*(example|пример)', parse_panel.substr(not_empty_line), re.IGNORECASE):
                 continue
             if len(parse_panel.find_by_selector(
                     'meta.class.mac, meta.macro.mac, meta.variable.mac, meta.if.mac, meta.while.mac, meta.for.mac, meta.const.mac')) > 0:
