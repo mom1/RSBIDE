@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-17 18:33:35
+# @Last Modified time: 2016-08-19 11:54:31
 import sublime
 import re
 import threading
@@ -94,7 +94,7 @@ class Linter(threading.Thread):
 
     def LongLines(self):
             project = self.ProjectManager.get_current_project()
-            maxLength = project.get_setting("MAXLENGTH", 150)
+            maxLength = project.get_setting("MAXLENGTH", 160)
             scope = self.scope
             firstCharacter_Only = False
 

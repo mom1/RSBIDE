@@ -29,6 +29,9 @@ import xml.etree.ElementTree as ET
 """
 IDc = "cache"
 
+global folders
+folders = []
+
 
 def posix(path):
     return path.replace("\\", "/")
@@ -36,8 +39,6 @@ def posix(path):
 
 class FileCacheWorker(threading.Thread):
     # stores all files and its fragments within property files
-
-    _request_id_lock = threading.Lock()
 
     def __init__(self, exclude_folders, extensions, folder):
         threading.Thread.__init__(self)
@@ -144,22 +145,28 @@ class FileCacheWorker(threading.Thread):
                 self.meta_data[o.get('Name')]['Keys'] += [k.get('Name')]
 
     def run(self):
+        global folders
         verbose(IDc, "START adding files in", self.folder)
         t = time.time()
         # indexing
         progress_bar = ProgressBar("RSBIDE: Индексация файлов проекта")
-        progress_bar.start()
+        th = [x for x in threading.enumerate() if x.name == self.folder]
+        self.name = self.folder
+        if len(th) > 0:
+            th[-1].join()
         try:
-            # self.files =
+            progress_bar.start()
+            folders.append(self.folder)
+            self.load_from_cache()
             self.read(self.folder)
+            if len(self.last_add) > 0 or self.is_delete:
+                self.save_to_cache()
         except Exception as e:
             warn(IDc, e)
-            progress_bar.stop()
         finally:
+            folders.remove(self.folder)
             progress_bar.stop()
 
-        if len(self.last_add) > 0 or self.is_delete:
-            self.save_to_cache()
         log("Files in cache:", len(self.files),
             "Scan Time:", str(time.time() - t),
             "Add to cache:", len(self.last_add)
