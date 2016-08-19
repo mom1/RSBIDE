@@ -91,7 +91,7 @@ class FileCacheWorker(threading.Thread):
         names_import = [parse_panel.substr(i) + '.mac' for i in parse_panel.find_by_selector('import.file.mac')]
         # globals
         for x in parse_panel.find_by_selector(
-                'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac'
+                'variable.declare.name.mac - meta.class.mac - meta.macro.mac, entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac'
         ):
             if 'entity.name.function.mac' in parse_panel.scope_name(x.a):
                 region = [i for i in parse_panel.find_by_selector('meta.macro.mac') if i.contains(x)]

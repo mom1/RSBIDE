@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-15 21:17:47
+# @Last Modified time: 2016-08-19 14:17:48
 
 
 import sublime
@@ -100,26 +100,7 @@ class RSBIDE:
         project = ProjectManager.get_current_project()
         project_folder = project.get_directory()
         # current file completion
-        classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
-        macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
-        sclass = 'meta.class.mac entity.name.class.mac'
-        smacro = 'meta.macro.mac entity.name.function.mac'
-        svaria = 'variable.declare.name.mac'
-        sismacro = ''
-        sparammacro = ''
-        sparamclass = ''
-        if len(classRegs) == 0:
-            smacro += ' - meta.class.mac'
-            svaria += ' - meta.class.mac'
-        else:
-            sparamclass += ', variable.parameter.class.mac'
-        if len(macroRegs) == 0:
-            sismacro += ' - meta.macro.mac'
-        else:
-            sparammacro += ', variable.parameter.macro.mac%s' % (sismacro)
-            sparamclass = ''
-
-        svaria = 'variable.declare.name.mac%s%s%s' % (sismacro, sparammacro, sparamclass)
+        classRegs, macroRegs, sclass, smacro, svaria = get_selectors_context(view)
 
         result = []
         filename, extension = os.path.splitext((view.file_name()))
@@ -369,6 +350,32 @@ def get_imports(fName):
     return already_im
 
 
+def get_selectors_context(view):
+    sel = view.sel()[0]
+    classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
+    macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
+    sclass = 'meta.class.mac entity.name.class.mac'
+    smacro = 'meta.macro.mac entity.name.function.mac'
+    svaria = 'variable.declare.name.mac'
+    sismacro = ''
+    sisclass = ''
+    sparammacro = ''
+    sparamclass = ''
+    if len(classRegs) == 0:
+        smacro += ' - meta.class.mac'
+        sisclass += ' - meta.class.mac'
+    else:
+        sparamclass += ', variable.parameter.class.mac'
+    if len(macroRegs) == 0:
+        sismacro += ' - meta.macro.mac'
+    else:
+        sparammacro += ', variable.parameter.macro.mac%s' % (sismacro)
+        sparamclass = ''
+    svaria = 'variable.declare.name.mac%s%s%s%s' % (sisclass, sismacro, sparammacro, sparamclass)
+
+    return classRegs, macroRegs, sclass, smacro, svaria
+
+
 def get_result(view):
     sel = view.sel()[0]
     window = sublime.active_window()
@@ -405,27 +412,7 @@ def get_result(view):
     # result = window.lookup_symbol_in_index(word)
     result = []
     im_result = []
-    classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
-    macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
-    sclass = 'meta.class.mac entity.name.class.mac'
-    smacro = 'meta.macro.mac entity.name.function.mac'
-    svaria = 'variable.declare.name.mac'
-    sismacro = ''
-    sparammacro = ''
-    sparamclass = ''
-    if len(classRegs) == 0:
-        smacro += ' - meta.class.mac'
-        svaria += ' - meta.class.mac'
-    else:
-        sparamclass += ', variable.parameter.class.mac'
-    if len(macroRegs) == 0:
-        sismacro += ' - meta.macro.mac'
-    else:
-        sparammacro += ', variable.parameter.macro.mac%s' % (sismacro)
-        sparamclass = ''
-
-    svaria = 'variable.declare.name.mac%s%s%s' % (sismacro, sparammacro, sparamclass)
-
+    classRegs, macroRegs, sclass, smacro, svaria = get_selectors_context(view)
     vars = []
     selections = [i for i in view.find_by_selector(sclass + ', ' + smacro + ', ' + svaria) if word.lower() == view.substr(view.word(i)).lower()]
     RegionMacroParam = view.find_by_selector('variable.parameter.macro.mac')
