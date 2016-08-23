@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-07-28 12:47:41
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-11 19:46:52
+# @Last Modified time: 2016-08-23 11:55:21
 import os
 import time
 import RSBIDE.common.path as Path
@@ -56,6 +56,14 @@ def get_globals_completion(imports, project, prefix=None):
         filecache = project.filecache.cache.files.get(x, {})
         if len(filecache) > 3:
             result += filecache[3].get('globals', [])
+    return result
+
+
+def get_class_completion(imports, project, prefix=None):
+    result = []
+    for x, val in project.filecache.cache.class_struct.items():
+        if val['file'] in imports:
+            result.append((x + '\tclass', x))
     return result
 
 

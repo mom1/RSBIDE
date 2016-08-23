@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-19 14:17:48
+# @Last Modified time: 2016-08-23 12:03:31
 
 
 import sublime
@@ -73,12 +73,12 @@ class RSBIDE:
         t1 = time.time()
         verbose(ID, view.scope_name(view.sel()[0].a))
         scope = view.scope_name(view.sel()[0].a)
+        project = ProjectManager.get_current_project()
         if "source.mac meta.import.mac" in scope or 'punctuation.definition.import.mac' in scope:
             # completion for import
             currentImport = [view.substr(s).lower().strip() for s in view.find_by_selector('meta.import.mac import.file.mac')]
             if view.file_name():
                 currentImport += [os.path.splitext(basename(view.file_name().lower()))[0]]
-            project = ProjectManager.get_current_project()
             pfiles = project.filecache.cache.files
             lfile = [
                 (
@@ -89,15 +89,22 @@ class RSBIDE:
             lfile = self.without_duplicates(list(lfile))
             lfile.sort()
             return lfile
-        sel = view.sel()[0]
-        if "string.quoted.double" in scope:
+        elif "string.quoted.double" in scope:
             completions += self.get_from_metadata(view)
+            completions = self.without_duplicates(completions)
+            return completions
+        elif "inherited-class" in scope:
+            completions += [(view.substr(s) + '\tclass', view.substr(s)) for s in view.find_by_selector('entity.name.class.mac')]
+            completions += parser.get_class_completion(get_imports(view.file_name()), project)
+            completions = self.without_duplicates(completions)
+            return completions
+
         log(ID, 'Из метаданных ' + str(time.time() - t) + ' sec')
         t = time.time()
+        sel = view.sel()[0]
         if sel.begin() == sel.end():
             sel = view.word(sel)
 
-        project = ProjectManager.get_current_project()
         project_folder = project.get_directory()
         # current file completion
         classRegs, macroRegs, sclass, smacro, svaria = get_selectors_context(view)
