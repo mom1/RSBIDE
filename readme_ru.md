@@ -55,7 +55,7 @@
     * Предопределенные языковые конструкции. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Другие команды**
     * RSBIDE: Вставить как строку - Вставляет скопированный текст как строку RSL. Если в целевом месте нет `;` то добавляет
-    Пример: В буфер скопированна строка
+      Пример: В буфер скопированна строка
     ```sql
     SELECT * FROM dbo.rdAnalyticSign ras
     WHERE ras.HasChild = 1 AND ras.ID NOT IN (SELECT DISTINCT COALESCE(ParentID,0)FROM rdAnalyticSign)
