@@ -54,6 +54,13 @@ Features
 * **Various useful Snippets**
     * Predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Other commands**
+    * RSBIDE: Вставить как строку - Inserts the copied text as the RSL string. If the target location is not `;` then added.
+      Example: In the copied string buffer
+    ```sql
+    SELECT * FROM dbo.rdAnalyticSign ras
+    WHERE ras.HasChild = 1 AND ras.ID NOT IN (SELECT DISTINCT COALESCE(ParentID,0)FROM rdAnalyticSign)
+    ```
+    ![PasteAsString](https://raw.github.com/mom1/RSBIDE/master/screenshot/PasteAsString.gif)
     * Print Tree Import - It displays the current file tree imports. It opens in a new tab
 
         ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
