@@ -54,6 +54,13 @@
 * **Различные полезные Snippets**
     * Предопределенные языковые конструкции. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Другие команды**
+    * RSBIDE: Вставить как строку - Вставляет скопированный текст как строку RSL. Если в целевом месте нет `;` то добавляет
+    Пример: В буфер скопированна строка
+    ```sql
+    SELECT * FROM dbo.rdAnalyticSign ras
+    WHERE ras.HasChild = 1 AND ras.ID NOT IN (SELECT DISTINCT COALESCE(ParentID,0)FROM rdAnalyticSign)
+    ```
+    ![PasteAsString](https://raw.github.com/mom1/RSBIDE/master/screenshot/PasteAsString.gif)
     * RSBIDE: Print Tree Import - Выводит дерево импортов текущего файла. Открывает в новой закладке
 
         ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
