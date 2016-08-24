@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-24 14:49:27
+# @Last Modified time: 2016-08-24 18:10:22
 import sublime
 import re
 import threading
@@ -256,16 +256,19 @@ class Linter(threading.Thread):
         pref_g = project.get_setting("PREFIX_VARIABLE_GLOBAL")
         pref_visual = project.get_setting("PREFIX_VARIABLE_VISUAL")
         pref_type = project.get_setting("PREFIX_VARIABLE_TYPE")
-        if (len(pref_visual) > 0 or len(pref_type) > 0) and len(pref_g) > 0:
-            pref_g += r'|'
         if len(pref_type) > 0 and len(pref_visual) > 0:
             pref_visual += r'|'
-        s_reg_exp = '^%s%s%s' % (pref_g, pref_visual, pref_type)
+        s_reg_exp = '^%s%s' % (pref_visual, pref_type)
         all_variable = self.view.find_by_selector('variable.declare.name - meta.const.mac')
         know_vars = []
         invalidRegions = []
         for x in all_variable:
-            if re.match(s_reg_exp, self.view.substr(x), re.IGNORECASE | re.VERBOSE):
+            stext = self.view.substr(x)
+            if len(stext) == 1:
+                know_vars.append(self.view.substr(x))
+                continue
+            stext = re.sub(r'^' + pref_g, '', stext, re.IGNORECASE | re.VERBOSE)
+            if re.match(s_reg_exp, stext, re.IGNORECASE | re.VERBOSE):
                 know_vars.append(self.view.substr(x))
         invalidRegions = [i for i in all_variable if self.view.substr(i) not in know_vars]
         if len(invalidRegions) > 0:
