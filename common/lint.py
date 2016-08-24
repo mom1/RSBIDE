@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-19 11:54:31
+# @Last Modified time: 2016-08-24 13:46:55
 import sublime
 import re
 import threading
@@ -43,6 +43,7 @@ class Linter(threading.Thread):
         self.many_param()
         self.many_dept_loop()
         self.cpwin()
+        self.unknown_prefix_variable()
         count_comment = len([j.a for i in self.all_lint_regions() for j in self.view.get_regions(i)])
         sublime.status_message("Проверка на замечания выполнена: найденно %s" % (count_comment))
         if project.get_setting("SHOW_SAVE", True) or self.force:
@@ -64,6 +65,7 @@ class Linter(threading.Thread):
         view.show_at_center(pt)
 
     def get_text_lint(self, key):
+        ''' Тексты проверок '''
         if key is None:
             return ''
         lint_mess = {
@@ -75,14 +77,22 @@ class Linter(threading.Thread):
             'many_param': 'У функции слишком много параметров',
             'reg_loop': 'Большая вложенность циков и условий',
             'reg_loop_for': 'Критическая вложенность for',
-            'cpwin': 'Не указана cpwin'
+            'cpwin': 'Не указана cpwin',
+            'unknown_prefix_variable': 'Неизвестный префикс переменной'
         }
         return lint_mess.get(key, '')
 
     def all_lint_regions(self):
-        return ['LongLines', 'comment_code', 'vare_unused', 'empty_line', 'not_empty_line', 'many_param', 'reg_loop_for', 'reg_loop', 'cpwin']
+        ''' Перечень всех проверок '''
+        return [
+            'LongLines', 'comment_code', 'vare_unused',
+            'empty_line', 'not_empty_line', 'many_param',
+            'reg_loop_for', 'reg_loop', 'cpwin',
+            'unknown_prefix_variable'
+        ]
 
     def erase_all_regions(self):
+        ''' Очистка всех подсвеченых проверок '''
         for i in self.all_lint_regions():
             self.view.erase_regions(i)
 
@@ -93,38 +103,40 @@ class Linter(threading.Thread):
             (locations and len(locations) and '.mac' in view.scope_name(locations[0])))
 
     def LongLines(self):
-            project = self.ProjectManager.get_current_project()
-            maxLength = project.get_setting("MAXLENGTH", 160)
-            scope = self.scope
-            firstCharacter_Only = False
+        ''' Проверка на длинные строки '''
+        project = self.ProjectManager.get_current_project()
+        maxLength = project.get_setting("MAXLENGTH", 160)
+        scope = self.scope
+        firstCharacter_Only = False
 
-            if 'R-Style' not in self.view.settings().get('syntax'):
-                return
-            indentationSize = self.view.settings().get("tab_size")
-            document = sublime.Region(0, self.view.size())
-            lineRegions = self.view.lines(document)
-            invalidRegions = []
-            for region in lineRegions:
-                text = self.view.substr(region)
-                text_WithoutTabs = text.expandtabs(indentationSize)
-                if text_WithoutTabs.isspace():
-                    tabOffset = 0
+        if 'R-Style' not in self.view.settings().get('syntax'):
+            return
+        indentationSize = self.view.settings().get("tab_size")
+        document = sublime.Region(0, self.view.size())
+        lineRegions = self.view.lines(document)
+        invalidRegions = []
+        for region in lineRegions:
+            text = self.view.substr(region)
+            text_WithoutTabs = text.expandtabs(indentationSize)
+            if text_WithoutTabs.isspace():
+                tabOffset = 0
+            else:
+                tabDifference = len(text_WithoutTabs) - len(text)
+                tabOffset = tabDifference
+            lineLength = (region.end() - region.begin()) - tabOffset
+            if lineLength > maxLength:
+                highlightStart = region.begin() + (maxLength - tabOffset)
+                if firstCharacter_Only is True:
+                    highlightEnd = highlightStart + 1
                 else:
-                    tabDifference = len(text_WithoutTabs) - len(text)
-                    tabOffset = tabDifference
-                lineLength = (region.end() - region.begin()) - tabOffset
-                if lineLength > maxLength:
-                    highlightStart = region.begin() + (maxLength - tabOffset)
-                    if firstCharacter_Only is True:
-                        highlightEnd = highlightStart + 1
-                    else:
-                        highlightEnd = region.end()
-                    invalidRegion = sublime.Region(highlightStart, highlightEnd)
-                    invalidRegions.append(invalidRegion)
-            if len(invalidRegions) > 0:
-                self.view.add_regions("LongLines", invalidRegions, scope, flags=self.flags)
+                    highlightEnd = region.end()
+                invalidRegion = sublime.Region(highlightStart, highlightEnd)
+                invalidRegions.append(invalidRegion)
+        if len(invalidRegions) > 0:
+            self.view.add_regions("LongLines", invalidRegions, scope, flags=self.flags)
 
     def comment_code(self):
+        ''' Проверка на закомментированный код '''
         pref = 'RSBIDE:Lint_'
         l_comment = [
             (self.view.substr(i).rstrip('\r\n') + "\n", i) for i in self.view.find_by_selector('source.mac comment. - punctuation.definition.comment.mac')]
@@ -147,6 +159,7 @@ class Linter(threading.Thread):
             self.view.add_regions("comment_code", invalidRegions, scope, flags=self.flags)
 
     def vare_unused(self):
+        ''' Проверка на не используемые переменные '''
         scope = self.scope
         invalidRegions = []
         l_all_vare_macro = [(
@@ -183,6 +196,7 @@ class Linter(threading.Thread):
             self.view.add_regions("vare_unused", invalidRegions, scope, flags=self.flags)
 
     def empty_line(self):
+        ''' Проверка пустых строк '''
         max_eline = self.ProjectManager.get_current_project().get_setting("MAX_EMPTY_LINE", 2)
         mr = self.view.find_all(r'^(\s)*$')
         invalidRegions = []
@@ -201,6 +215,7 @@ class Linter(threading.Thread):
             self.view.add_regions("not_empty_line", invalidExpect, self.scope, flags=self.flags)
 
     def many_param(self):
+        ''' Проверка количества параметров '''
         max_count_param = self.ProjectManager.get_current_project().get_setting("MAX_COUNT_MACRO_PARAM", 5)
         macroRegsName = self.view.find_by_selector('meta.macro.mac & (storage.type.macro.mac, entity.name.function.mac, variable.parameter.macro.mac)')
         invalidRegions = []
@@ -217,6 +232,7 @@ class Linter(threading.Thread):
             self.view.add_regions("many_param", invalidRegions, self.scope, flags=self.flags)
 
     def many_dept_loop(self):
+        ''' Проверка уровня вложенности '''
         max_depth = self.ProjectManager.get_current_project().get_setting("MAX_DEPTH_LOOP", 3)
         reg_loop = self.view.find_by_selector('source.mac' + ' meta.if.mac' * max_depth)
         reg_loop += self.view.find_by_selector('source.mac' + ' meta.while.mac' * max_depth)
@@ -227,7 +243,26 @@ class Linter(threading.Thread):
             self.view.add_regions("reg_loop", reg_loop, self.scope, flags=self.flags)
 
     def cpwin(self):
+        ''' Проверка наличия cpwin '''
         l_cpwin = self.view.find_by_selector('keyword.control.cpwin.mac')
         if len(l_cpwin) == 0:
             invalidRegions = [self.view.line(sublime.Region(0, 0))]
             self.view.add_regions("cpwin", invalidRegions, self.scope, flags=self.flags)
+
+    def unknown_prefix_variable(self):
+        ''' Проверка префиксов переменных '''
+        all_variable = self.view.find_by_selector('variable.declare.name - meta.const.mac')
+        know_vars = []
+        invalidRegions = []
+        for x in all_variable:
+            if re.match(r'''
+                ^
+                ([msg]_)|(the)| # глобалки и основополагающие
+                (grid|grd)|(tree)|(fld)|(frm)|(dlg)|(btn)|(chk)|(radio|rd)|(edit|edt)|(list|lst)|(cmb)|(lbl)|(tab)| # объекты визуального представления
+                (ref)|(arr|tarr)|(o|obj)|(ax)|(dict)| # По типам
+                (ds)|(i)|(s|str)|(is|b)|(f|lf)|(n|d|m)|(dt)|(t)|(v) # По типам
+                ''', self.view.substr(x), re.IGNORECASE | re.VERBOSE):
+                know_vars.append(self.view.substr(x))
+        invalidRegions = [i for i in all_variable if self.view.substr(i) not in know_vars]
+        if len(invalidRegions) > 0:
+            self.view.add_regions("unknown_prefix_variable", invalidRegions, self.scope, flags=self.flags)

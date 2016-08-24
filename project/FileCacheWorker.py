@@ -219,7 +219,7 @@ class FileCacheWorker(threading.Thread):
 
     def read(self, folder):
         """return all files in folder"""
-        folder_cache = self.files
+        folder_cache = self.files.copy()
         # test ignore expressions on current path
         for test in self.exclude_folders:
             if re.search('(?i)' + test, folder) is not None:
@@ -238,15 +238,15 @@ class FileCacheWorker(threading.Thread):
                 self.files.pop(key, True)
                 self.is_delete = True
                 for_del = set()
-                for x, val in self.meta_data.items():
-                    if val['file'] != key:
+                for x, valm in self.meta_data.items():
+                    if valm['file'] != key:
                         continue
                     for_del.add(x)
                 for x in for_del:
                     self.meta_data.pop(x, True)
                 for_del = set()
-                for x, val in self.class_struct.items():
-                    if val['file'] != key:
+                for x, valc in self.class_struct.items():
+                    if valc['file'] != key:
                         continue
                     for_del.add(x)
                 for x in for_del:
