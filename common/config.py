@@ -1,6 +1,8 @@
 config = {
+    # Сообщения в консоль
     "DEBUG": False,
     "LOG": False,
+    # Linter
     "LINT": True,
     "MAXLENGTH": 160,
     "SHOW_SAVE": True,
@@ -10,17 +12,23 @@ config = {
     "MAX_DEPTH_LOOP": 5,
     "MAX_COUNT_MACRO_PARAM": 5,
     "LINT_ON_SAVE": True,
+    "PREFIX_VARIABLE_GLOBAL": r"([msg]_)|(the)",
+    "PREFIX_VARIABLE_VISUAL": r"(grid|grd)|(tree)|(fld)|(frm)|(dlg)|(btn)|(chk)|(radio|rd)|(edit|edt)|(list|lst)|(cmb)|(lbl)|(tab)",
+    "PREFIX_VARIABLE_TYPE": r"(ref)|(arr|tarr)|(o|obj)|(ax)|(dict)|(ds)|(i)|(s|str)|(is|b)|(f|lf)|(n|d|m)|(dt)|(t)|(v)",
+    # Settings
     "RSB_SETTINGS_FILE": "RSBIDE.sublime-settings",
+    # Кэш
     "ESCAPE_DOLLAR": '\$',
-    "TRIGGER_ACTION": ["auto_complete", "insert_path"],
-    "INSERT_ACTION": ["commit_completion", "insert_best_completion"],
-    "TRIGGER_STATEMENTS": ["prefix", "tagName", "style"],
-
+    "EXCLUDE_FOLDERS": [
+        "DBFiles", "DstLbr", "Export",
+        "Help", "Html", "Import",
+        "Lbr", "LoadDocum", "Log",
+        "PKG", "Report", "RSM",
+        "Script", "TaskLog", "Template",
+        "Upgrader", "Web"],
+    "ALWAYS_IMPORT": ["CommonVariables", "CommonDefines", "CommonClasses", "CommonFunctions", "CommonCallReference"],
     "BASE_DIRECTORY": False,
     "PROJECT_DIRECTORY": "",
-    "DISABLE_AUTOCOMPLETION": False,
-    "DISABLE_KEYMAP_ACTIONS": False,
-    "AUTO_TRIGGER": True,
     "TRIGGER": [{
                 "scope": "\\.mac\\s",
                 "auto": True,
@@ -28,8 +36,4 @@ config = {
                 "base_directory": False,
                 "extensions": ["mac", "xml"],
                 }],
-    "EXCLUDE_FOLDERS": ["node\\_modules", "DBFiles", "Help", "Html", "Lbr", "template", "upgrader", "Web", "script"],
-    "ALWAYS_IMPORT": ["CommonVariables", "CommonDefines", "CommonClasses", "CommonFunctions", "CommonCallReference"],
-
-    "POST_INSERT_MOVE_CHARACTERS": "^[\"\'\);]*"
 }

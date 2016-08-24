@@ -1,15 +1,36 @@
 {
+    // Выводить отладочную информацию в консоль
     "debug": false,
+    // Выводить лог в консоль
     "log": false,
+    // Исключить папки из кэширования
     "exclude_folders": ["DBFiles", "DstLbr", "Export", "Help", "Html", "Import", "Lbr", "LoadDocum", "Log", "PKG", "Report", "RSM", "Script", "TaskLog", "Template", "Upgrader", "Web"],
+    // Макро файлы которые всегда есть в области видимости
     "always_import": ["CommonVariables", "CommonDefines", "CommonClasses", "CommonFunctions", "CommonCallReference"],
+    // Разрешить проверку по соглашениям
     "lint": true,
+    // Показывать панель перехода к замечаниям при сохранении
     "show_save": true,
+    // Максимальная длинна строки по соглашению
     "maxlength": 160,
+    // Тип подсветки замечаний по соглашению
     "scop_error": "invalid.mac",
+    // Максимальное количество идущих подряд пустых строк
     "max_empty_line": 2,
+    // Отображение в статус строке
+    // текущего класса и макро функции (по клику мыши, под курсором)
     "show_class_in_status": false,
+    // Максимальная вложенность циклов и условий
     "max_depth_loop": 5,
+    // Максимальное количество параметров функций
     "max_count_macro_param": 5,
+    // Проверять и подсвечивать замечания по соглашениям при сохранении
     "lint_on_save": true,
+    // Префиксы переменных
+    // глобалки и основополагающие
+    "prefix_variable_global": "([msg]_)|(the)",
+    // объекты визуального представления
+    "prefix_variable_visual": "(grid|grd)|(tree)|(fld)|(frm)|(dlg)|(btn)|(chk)|(radio|rd)|(edit|edt)|(list|lst)|(cmb)|(lbl)|(tab)",
+    // По типам
+    "prefix_variable_type": "(ref)|(arr|tarr)|(o|obj)|(ax)|(dict)|(ds)|(i)|(s|str)|(is|b)|(f|lf)|(n|d|m)|(dt)|(t)|(v)",
 }
