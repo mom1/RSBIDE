@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-23 14:53:47
+# @Last Modified time: 2016-08-25 19:49:19
 
 
 import sublime
@@ -153,16 +153,35 @@ class RSBIDE:
         t = time.time()
         completions += parser.get_globals_completion(get_imports(view.file_name()), project)
         log(ID, 'Из глобала ' + str(time.time() - t) + ' sec')
-        # t = time.time()
+        t = time.time()
 
         completions = self.without_duplicates(completions)
         log(ID, 'Дубли ' + str(time.time() - t) + ' sec')
         t = time.time()
 
-        # start with default completions
-        # completions = list(Pref.always_on_auto_completions)
+        completions += self.get_completions_always(view)
         log(ID, 'Автокомплит ' + str(time.time() - t1) + ' sec')
         return completions
+
+    def get_completions_always(self, view):
+        result = []
+        collections = sublime.find_resources('RSBIDE*.sublime-completions')
+        sel = view.sel()[0]
+        for collection_file in collections:
+            collection_res = sublime.decode_value(
+                sublime.load_resource(collection_file)
+            )
+            if collection_res.get('scope', 'source.mac') in view.scope_name(sel.begin()):
+                completions = collection_res.get('completions', [])
+            else:
+                continue
+            descr = collection_res.get('descr', 'rsl')
+            for completion in completions:
+                if 'trigger' in completion:
+                    result.append((completion['trigger'] + descr, completion['contents']))
+                else:
+                    result.append((completion + descr, completion))
+        return result
 
 
 RSBIDE = RSBIDE()
