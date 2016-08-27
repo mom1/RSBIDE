@@ -14,6 +14,7 @@
     * Вместе с именем функции подставляются ее возможные параметры
     * Авто-дополнение Object/Field/Method/Key из *.xml (RSTypeInfo)
     * Авто-дополнение не чувствительно к регистру
+    * Авто-дополнение расширяется за счет фалов `RSBIDE*.sublime-completions` описание формата [тут](http://docs.sublimetext.info/en/latest/reference/completions.html#file-format)
     * Авто-дополнение в области import (подсказываются только не импортированные файлы из проекта)
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
 * **Перейти к объявлению и обратно**

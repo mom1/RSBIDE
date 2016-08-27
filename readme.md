@@ -9,11 +9,12 @@ This plugin adds RS-Balance 3 completions and some IDE-like functions to Sublime
 Features
 ------------
 
-* **auto-completions**
+* **Auto-completions**
     * The variables / functions / classes / class options / parameters functions are complemented in view of visibility obalsti
     * Together with the name of the function substituted its possible parameters
-    * auto-completions Object/Field/Method/Key from *.xml (RSTypeInfo)
-    * auto-completions are not case sensitive
+    * Auto-completions Object/Field/Method/Key from *.xml (RSTypeInfo)
+    * Auto-completions are not case sensitive
+    * Auto-completion is extended by tethers `RSBIDE*. sublime-completions` description format [there](http://docs.sublimetext.info/en/latest/reference/completions.html#file-format)
     * Auto-completion in the import (not only tells the imported files from the project)
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/Completion_Import.jpg)
 * **Go to declaration and back again**
