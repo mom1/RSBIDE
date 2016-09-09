@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-07-28 12:47:41
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-23 11:55:21
+# @Last Modified time: 2016-09-09 12:42:42
 import os
 import time
 import RSBIDE.common.path as Path
@@ -35,6 +35,8 @@ def get_import_tree(fName, project, add_self=False):
     always_import = []
     project_folder = project.get_directory()
     file = Path.posix(Path.get_absolute_path(project_folder, fName))
+    if file == '':
+        return all_imports
     sfile = Path.posix(os.path.relpath(file, project_folder))
     always_import += project.filecache.cache.always_import
     always_import = [i for j in always_import for i in project.find_file(j + '.mac')]

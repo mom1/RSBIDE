@@ -38,6 +38,8 @@ def sanitize_base_directory(path):
 def get_absolute_path(base_path, relative_path):
     # return absolute target of join(base_path, relative_path)
     # http://stackoverflow.com/questions/17295086/python-joining-current-directory-and-parent-directory-with-os-path-join?rq=1
+    if not base_path or not relative_path:
+        return ''
     path = os.path.join(base_path, relative_path)
     path = os.path.abspath(path)
     return path

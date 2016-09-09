@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-25 19:49:19
+# @Last Modified time: 2016-09-09 12:43:42
 
 
 import sublime
@@ -28,6 +28,7 @@ import RSBIDE.common.path as Path
 from RSBIDE.project.CurrentFile import CurrentFile
 from RSBIDE.common.lint import Linter
 import Default.history_list as History
+# import selection as Selection
 
 global already_im
 already_im = []
@@ -62,9 +63,20 @@ class RSBIDE:
                 result.append((w, v))
         return result
 
-    def get_from_metadata(self, view):
+    def get_from_metadata(self, view, is_brack=False, sobj=''):
         project = ProjectManager.get_current_project()
-        return project.get_all_list_metadate()
+        return project.get_all_list_metadate(is_brack, sobj)
+
+    def intelige_end(self, view):
+        result = []
+        scope = view.scope_name(view.sel()[0].a)
+        if scope.strip().endswith('meta.if.mac') or scope.strip().endswith('meta.for.mac') or scope.strip().endswith('meta.while.mac'):
+            result = [('end\trsl', 'end;')]
+        elif scope.strip().endswith('meta.macro.mac'):
+            result = [('End\trsl', 'End;')]
+        elif scope.strip().endswith('meta.class.mac'):
+            result = [('END\trsl', 'END;')]
+        return result
 
     def get_completions(self, view, prefix):
         # completion from cache
@@ -90,7 +102,21 @@ class RSBIDE:
             lfile.sort()
             return lfile
         elif "string.quoted.double" in scope:
-            completions += self.get_from_metadata(view)
+            sel = view.sel()[0]
+            if view.substr(sel.begin() - 1) == '.':
+                line = view.line(sel.begin())
+                bef_symbols = sublime.Region(line.begin(), sel.begin())
+                il = 2
+                word = ''
+                while bef_symbols.size() >= il:
+                    if 'constant.other.table-name.mac' in view.scope_name(sel.begin() - il):
+                        word = view.extract_scope(sel.begin() - il)
+                        word = re.sub(r'(\\")', '', view.substr(word))
+                        break
+                    il += 1
+                completions += self.get_from_metadata(view, True, word)
+            else:
+                completions += self.get_from_metadata(view)
             completions = self.without_duplicates(completions)
             return completions
         elif "inherited-class" in scope:
@@ -110,7 +136,7 @@ class RSBIDE:
         classRegs, macroRegs, sclass, smacro, svaria = get_selectors_context(view)
 
         result = []
-        filename, extension = os.path.splitext((view.file_name()))
+        # filename, extension = os.path.splitext((view.file_name()))
         regions = [i for i in view.find_by_selector(sclass + ', ' + smacro + ', ' + svaria)]
 
         if len(classRegs) > 0:
@@ -153,6 +179,10 @@ class RSBIDE:
         t = time.time()
         completions += parser.get_globals_completion(get_imports(view.file_name()), project)
         log(ID, 'Из глобала ' + str(time.time() - t) + ' sec')
+        t = time.time()
+
+        completions += self.intelige_end(view)
+        log(ID, 'Умный End ' + str(time.time() - t) + ' sec')
         t = time.time()
 
         completions = self.without_duplicates(completions)

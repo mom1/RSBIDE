@@ -136,13 +136,21 @@ class FileCacheWorker(threading.Thread):
         lines = [line for line in codecs.open(file, encoding='cp1251', errors='replace')]
         root = ET.fromstring("".join(lines))
         for o in root.findall("./object"):
-            self.meta_data[o.get('Name')] = {'type': 'Object', 'file': relative_path, 'Fields': [], 'Methods': [], 'Keys': []}
+            self.meta_data[o.get('GUID')] = {
+                'type': 'Object',
+                'file': relative_path,
+                'Name': o.get('Name'),
+                'AncestorID': o.get('AncestorID'),
+                'Fields': [],
+                'Methods': [],
+                'Keys': []
+            }
             for f in o.findall("Field"):
-                self.meta_data[o.get('Name')]['Fields'] += [f.get('Name')]
+                self.meta_data[o.get('GUID')]['Fields'] += [f.get('Name')]
             for m in o.findall("Method"):
-                self.meta_data[o.get('Name')]['Methods'] += [m.get('Name')]
+                self.meta_data[o.get('GUID')]['Methods'] += [m.get('Name')]
             for k in o.findall("Key"):
-                self.meta_data[o.get('Name')]['Keys'] += [k.get('Name')]
+                self.meta_data[o.get('GUID')]['Keys'] += [k.get('Name')]
 
     def run(self):
         global folders

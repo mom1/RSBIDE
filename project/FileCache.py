@@ -119,18 +119,42 @@ class FileCache:
             # create relative path
             return (target_path, Path.trace(base_path, target_path))
 
-    def get_all_list_metadate(self):
+    def get_ancestor(self, ancestor=''):
+        if ancestor == '':
+            return
+        result = []
+        objects = [ancestor]
+        for x in objects:
+            o = self.cache.meta_data.get(x, None)
+            if not o:
+                continue
+            result += [(i + '\t' + 'Field', '\\"' + i + '\\"') for i in o['Fields']]
+            ancestor_up = o.get('AncestorID', '')
+            if ancestor_up != '':
+                objects.append(ancestor_up)
+        return result
+
+    def get_all_list_metadate(self, is_brack=False, sobj=''):
         """ Return all types from metadata
         """
         if not self.cache:
             return
         result = []
-        for x, val in self.cache.meta_data.items():
-            result += [(x + '\t' + val['type'], x)]
-            result += [(i + '\t' + 'Field', i) for i in val['Fields']]  # if (i + '\t' + 'Field', i) not in result
-            result += [(i + '\t' + 'Method', i) for i in val['Methods']]  # if (i + '\t' + 'Method', i) not in result
-            result += [(i + '\t' + 'Key', i) for i in val['Keys']]  # if (i + '\t' + 'Key', i) not in result
+        sobj = sobj.strip()
+        if is_brack:
+            for x, val in self.cache.meta_data.items():
+                if sobj != '' and sobj.lower() != val['Name'].lower():
+                    continue
+                result += [(i + '\t' + 'Field', '\\"' + i + '\\"') for i in val['Fields']]
+                result += self.get_ancestor(val['AncestorID'])
+        else:
+            for x, val in self.cache.meta_data.items():
+                result += [(x + '\t' + val['type'], val['Name'])]
+                result += [(i + '\t' + 'Field', i) for i in val['Fields']]
+                result += [(i + '\t' + 'Method', i) for i in val['Methods']]
+                result += [(i + '\t' + 'Key', i) for i in val['Keys']]
         log(ID, len(result))
+        result = sorted(result, key=lambda t: t[0])
         return result
 
     def file_is_cached(self, file_name):

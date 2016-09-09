@@ -460,7 +460,7 @@ contexts:
           scope: constant.character.escape.mac
         - match: ">"
           scope: punctuation.definition.tag.end.mac
-        - match: '(?=<)'
+        - match: '(\s)*(?=<)'
           push:
             - meta_scope: string.quoted.xml.mac
             - include: scope:text.xml

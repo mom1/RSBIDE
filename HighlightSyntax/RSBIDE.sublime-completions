@@ -51,6 +51,5 @@
         "ProcRef",
         "MethodRef",
         "return",
-        "end;"
         ],
 }
