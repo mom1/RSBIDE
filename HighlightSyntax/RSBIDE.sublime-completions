@@ -51,5 +51,7 @@
         "ProcRef",
         "MethodRef",
         "return",
+        "True",
+        "False",
         ],
 }

@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-08-24 18:10:22
+# @Last Modified time: 2016-09-28 13:35:54
 import sublime
 import re
 import threading
@@ -149,7 +149,7 @@ class Linter(threading.Thread):
                 if not re.match(r'^(\s)*$', parse_panel.substr(l), re.IGNORECASE):
                     not_empty_line = l
                     break
-            if re.match(r'^\s*(example|пример)', parse_panel.substr(not_empty_line), re.IGNORECASE):
+            if re.match(r'^\s*(example|пример|description)', parse_panel.substr(not_empty_line), re.IGNORECASE):
                 continue
             if len(parse_panel.find_by_selector(
                     'meta.class.mac, meta.macro.mac, meta.variable.mac, meta.if.mac, meta.while.mac, meta.for.mac, meta.const.mac')) > 0:
