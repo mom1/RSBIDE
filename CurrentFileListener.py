@@ -17,10 +17,13 @@ class CurrentFileListener(sublime_plugin.EventListener):
         Linter(view).erase_all_regions()
 
     def on_post_save_async(self, view):
+        project = ProjectManager.get_current_project()
+        if not project:
+            return
         if CurrentFile.is_temp():
             verbose(ID, "temp file saved, reevaluate")
             CurrentFile.cache[view.id()] = None
-        if ProjectManager.get_current_project().get_setting("LINT_ON_SAVE", True):
+        if project.get_setting("LINT_ON_SAVE", True):
             lint = Linter(view, ProjectManager)
             lint.start()
         if CurrentFile.is_valid():
@@ -30,4 +33,6 @@ class CurrentFileListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         # view has gained focus
         proj = ProjectManager.get_current_project()
+        if not proj:
+            return
         CurrentFile.evaluate_current(view, proj)

@@ -25,12 +25,17 @@ class Linter(threading.Thread):
         self.view = view
         self.all_regions = []
         self.ProjectManager = ProjectManager
-        self.scope = self.ProjectManager.get_current_project().get_setting("SCOP_ERROR", "invalid.mac")
+        project = self.ProjectManager.get_current_project()
+        if not project:
+            return
+        self.scope = project.get_setting("SCOP_ERROR", "invalid.mac")
         self.flags = sublime.DRAW_NO_FILL
         self.force = force
 
     def run(self):
         project = self.ProjectManager.get_current_project()
+        if not project:
+            return
         window = sublime.active_window()
         islint = project.get_setting("LINT", True)
         if not islint or not self.is_RStyle_view():

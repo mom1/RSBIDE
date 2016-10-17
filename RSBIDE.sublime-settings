@@ -30,7 +30,7 @@
     // глобалки и основополагающие
     "prefix_variable_global": "([msg]_)|(the)",
     // объекты визуального представления
-    "prefix_variable_visual": "(grid|grd)|(tree)|(fld)|(frm)|(dlg)|(btn)|(chk)|(radio|rd)|(edit|edt)|(list|lst)|(cmb)|(lbl)|(tab)|(cmd)",
+    "prefix_variable_visual": "(grid|grd)|(tree)|(fld)|(frm)|(dlg)|(btn)|(chk)|(radio|rd)|(edit|edt)|(list|lst)|(cmb)|(lbl|label)|(tab)|(cmd)|(control)",
     // По типам
     "prefix_variable_type": "(ref)|(ev)|(arr|tarr)|(o|obj)|(ax)|(dict)|(ds)|(i)|(s|str)|(is|b)|(f|lf)|(n|d|m)|(dt)|(t)|(v)",
 }
