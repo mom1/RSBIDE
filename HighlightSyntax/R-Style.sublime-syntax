@@ -460,12 +460,14 @@ contexts:
           scope: constant.character.escape.mac
         - match: ">"
           scope: punctuation.definition.tag.end.mac
-        - match: '(\s)*(?=<)'
+        - match: '(?=\s*<)'
           push:
             - meta_scope: string.quoted.xml.mac
             - include: scope:text.xml
           with_prototype:
-            - match: '(?=("|“|”))'
+            - match: '(?=("|“|”))|(\s*|^)(<=?)(?=([[:digit:].-][[:alnum:]:_.-]*)|(\s)+)'
+              captures:
+                3: keyword.operator.comparison.sql
               pop: true
             - match: '(\\x[0-9A-F]{2})|(\\[0-7]{3})|(\\\\)|(\\\")|(\\n)|(\\r)'
               scope: constant.character.escape.mac
