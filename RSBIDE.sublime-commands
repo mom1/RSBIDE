@@ -22,9 +22,5 @@
     {
         "caption": "RSBIDE: Lint This View",
         "command": "lint_this_view"
-    },
-    {
-        "caption": "RSBIDE: Вставить как строку",
-        "command": "paste_as_string"
     }
 ]

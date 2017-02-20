@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-09-09 12:43:42
+# @Last Modified time: 2017-02-20 17:24:05
 
 
 import sublime
@@ -646,45 +646,6 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
                 MessStat += ' macro: ' + view.substr(mrn)
                 break
         view.set_status('rsbide_stat', MessStat)
-
-
-class PasteAsStringCommand(sublime_plugin.TextCommand):
-
-    def run(self, edit):
-        view = self.view
-        if not is_RStyle_view(view):
-            return
-        stext = sublime.get_clipboard()
-        if not stext:
-            return
-        stext = re.sub(r"\n", r' \\n"\n+ "', stext, flags=re.IGNORECASE)
-        stext = re.sub(r"^", r'"', stext, flags=re.IGNORECASE)
-        stext = re.sub(r"$", r' "', stext, flags=re.IGNORECASE)
-        for s in view.sel():
-            line = view.line(s.begin())
-            len_bef_symbol = len(view.substr(sublime.Region(line.begin(), s.begin()))) - 2
-            aft_symbol = view.substr(sublime.Region(s.end(), line.end()))
-
-            if len_bef_symbol < 0:
-                len_bef_symbol = 0
-            if re.match(r'\s*\;\s*', aft_symbol, flags=re.IGNORECASE):
-                stext = re.sub(r'\;', '', stext, flags=re.IGNORECASE)
-            else:
-                if stext[-1] != ';':
-                    stext += ';'
-            stext_ident = re.sub(r"\n", r'\n' + ' ' * len_bef_symbol, stext, flags=re.IGNORECASE)
-            view.replace(edit, s, stext_ident)
-
-    def is_visible(self):
-        view = self.view
-        project = ProjectManager.get_current_project()
-        isvis = False
-        if is_RStyle_view(view):
-            isvis = True
-        return isvis
-
-    def description(self):
-        return 'RSBIDE: Вставить как строку'
 
 
 def plugin_loaded():

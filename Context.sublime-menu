@@ -3,5 +3,4 @@
    {"command": "go_to_definition" },
    {"command": "print_sign_to_panel" },
    {"command": "lint_this_view" },
-   {"command": "paste_as_string" },
 ]
