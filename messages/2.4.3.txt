@@ -1,0 +1,24 @@
+RSBIDE 2.4.3
+-------------
+
+Переход к родительской функции из переопределенной
+```
+class Test (Params)
+           // Теперь переходит сюда
+           v
+     macro NameMacro ()
+     End;
+END;
+
+class (Test) 1Test (Params)
+     InitTest(Params)
+           // Раньше переходило сюда
+           v
+     macro NameMacro ()
+           // Переходим от NameMacro
+           v
+           NameMacro ();
+     End;
+END;
+```
+
