@@ -90,16 +90,16 @@ class FileCacheWorker(threading.Thread):
         parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + relative_path)
         names_import = [parse_panel.substr(i) + '.mac' for i in parse_panel.find_by_selector('import.file.mac')]
         # globals
-        for x in parse_panel.find_by_selector(
+        for g in parse_panel.find_by_selector(
                 'variable.declare.name.mac - meta.class.mac - meta.macro.mac, entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac'
         ):
-            if 'entity.name.function.mac' in parse_panel.scope_name(x.a):
-                region = [i for i in parse_panel.find_by_selector('meta.macro.mac') if i.contains(x)]
+            if 'entity.name.function.mac' in parse_panel.scope_name(g.a):
+                region = [i for i in parse_panel.find_by_selector('meta.macro.mac') if i.contains(g)]
                 name_param = [parse_panel.substr(i) for i in parse_panel.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
                 hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
-                names_global.append((parse_panel.substr(x) + '(...)\t' + 'global', parse_panel.substr(x) + '(' + hint + ')'))
+                names_global.append((parse_panel.substr(g) + '(...)\t' + 'global', parse_panel.substr(g) + '(' + hint + ')'))
             else:
-                names_global.append((parse_panel.substr(x) + '\t' + 'global', parse_panel.substr(x)))
+                names_global.append((parse_panel.substr(g) + '\t' + 'global', parse_panel.substr(g)))
         # class struktura
         for mc in parse_panel.find_by_selector('meta.class.mac'):
             for x in parse_panel.find_by_selector('meta.class.mac entity.name.class.mac'):

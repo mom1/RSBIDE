@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-07-28 12:47:41
 # @Last Modified by:   mom1
-# @Last Modified time: 2016-09-09 12:42:42
+# @Last Modified time: 2018-01-16 13:22:22
 import os
 import time
 import RSBIDE.common.path as Path
@@ -56,8 +56,7 @@ def get_globals_completion(imports, project, prefix=None):
     result = []
     for x in imports:
         filecache = project.filecache.cache.files.get(x, {})
-        if len(filecache) > 3:
-            result += filecache[3].get('globals', [])
+        result += filecache[3].get('globals', [])
     return result
 
 

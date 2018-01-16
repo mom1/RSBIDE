@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2017-02-20 17:24:05
+# @Last Modified time: 2018-01-16 12:46:23
 
 
 import sublime
@@ -106,7 +106,7 @@ class RSBIDE:
             if view.substr(sel.begin() - 1) == '.':
                 line = view.line(sel.begin())
                 bef_symbols = sublime.Region(line.begin(), sel.begin())
-                il = 2
+                il = 3
                 word = ''
                 while bef_symbols.size() >= il:
                     if 'constant.other.table-name.mac' in view.scope_name(sel.begin() - il):
@@ -458,14 +458,12 @@ def get_result(view):
         meta = view.extract_scope(sel.a - 1)
         row, col = view.rowcol(meta.a)
         return [(file, sfile, (row + 1, col + 1))]
-        # log(view.substr())
 
     if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
         return [(val[3].get('fullpath'), i, (0, 0)) for i, val in project.find_file(word.lower() + '.mac').items()]
     elif view.scope_name(view.sel()[0].a) == "source.mac meta.class.mac inherited-class.mac entity.other.inherited-class.mac ":
         return window.lookup_symbol_in_index(word)
 
-    # result = window.lookup_symbol_in_index(word)
     result = []
     im_result = []
     classRegs, macroRegs, sclass, smacro, svaria = get_selectors_context(view)
@@ -477,7 +475,7 @@ def get_result(view):
     if len(classRegs) > 0 and len(selections) > 1:
         # Ищем в текущем классе
         selections = [i for i in selections for j in classRegs if j.contains(i)]
-    if len(macroRegs) > 0 and len(selections) > 1:
+    if len(macroRegs) > 0 and len(selections) > 0:
         # Нашли в текущем классе ищем  в текущем макро
         selections = [i for i in selections for j in macroRegs if j.contains(i)]
         for x in selections:
