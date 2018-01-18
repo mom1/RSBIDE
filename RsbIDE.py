@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-01-16 12:46:23
+# @Last Modified time: 2018-01-18 12:00:37
 
 
 import sublime
@@ -477,10 +477,12 @@ def get_result(view):
         selections = [i for i in selections for j in classRegs if j.contains(i)]
     if len(macroRegs) > 0 and len(selections) > 0:
         # Нашли в текущем классе ищем  в текущем макро
-        selections = [i for i in selections for j in macroRegs if j.contains(i)]
-        for x in selections:
+        selections_in_macro = [i for i in selections for j in macroRegs if j.contains(i)]
+        for x in selections_in_macro:
             if 'entity.name.function.mac' in view.scope_name(x.a):
                 selections.remove(x)
+                selections_in_macro.remove(x)
+        selections = selections_in_macro if len(selections_in_macro) > 0 else selections
     if len(macroRegs) > 0 and len(selections) == 0:
         # текущая позиция в макро но переменной в ней нет (ищем в параметрах текущего макро)
         MacroParamRegs = [i for i in RegionMacroParam if word.lower() == view.substr(view.word(i)).lower()]
