@@ -2,7 +2,7 @@
 # @Author: MOM
 # @Date:   2015-09-09 21:44:10
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-01-18 12:00:37
+# @Last Modified time: 2018-01-20 23:22:32
 
 
 import sublime
@@ -151,17 +151,17 @@ class RSBIDE:
                 if macroRegs[0].contains(x):
                     result.append((view.substr(x) + '\t' + 'macro param', view.substr(x)))
             elif'variable.declare.name.mac' in view.scope_name(x.a):
-                    c = 0
-                    if len(macroRegs) > 0:
-                        if macroRegs[0].contains(x):
-                            result.append((view.substr(x) + '\t' + 'var in macro', view.substr(x)))
-                            c += 1
-                    if len(classRegs) > 0 and c == 0 and 'meta.macro.mac' not in view.scope_name(x.a):
-                        if classRegs[0].contains(x):
-                            result.append((view.substr(x) + '\t' + 'var in class', view.substr(x)))
-                            c += 1
-                    if c == 0 and ('meta.macro.mac' not in view.scope_name(x.a) or 'meta.class.mac' not in view.scope_name(x.a)):
-                        result.append((view.substr(x) + '\t' + 'global', view.substr(x)))
+                c = 0
+                if len(macroRegs) > 0:
+                    if macroRegs[0].contains(x):
+                        result.append((view.substr(x) + '\t' + 'var in macro', view.substr(x)))
+                        c += 1
+                if len(classRegs) > 0 and c == 0 and 'meta.macro.mac' not in view.scope_name(x.a):
+                    if classRegs[0].contains(x):
+                        result.append((view.substr(x) + '\t' + 'var in class', view.substr(x)))
+                        c += 1
+                if c == 0 and ('meta.macro.mac' not in view.scope_name(x.a) or 'meta.class.mac' not in view.scope_name(x.a)):
+                    result.append((view.substr(x) + '\t' + 'global', view.substr(x)))
             else:
                 result.append((view.substr(x) + '\t' + 'current file', view.substr(x)))
         completions += result
@@ -531,15 +531,15 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
         self.window.show_quick_panel(["%s (%s)" % (r[1], r[2][0]) for r in self.result], self.open_file, 0, 0, lambda x: self.open_file(x, True))
 
     def open_file(self, idx, transient=False):
-            flags = sublime.ENCODED_POSITION
-            if transient:
-                flags |= sublime.TRANSIENT
+        flags = sublime.ENCODED_POSITION
+        if transient:
+            flags |= sublime.TRANSIENT
 
-            if idx > -1:
-                self.window.open_file("%s:%s:%s" % (self.result[idx][0], self.result[idx][2][0], self.result[idx][2][1]), flags)
-            else:
-                self.window.focus_view(self.old_view)
-                self.old_view.show_at_center(self.current_file_location)
+        if idx > -1:
+            self.window.open_file("%s:%s:%s" % (self.result[idx][0], self.result[idx][2][0], self.result[idx][2][1]), flags)
+        else:
+            self.window.focus_view(self.old_view)
+            self.old_view.show_at_center(self.current_file_location)
 
     def is_visible(self, paths=None):
         view = self.window.active_view()

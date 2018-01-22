@@ -7,6 +7,7 @@ author: MOM
 variables:
   identifier: '[_$[:alpha:]][_$[:alnum:]]*'
   constant_identifier: '[[:upper:]][_$[:digit:][:upper:]]*\b'
+  xml_indicator: (?i)(\s)*(<)(\/|\?)*(?:OBJECT_LIST|OBJECT|FIELD|COMMENT|VERSION|XML|KEY|KEYFIELD)\b
 
 contexts:
   main:
@@ -102,35 +103,13 @@ contexts:
   class:
     - include: simple
     - meta_scope: meta.class.mac
-    - match: '(?i)\bclass\b'
+    - match: '(?i)\b(class)\b'
       scope: storage.type.class.mac
-      push:
-        - include: comments
-        - match: '\('
-          scope: punctuation.definition.inherited-class.mac
-          push: class-inherited
-        - match: '(?={{identifier}})'
-          set: class-definition
-    - include: flow
-    - match: '(?i)(?=\bmacro\b)'
-      push: macro
-    - match: '(?i)(?=\bvar\b)'
-      push: var
-    - match: '(?i)(?=\bconst\b)'
-      push: const
-    - match: '(?i)(END)\s*(;)'
-      captures:
-        1: keyword.class.end.mac
-      pop: true
-
-  class-inherited:
-    - meta_scope: inherited-class.mac
-    - include: comments
-    - match: '{{identifier}}'
-      scope: entity.other.inherited-class.mac
-    - match: '\)'
+    - match: '\('
       scope: punctuation.definition.inherited-class.mac
-      pop: true
+      push: class-inherited
+    - match: '(?={{identifier}})'
+      set: [class-block, class-definition]
 
   class-definition:
     - include: simple
@@ -146,6 +125,34 @@ contexts:
           pop: true
         - match: '(?={{identifier}})'
           pop: true
+
+  class-block:
+    - meta_scope: meta.class.mac
+    - match: '(?i)\b(END)\b\s*(;)?'
+      captures:
+        1: keyword.class.end.mac
+      pop: true
+    - include: simple
+    - include: flow
+    - match: '(?i)(?=\bmacro\b)'
+      push: macro
+    - match: '(?i)(?=\bclass\b)'
+      push: class
+    - match: '(?i)(?=\bvar\b)'
+      push: var
+    - match: '(?i)(?=\bconst\b)'
+      push: const
+
+  class-inherited:
+    - meta_scope: inherited-class.mac
+    - match: '\('
+      scope: punctuation.definition.inherited-class.mac
+    - match: '\)'
+      scope: punctuation.definition.inherited-class.mac
+      pop: true
+    - include: comments
+    - match: '{{identifier}}'
+      scope: entity.other.inherited-class.mac
 
   class-param:
     - meta_scope: class-param.mac
@@ -171,51 +178,51 @@ contexts:
     - include: modifier
     - include: type-variable
     - meta_scope: meta.macro.mac
-    - match: '(?i)\bmacro\b'
+    - match: '(?i)\b(macro)\b'
       scope: storage.type.macro.mac
-      push:
-        - include: comments
-        - match: '(?i)(?=\bmacro\b)'
-          push: macro
-        - match: '(?={{identifier}})'
-          set: macro-declaration
-    - include: simple
-    - include: flow
-    - match: '(?i)(?=\bvar\b)'
-      push: var
-    - match: '(?i)(?=\bconst\b)'
-      push: const
-    - match: '(?i)(END)\s*(;)'
+    - match: '(?={{identifier}})'
+      set: [macro-block, macro-declaration]
+
+  macro-block:
+    - match: '(?i)\b(END)\b\s*(;)?'
       captures:
         1: keyword.macro.end.mac
       pop: true
+    - meta_scope: meta.macro.mac
+    - include: simple
+    - include: flow
+    - include: type-variable
+    - match: '(?i)(?=\bconst\b)'
+      push: const
+    - match: '(?i)(?=\bvar\b)'
+      push: var
+    - match: '(?i)(?=\bmacro\b)'
+      push: macro
 
   macro-declaration:
     - match: '({{identifier}})'
       scope: entity.name.function.mac
-      set:
-        - include: simple
-        - match: '\s*(\()'
-          captures:
-            1: punctuation.definition.parameters.begin.mac
-          set: macro-declaration-parameters
-        - match: '(?i)(?=\bEND\b)'
-          pop: true
-        - match: '(?={{identifier}})'
-          pop: true
+    - match: '\s*(\()'
+      captures:
+        1: punctuation.definition.parameters.begin.mac
+      set: macro-declaration-parameters
+    - match: '(?=\n+)'
+      pop: true
     - include: simple
+    - include: type-variable
+    - include: comments
 
   macro-declaration-parameters:
     - meta_scope: macro-param.mac
     - include: type-variable
     - include: comments
+    - match: (\))
+      scope: punctuation.definition.parameters.end.mac
+      pop: true
     - match: '(?i)({{identifier}})'
       scope: variable.parameter.macro.mac
     - match: (?=,)
       set: macro-param-continue
-    - match: \)
-      scope: punctuation.definition.parameters.end.mac
-      pop: true
 
   type-variable:
     - include: comments
@@ -232,7 +239,7 @@ contexts:
     - match: ','
       scope: meta.delimiter.comma.mac
       set: macro-declaration-parameters
-    - match: '\)'
+    - match: '(?=\))'
       pop: true
 
   modifier:
@@ -369,7 +376,7 @@ contexts:
           push: var
         - match: '(?i)(?=\bconst\b)'
           push: const
-    - match: '(?i)(END)\s*(;)?'
+    - match: '(?i)\b(END)\b\s*(;)?'
       captures:
         1: keyword.if.end.mac
       pop: true
@@ -389,7 +396,7 @@ contexts:
           push: for
         - match: '(?i)(?=\bEND\b)'
           pop: true
-    - match: '(?i)(END)\s*(;)?'
+    - match: '(?i)\b(END)\b\s*(;)?'
       captures:
         1: keyword.while.end.mac
       pop: true
@@ -421,7 +428,7 @@ contexts:
                   pop: true
             - match: '\)'
               pop: true
-    - match: '(?i)(END)\s*(;)?'
+    - match: '(?i)\b(END)\b\s*(;)?'
       captures:
         1: keyword.for.end.mac
       pop: true
@@ -460,7 +467,7 @@ contexts:
           scope: constant.character.escape.mac
         - match: ">"
           scope: punctuation.definition.tag.end.mac
-        - match: '(?=\s*<)'
+        - match: '(?={{xml_indicator}})'
           push:
             - meta_scope: string.quoted.xml.mac
             - include: scope:text.xml
@@ -480,7 +487,7 @@ contexts:
               captures:
                 1: keyword.operator.comparison.sql
                 2: keyword.operator.math.sql
-        - match: '(?!<)'
+        - match: '(?!{{xml_indicator}})'
           push:
             - meta_scope: string.quoted.sql.mac
             - include: scope:source.sql

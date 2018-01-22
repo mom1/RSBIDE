@@ -1,0 +1,172 @@
+// SYNTAX TEST "Packages/RSBIDE/HighlightSyntax/R-Style.sublime-syntax"
+macro /**/ name /**/ (
+// <- meta.macro.mac storage.type.macro.mac
+//     ^ meta.macro.mac comment.block.mac
+//         ^ meta.macro.mac entity.name.function.mac
+//                   ^ meta.macro.mac macro-param.mac punctuation.definition.parameters.begin.mac
+                abs,
+//              ^ meta.macro.mac macro-param.mac variable.parameter.macro.mac
+//                 ^ meta.macro.mac macro-param.mac meta.delimiter.comma.mac
+                vcx) :Object
+//              ^ meta.macro.mac macro-param.mac variable.parameter.macro.mac
+//                 ^ meta.macro.mac macro-param.mac punctuation.definition.parameters.end.mac
+//                   ^ meta.macro.mac punctuation.separator.parameters.mac
+//                    ^ meta.macro.mac storage.type.variable.mac
+    return NullObj;
+//  ^ meta.macro.mac keyword.control.flow.mac
+//         ^ meta.macro.mac constant.language.mac
+End;
+// <- meta.macro.mac keyword.macro.end.mac
+// ^ meta.macro.mac
+
+"\"Поле\"<=" + 2
+//       ^ string.quoted.double.mac string.quoted.sql.mac keyword.operator.comparison.sql
+"<object_list schema_version = '3'>"
+// ^ string.quoted.double.mac string.quoted.xml.mac meta.tag.xml entity.name.tag.localname.xml
+//            ^ string.quoted.double.mac string.quoted.xml.mac meta.tag.xml entity.other.attribute-name.localname.xml
+//                           ^ string.quoted.double.mac string.quoted.xml.mac meta.tag.xml punctuation.separator.key-value.xml
+//                              ^ string.quoted.double.mac string.quoted.xml.mac meta.tag.xml string.quoted.single.xml
+//                                ^ string.quoted.double.mac string.quoted.xml.mac meta.tag.xml punctuation.definition.tag.end.mac
+var sVal:String = "";
+// <- meta.variable.mac storage.type.var.mac
+//  ^ meta.variable.mac variable.declare.name.mac
+//      ^ meta.variable.mac punctuation.separator.parameters.mac
+//       ^ meta.variable.mac storage.type.variable.mac
+//              ^ meta.variable.mac meta.variable.value.mac keyword.operator.mac
+//                ^ meta.variable.mac meta.variable.value.mac string.quoted.double.mac punctuation.definition.string.begin.mac
+//                 ^ meta.variable.mac meta.variable.value.mac string.quoted.double.mac punctuation.definition.string.end.mac
+//                  ^ meta.variable.mac
+
+macro /**/ name (asd, asd) /**/
+//  <- source.mac meta.macro.mac storage.type.macro.mac
+//   ^ meta.macro.mac
+//    ^ meta.macro.mac comment.block.mac punctuation.definition.comment.mac
+//        ^ meta.macro.mac
+//         ^ meta.macro.mac entity.name.function.mac
+//             ^ meta.macro.mac
+//              ^ meta.macro.mac macro-param.mac punctuation.definition.parameters.begin.mac
+//               ^ meta.macro.mac macro-param.mac variable.parameter.macro.mac
+//                  ^ meta.macro.mac macro-param.mac meta.delimiter.comma.mac
+//                   ^ meta.macro.mac macro-param.mac
+//                    ^ meta.macro.mac macro-param.mac variable.parameter.macro.mac
+//                       ^ meta.macro.mac macro-param.mac punctuation.definition.parameters.end.mac
+//                        ^ meta.macro.mac
+//                         ^ meta.macro.mac comment.block.mac punctuation.definition.comment.mac
+  ""
+// ^ meta.macro.mac string.quoted.double.mac punctuation.definition.string.end.mac
+  name1();
+//^ meta.macro.mac - entity.name.function.mac
+  var i=0;
+//^ meta.macro.mac meta.variable.mac storage.type.var.mac
+End;
+//^ meta.macro.mac keyword.macro.end.mac
+macro NameMacro (Sender:Object, www)
+//<- meta.macro.mac storage.type.macro.mac
+//    ^ meta.macro.mac entity.name.function.mac
+//               ^ meta.macro.mac macro-param.mac variable.parameter.macro.mac
+//                              ^ meta.macro.mac macro-param.mac variable.parameter.macro.mac
+    //Comment macro
+//    ^ meta.macro.mac comment.line.double-slash.mac
+    var i=0;
+//      ^ meta.macro.mac meta.variable.mac variable.declare.name.mac
+    asd(asd, asd)
+//  ^ meta.macro.mac
+    macro /* */ name1 (sad)
+//  ^ meta.macro.mac meta.macro.mac storage.type.macro.mac
+//          ^ meta.macro.mac meta.macro.mac comment.block.mac
+//              ^ meta.macro.mac meta.macro.mac entity.name.function.mac
+//                     ^ meta.macro.mac meta.macro.mac macro-param.mac variable.parameter.macro.mac
+        var qwe;
+//          ^ meta.macro.mac meta.macro.mac meta.variable.mac variable.declare.name.mac
+        name1();
+//      ^ meta.macro.mac meta.macro.mac
+        if (true)
+
+        end;
+        for (var a, arr)
+            //list instruction
+
+        end;
+    End;
+//  ^ meta.macro.mac meta.macro.mac keyword.macro.end.mac
+    name1;
+//  ^ meta.macro.mac
+End;
+// <- meta.macro.mac keyword.macro.end.mac
+NameMacro
+
+class Ttest1 (ParamClass)
+// <- meta.class.mac storage.type.class.mac
+//    ^ meta.class.mac entity.name.class.mac
+//            ^ meta.class.mac class-param.mac variable.parameter.class.mac
+//Оставь коммент для класса
+//^ meta.class.mac comment.line.double-slash.mac
+  macro NameMacro (Sender:Object)
+//^ meta.class.mac meta.macro.mac storage.type.macro.mac
+     //Comment macro
+//     ^ meta.class.mac meta.macro.mac comment.line.double-slash.mac
+     macro name1
+//   ^ meta.class.mac meta.macro.mac meta.macro.mac storage.type.macro.mac
+//         ^ meta.class.mac meta.macro.mac meta.macro.mac entity.name.function.mac
+//              ^ meta.class.mac meta.macro.mac meta.macro.mac
+     End;
+//   ^ meta.class.mac meta.macro.mac meta.macro.mac keyword.macro.end.mac
+     NameMacro
+//   ^ meta.class.mac meta.macro.mac
+  End;
+//^ meta.class.mac meta.macro.mac keyword.macro.end.mac
+
+  NameMacro();
+// ^ meta.class.mac
+
+  class Ttest23 (ParamClass)
+//^ meta.class.mac meta.class.mac storage.type.class.mac
+//      ^ meta.class.mac meta.class.mac entity.name.class.mac
+//               ^ meta.class.mac meta.class.mac class-param.mac variable.parameter.class.mac
+  //Оставь коммент для класса
+//   ^ meta.class.mac meta.class.mac comment.line.double-slash.mac
+    NameMacro();
+//  ^ meta.class.mac meta.class.mac
+  END;
+//^ meta.class.mac meta.class.mac keyword.class.end.mac
+END;
+// <- meta.class.mac keyword.class.end.mac
+
+class (Ttest23) Ttest (фывб,
+//    <- meta.class.mac storage.type.class.mac
+//     ^ meta.class.mac inherited-class.mac entity.other.inherited-class.mac
+//              ^ meta.class.mac entity.name.class.mac
+//                     ^ meta.class.mac class-param.mac variable.parameter.class.mac
+          выф)
+//        ^ meta.class.mac class-param.mac variable.parameter.class.mac
+  //Оставь коммент для класса
+//  ^ meta.class.mac comment.line.double-slash.mac
+  macro NameMacro (Sender:Object)
+//^ meta.class.mac meta.macro.mac storage.type.macro.mac
+//      ^ meta.class.mac meta.macro.mac entity.name.function.mac
+//                 ^ meta.class.mac meta.macro.mac macro-param.mac variable.parameter.macro.mac
+//                        ^ meta.class.mac meta.macro.mac macro-param.mac storage.type.variable.mac
+     //Comment macro
+//     ^ meta.class.mac meta.macro.mac comment.line.double-slash.mac
+     NameMacro();
+//   ^ meta.class.mac meta.macro.mac
+  End;
+//^ meta.class.mac meta.macro.mac keyword.macro.end.mac
+  NameMacro();
+//^ meta.class.mac
+
+  macro NameMacro1 (Sender:Object) : Variant
+//^ meta.class.mac meta.macro.mac storage.type.macro.mac
+//      ^ meta.class.mac meta.macro.mac entity.name.function.mac
+//                  ^ meta.class.mac meta.macro.mac macro-param.mac variable.parameter.macro.mac
+//                         ^ meta.class.mac meta.macro.mac macro-param.mac storage.type.variable.mac
+     //Comment macro
+//     ^ meta.class.mac meta.macro.mac comment.line.double-slash.mac
+     NameMacro();
+//   ^ meta.class.mac meta.macro.mac
+  End;
+//^ meta.class.mac meta.macro.mac keyword.macro.end.mac
+
+END;
+// <- meta.class.mac keyword.class.end.mac
+// ^ meta.class.mac
