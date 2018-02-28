@@ -1,0 +1,4 @@
+RSBIDE 2.5.2
+-------------
+
+* Bug fix syntax
