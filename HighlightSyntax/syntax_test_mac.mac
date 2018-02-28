@@ -170,3 +170,16 @@ class (Ttest23) Ttest (фывб,
 END;
 // <- meta.class.mac keyword.class.end.mac
 // ^ meta.class.mac
+  macro ShowPlaces // Запускач для формы "Участки работы"
+//      ^ meta.macro.mac entity.name.function.mac
+//                ^ meta.macro.mac
+//                   ^ meta.macro.mac comment.line.double-slash.mac
+    var ObjPlaces =  TfrmWHWorkPlaces;
+//  ^ meta.macro.mac meta.variable.mac storage.type.var.mac
+//      ^ meta.macro.mac meta.variable.mac variable.declare.name.mac
+//                   ^ meta.macro.mac meta.variable.mac meta.variable.value.mac
+    return ObjPlaces.DoModal();
+//  ^ meta.macro.mac keyword.control.flow.mac
+//         ^ meta.macro.mac
+  end;
+//^ meta.macro.mac keyword.macro.end.mac

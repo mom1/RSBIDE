@@ -202,15 +202,18 @@ contexts:
   macro-declaration:
     - match: '({{identifier}})'
       scope: entity.name.function.mac
-    - match: '\s*(\()'
-      captures:
-        1: punctuation.definition.parameters.begin.mac
-      set: macro-declaration-parameters
-    - match: '(?=\n+)'
+      set:
+        - include: comments
+        - match: '\s*(\()'
+          captures:
+            1: punctuation.definition.parameters.begin.mac
+          set: macro-declaration-parameters
+        - match: '(?={{identifier}})'
+          pop: true
+    - match: '(?=\n)'
       pop: true
     - include: simple
     - include: type-variable
-    - include: comments
 
   macro-declaration-parameters:
     - meta_scope: macro-param.mac
