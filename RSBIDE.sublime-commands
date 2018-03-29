@@ -9,7 +9,24 @@
     },
     {
         "caption": "RSBIDE: Rebuild Cache",
-        "command": "rebuild_cache"
+        "command": "rebuild_cache",
+        "args": {
+            "action": "rebuild"
+        }
+    },
+    {
+        "caption": "RSBIDE: Update Cache",
+        "command": "rebuild_cache",
+        "args": {
+            "action": "update"
+        }
+    },
+    {
+        "caption": "RSBIDE2: Cancel Cache",
+        "command": "rebuild2_cache",
+        "args": {
+            "action": "cancel"
+        }
     },
     {
         "caption": "RSBIDE: DllRegister RS-Balance 3",

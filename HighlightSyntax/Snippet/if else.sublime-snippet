@@ -1,9 +1,9 @@
 <snippet>
     <content><![CDATA[
 if (${1:true})
-   ${2:$TM_SELECTED_TEXT}
+	${2:$TM_SELECTED_TEXT}
 else
-   ${0:$TM_SELECTED_TEXT}
+	${0:$TM_SELECTED_TEXT}
 end;]]></content>
     <tabTrigger>ife</tabTrigger>
     <scope>source.mac - (class-param.mac, macro-param.mac, variable.declare.name.mac, string, entity.name, meta.import.mac, storage.type)</scope>

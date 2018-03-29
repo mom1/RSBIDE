@@ -13,12 +13,11 @@ config = {
     "MAX_COUNT_MACRO_PARAM": 5,
     "LINT_ON_SAVE": True,
     "PREFIX_VARIABLE_GLOBAL": r"([msg]_)|(the)",
-    "PREFIX_VARIABLE_VISUAL": r"(grid|grd)|(tree)|(fld)|(frm)|(dlg)|(btn)|(chk)|(radio|rd)|(edit|edt)|(list|lst)|(cmb)|(lbl)|(tab)",
-    "PREFIX_VARIABLE_TYPE": r"(ref)|(arr|tarr)|(o|obj)|(ax)|(dict)|(ds)|(i)|(s|str)|(is|b)|(f|lf)|(n|d|m)|(dt)|(t)|(v)",
+    "PREFIX_VARIABLE_VISUAL": r"(grid|grd)|(tree)|(fld)|(frm)|(dlg)|(btn)|(chk)|(radio|rd)|(edit|edt)|(list|lst)|(cmb)|(lbl|label)|(tab)|(cmd)|(control|ctrl)|(cl)",
+    "PREFIX_VARIABLE_TYPE": r"(ref)|(ev)|(arr|tarr)|(o|obj)|(key)|(ax)|(dict)|(ds)|(i)|(s|str)|(is|b)|(f|lf)|(n|d|m)|(dt)|(t)|(v)|(pIn)|(oOut)",
     # Settings
     "RSB_SETTINGS_FILE": "RSBIDE.sublime-settings",
     # Кэш
-    "ESCAPE_DOLLAR": '\$',
     "EXCLUDE_FOLDERS": [
         "DBFiles", "DstLbr", "Export",
         "Help", "Html", "Import",

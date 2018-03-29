@@ -1,11 +1,11 @@
 <snippet>
     <content><![CDATA[
-// FILE         :    $TM_FILENAME
-// COPYRIGHT    :    RS Softlab Research. 2016
-// DESCRIPTION  :    <Краткое описание>
-// PROGRAMMED BY:    <Имя автора>
-// CREATION DATE:    <Дата создания>
-// Last Update  :    <Дата последнего изменения, опционально>
+// FILE         :	$TM_FILENAME
+// COPYRIGHT    :	RS Softlab Research. 2018
+// DESCRIPTION  :	<Краткое описание>
+// PROGRAMMED BY:	<Имя автора>
+// CREATION DATE:	<Дата создания>
+// Last Update  :	<Дата последнего изменения, опционально>
 cpwin;
 ]]></content>
     <tabTrigger>title</tabTrigger>

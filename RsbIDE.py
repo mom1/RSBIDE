@@ -1,307 +1,345 @@
-# -*- coding: cp1251 -*-
-# @Author: MOM
-# @Date:   2015-09-09 21:44:10
+# -*- coding: utf-8 -*-
+# @Author: Maximus
+# @Date:   2018-03-19 19:08:39
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-01-20 23:22:32
-
-
+# @Last Modified time: 2018-03-29 20:08:03
 import sublime
 import sublime_plugin
 import os
-import json
-import re
-import codecs
 import time
-import xml.etree.ElementTree as ET
-from os.path import basename, dirname, normpath, normcase, realpath
-from RSBIDE.tree import Tree
-from RSBIDE.RsbIde_print_panel import get_panel
-from RSBIDE.RsbIde_print_panel import print_to_panel
-
-from RSBIDE.common.verbose import verbose, log
-from RSBIDE.project.ProjectManager import ProjectManager
-import RSBIDE.common.parser as parser
-from RSBIDE.project.Project import Project
-import RSBIDE.common.settings as Settings
-from RSBIDE.common.config import config
-import RSBIDE.common.path as Path
-from RSBIDE.project.CurrentFile import CurrentFile
-from RSBIDE.common.lint import Linter
+import re
+import json
+import hashlib
+import imp
 import Default.history_list as History
-# import selection as Selection
-
-global already_im
-already_im = []
-ID = 'RSBIDE'
-
+import RSBIDE.external.symdb as symdb
+import RSBIDE.common.ast_rsl as ast_rsl
+import RSBIDE.common.settings as Settings
+from subprocess import call
+from RSBIDE.common.notice import *
+from RSBIDE.common.tree import Tree
+from RSBIDE.common.lint import Linter
+from RSBIDE.common.config import config
+from RSBIDE.common.RsbIde_print_panel import print_to_panel
+from RSBIDE.common.async import async_worker, run_after_loading
 
 ST2 = int(sublime.version()) < 3000
 
 if ST2:
     try:
-        sublime.error_message("RSBIDE Package Message:\n\n›ÚÓÚ œ‡ÍÂÚ Õ≈ –¿¡Œ“¿≈“ ‚ Sublime Text 2 \n\n »ÒÔÓÎ¸ÁÛÈÚÂ Sublime Text 3.")
-    except:
+        sublime.error_message("RSBIDE Package Message:\n\n–≠—Ç–æ—Ç –ü–∞–∫–µ—Ç –ù–ï –†–ê–ë–û–¢–ê–ï–¢ –≤ Sublime Text 2 \n\n –ò—Å–ø–æ–ª—å–∑—É–π—Ç–µ Sublime Text 3.")
+    except Exception as e:
         try:
-            sublime.message_dialog("RSBIDE Package Message:\n\n›ÚÓÚ œ‡ÍÂÚ Õ≈ –¿¡Œ“¿≈“ ‚ Sublime Text 2 \n\n »ÒÔÓÎ¸ÁÛÈÚÂ Sublime Text 3.")
-        except:
+            sublime.message_dialog("RSBIDE Package Message:\n\n–≠—Ç–æ—Ç –ü–∞–∫–µ—Ç –ù–ï –†–ê–ë–û–¢–ê–ï–¢ –≤ Sublime Text 2 \n\n –ò—Å–ø–æ–ª—å–∑—É–π—Ç–µ Sublime Text 3.")
+        except Exception as e:
             pass
 
 
-class RSBIDE:
-
-    def rebuild_cache(self):
-        project = ProjectManager.get_current_project()
-        os.remove(os.path.join(os.path.expandvars(r'%TEMP%'), project.filecache.cache.files_cache))
-        project.rebuild_filecache()
-
-    def without_duplicates(self, words):
-        result = []
-        used_words = []
-        for w, v in words:
-            if w.lower() not in used_words:
-                used_words.append(w.lower())
-                result.append((w, v))
-        return result
-
-    def get_from_metadata(self, view, is_brack=False, sobj=''):
-        project = ProjectManager.get_current_project()
-        return project.get_all_list_metadate(is_brack, sobj)
-
-    def intelige_end(self, view):
-        result = []
-        scope = view.scope_name(view.sel()[0].a)
-        if scope.strip().endswith('meta.if.mac') or scope.strip().endswith('meta.for.mac') or scope.strip().endswith('meta.while.mac'):
-            result = [('end\trsl', 'end;')]
-        elif scope.strip().endswith('meta.macro.mac'):
-            result = [('End\trsl', 'End;')]
-        elif scope.strip().endswith('meta.class.mac'):
-            result = [('END\trsl', 'END;')]
-        return result
-
-    def get_completions(self, view, prefix):
-        # completion from cache
-        completions = []
-        t = time.time()
-        t1 = time.time()
-        verbose(ID, view.scope_name(view.sel()[0].a))
-        scope = view.scope_name(view.sel()[0].a)
-        project = ProjectManager.get_current_project()
-        if "source.mac meta.import.mac" in scope or 'punctuation.definition.import.mac' in scope:
-            # completion for import
-            currentImport = [view.substr(s).lower().strip() for s in view.find_by_selector('meta.import.mac import.file.mac')]
-            if view.file_name():
-                currentImport += [os.path.splitext(basename(view.file_name().lower()))[0]]
-            pfiles = project.filecache.cache.files
-            lfile = [
-                (
-                    os.path.splitext(basename(fil))[0] + "\tFile", os.path.splitext(basename(fil))[0]
-                )
-                for fil in pfiles if os.path.splitext(basename(fil.lower()))[0] not in currentImport
-            ]
-            lfile = self.without_duplicates(list(lfile))
-            lfile.sort()
-            return lfile
-        elif "string.quoted.double" in scope:
-            sel = view.sel()[0]
-            if view.substr(sel.begin() - 1) == '.':
-                line = view.line(sel.begin())
-                bef_symbols = sublime.Region(line.begin(), sel.begin())
-                il = 3
-                word = ''
-                while bef_symbols.size() >= il:
-                    if 'constant.other.table-name.mac' in view.scope_name(sel.begin() - il):
-                        word = view.extract_scope(sel.begin() - il)
-                        word = re.sub(r'(\\")', '', view.substr(word))
-                        break
-                    il += 1
-                completions += self.get_from_metadata(view, True, word)
-            else:
-                completions += self.get_from_metadata(view)
-            completions = self.without_duplicates(completions)
-            return completions
-        elif "inherited-class" in scope:
-            completions += [(view.substr(s) + '\tclass', view.substr(s)) for s in view.find_by_selector('entity.name.class.mac')]
-            completions += parser.get_class_completion(get_imports(view.file_name()), project)
-            completions = self.without_duplicates(completions)
-            return completions
-
-        log(ID, '»Á ÏÂÚ‡‰‡ÌÌ˚ı ' + str(time.time() - t) + ' sec')
-        t = time.time()
-        sel = view.sel()[0]
-        if sel.begin() == sel.end():
-            sel = view.word(sel)
-
-        project_folder = project.get_directory()
-        # current file completion
-        classRegs, macroRegs, sclass, smacro, svaria = get_selectors_context(view)
-
-        result = []
-        # filename, extension = os.path.splitext((view.file_name()))
-        regions = [i for i in view.find_by_selector(sclass + ', ' + smacro + ', ' + svaria)]
-
-        if len(classRegs) > 0:
-            regions = [i for i in regions if classRegs[0].contains(i)]
-        for x in regions:
-            if 'entity.name.function.mac' in view.scope_name(x.a):
-                region = [i for i in view.find_by_selector('meta.macro.mac') if i.contains(x)]
-                name_param = [view.substr(i) for i in view.find_by_selector('variable.parameter.macro.mac') if region[0].contains(i)]
-                hint = ", ".join(["${%s:%s}" % (k + 1, v.strip()) for k, v in enumerate(name_param)])
-                result.append((view.substr(x) + '(...)\t' + 'macro', view.substr(x) + '(' + hint + ')'))
-            elif'variable.parameter.macro.mac' in view.scope_name(x.a):
-                if macroRegs[0].contains(x):
-                    result.append((view.substr(x) + '\t' + 'macro param', view.substr(x)))
-            elif'variable.declare.name.mac' in view.scope_name(x.a):
-                c = 0
-                if len(macroRegs) > 0:
-                    if macroRegs[0].contains(x):
-                        result.append((view.substr(x) + '\t' + 'var in macro', view.substr(x)))
-                        c += 1
-                if len(classRegs) > 0 and c == 0 and 'meta.macro.mac' not in view.scope_name(x.a):
-                    if classRegs[0].contains(x):
-                        result.append((view.substr(x) + '\t' + 'var in class', view.substr(x)))
-                        c += 1
-                if c == 0 and ('meta.macro.mac' not in view.scope_name(x.a) or 'meta.class.mac' not in view.scope_name(x.a)):
-                    result.append((view.substr(x) + '\t' + 'global', view.substr(x)))
-            else:
-                result.append((view.substr(x) + '\t' + 'current file', view.substr(x)))
-        completions += result
-        log(ID, '“ÂÍÛ˘. Ù‡ÈÎ ' + str(time.time() - t) + ' sec')
-        t = time.time()
-        # from parent comletion
-        # completions += get_declare_in_parent(view, classRegs, None)
-        regions_parent = [i for i in view.find_by_selector('entity.other.inherited-class.mac') for j in classRegs if j.contains(i)]
-        if len(regions_parent) == 0:
-            class_word = None
-        else:
-            class_word = view.substr(regions_parent[0])
-        completions += parser.get_parent_completion(class_word, project)
-        log(ID, '»Á Ó‰ËÚÂÎˇ ' + str(time.time() - t) + ' sec')
-        t = time.time()
-        completions += parser.get_globals_completion(get_imports(view.file_name()), project)
-        log(ID, '»Á „ÎÓ·‡Î‡ ' + str(time.time() - t) + ' sec')
-        t = time.time()
-
-        completions += self.intelige_end(view)
-        log(ID, '”ÏÌ˚È End ' + str(time.time() - t) + ' sec')
-        t = time.time()
-
-        completions = self.without_duplicates(completions)
-        log(ID, 'ƒÛ·ÎË ' + str(time.time() - t) + ' sec')
-        t = time.time()
-
-        completions += self.get_completions_always(view)
-        log(ID, '¿‚ÚÓÍÓÏÔÎËÚ ' + str(time.time() - t1) + ' sec')
-        return completions
-
-    def get_completions_always(self, view):
-        result = []
-        collections = sublime.find_resources('RSBIDE*.sublime-completions')
-        sel = view.sel()[0]
-        for collection_file in collections:
-            collection_res = sublime.decode_value(
-                sublime.load_resource(collection_file)
-            )
-            if collection_res.get('scope', 'source.mac') in view.scope_name(sel.begin()):
-                completions = collection_res.get('completions', [])
-            else:
-                continue
-            descr = collection_res.get('descr', 'rsl')
-            for completion in completions:
-                if 'trigger' in completion:
-                    result.append((completion['trigger'] + descr, completion['contents']))
-                else:
-                    result.append((completion + descr, completion))
-        return result
+def posix(path):
+    return path.replace("\\", "/")
 
 
-RSBIDE = RSBIDE()
+def is_file_index(file):
+    ret = False
+    if file and file.endswith('.mac'):
+        ret = True
+    elif file and file.endswith('.xml'):
+        ret = True
+    return ret
 
 
-def is_RStyle_view(view, locations=None):
-    return (
-        view.file_name() and is_mac_file(view.file_name()) or
-        ('RStyle' in view.settings().get('syntax')) or ('R-Style' in view.settings().get('syntax')) or
-        (locations and len(locations) and '.mac' in view.scope_name(locations[0])))
+def is_RStyle_view(view):
+    if ('R-Style' in view.settings().get('syntax')):
+        return True
+    elif is_file_index(view.file_name()):
+        return True
+    else:
+        return False
 
 
-def is_mac_file(file):
-    return file and file.endswith('.mac') and '.min.' not in file
+def get_db(window):
+    fold = window.folders()[0]
+    sublime_cache_path = sublime.cache_path()
+    tmp_folder = sublime_cache_path + "/RSBIDE/"
+    if os.path.isdir(tmp_folder) is False:
+        log('–ü–∞–ø–∫–∞ –Ω–µ –Ω–∞–π–¥–µ–Ω–∞. –°–æ–∑–¥–∞–µ–º –ø–∞–ø–∫—É –∫—ç—à–∞: %s' % tmp_folder)
+        os.makedirs(tmp_folder)
+    hsh = hashlib.md5(fold.encode('utf-8'))
+    db = [os.path.join(tmp_folder, hsh.hexdigest() + '.cache_db')]
+    return db
 
 
-def norm_path(file):
-    return normcase(normpath(realpath(file))).replace('\\', '/')
+def extent_reg(view, sel, mod=1):
+    if mod == 1:  # class
+        dist_scope = 'source.mac meta.class.mac'
+        dist_scope_name = 'source.mac meta.class.mac entity.name.class.mac'
+    elif mod == 2:  # macro
+        dist_scope = 'source.mac meta.macro.mac'
+        dist_scope_name = 'source.mac meta.macro.mac entity.name.function.mac'
+    regions = [i for i in view.find_by_selector(dist_scope) if i.contains(sel)]
+    if len(regions) == 0:
+        return None
+    region = regions[-1]
+    regions_name = [j for j in view.find_by_selector(dist_scope_name) if region.contains(j)]
+    region_name = regions_name[-1]
+    return (region, region_name)
 
 
-def norm_path_string(file):
-    return file.strip().lower().replace('\\', '/').replace('//', '/')
+def get_result(view, symbol):
+
+    def ret_format(file=view.file_name(), row=0, col=0, scope='', rowcol=None):
+        if isinstance(rowcol, tuple):
+            row, col = rowcol
+        return {'file': file, 'row': row, 'col': col, 'scope': scope}
+
+    window = sublime.active_window()
+    sel = view.sel()[0]
+    if sel.empty():
+        sel = view.word(sel)
+    if not symbol:
+        symbol = view.substr(sel).strip()
+
+    t = time.time()
+
+    if symbol.lower() == 'end' and view.match_selector(
+        sel.begin(),
+        'keyword.macro.end.mac, keyword.class.end.mac, keyword.if.end.mac, keyword.for.end.mac, keyword.while.end.mac'
+    ):
+        meta = view.extract_scope(sel.begin() - 1)
+        res = ret_format(rowcol=view.rowcol(meta.begin()))
+        return [res]
+    elif view.match_selector(sel.begin(), 'import.file.mac'):
+        return [ret_format(f) for f in symdb.query_packages_info(symbol.lower())]
+    elif view.match_selector(sel.begin(), 'entity.other.inherited-class.mac'):
+        ret = window.lookup_symbol_in_index(symbol)
+        return [ret_format(cp[0], cp[2][0] - 1, cp[2][1] - 1) for cp in ret]
+
+    # –∫–æ–Ω—Ç–µ–∫—Å—Ç
+    cur_class = extent_reg(view, sel)
+    cur_macro = extent_reg(view, sel, 2)
+    log('–¢–µ–∫. –∫–æ–Ω—Ç–µ–∫—Å—Ç', "%.3f" % (time.time() - t))
+    t = time.time()
+    # –ì–æ—Ç–æ–≤–∏–º –≥–µ–Ω–µ—Ä–∞—Ç–æ—Ä—ã
+    g_all = ast_rsl.generat_scope(
+        view,
+        'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, entity.name.class.mac'
+    )
+    cls_symbols = ast_rsl.generat_scope(
+        view,
+        'meta.class.mac variable.declare.name.mac - meta.macro.mac, meta.class.mac entity.name.function.mac - (meta.macro.mac meta.macro.mac)'
+    )
+    cls_param_symbols = ast_rsl.generat_scope(view, 'variable.parameter.class.mac')
+    macro_symbols = ast_rsl.generat_scope(
+        view,
+        'meta.macro.mac & (variable.parameter.macro.mac, variable.declare.name.mac, meta.macro.mac meta.macro.mac entity.name.function.mac)'
+    )
+    log('–ü–æ–¥–≥–æ—Ç–æ–≤–∫–∞ –≥–µ–Ω–µ—Ä–∞—Ç–æ—Ä–æ–≤', "%.3f" % (time.time() - t))
+    t = time.time()
+    # –ì–ª–æ–±–∞–ª –≤ —Ç–µ–∫—É—â–µ–º —Ñ–∞–π–ª–µ
+    for ga in g_all:
+        if view.substr(ga).lower() == symbol.lower():
+            log('–ì–ª–æ–±–∞–ª –≤ —Ç–µ–∫—É—â–µ–º —Ñ–∞–π–ª–µ', "%.3f" % (time.time() - t))
+            return [ret_format(rowcol=view.rowcol(ga.begin()))]
+
+    # –í —Ç–µ–∫—É—â–µ–º –∫–ª–∞—Å—Å–µ
+    if cur_class:
+        for cs in cls_symbols:
+            if cur_class[0].contains(cs) and view.substr(cs).lower() == symbol.lower():
+                if cur_macro and view.substr(cur_macro[1]).lower() == symbol.lower():
+                    break
+                log('–í —Ç–µ–∫—É—â–µ–º –∫–ª–∞—Å—Å–µ', "%.3f" % (time.time() - t))
+                return [ret_format(rowcol=view.rowcol(cs.begin()))]
+        # –í –ø–∞—Ä–∞–º–µ—Ç—Ä–∞—Ö –∫–ª–∞—Å—Å–∞
+        if cur_macro is None:
+            for cps in cls_param_symbols:
+                if cur_class[0].contains(cps) and view.substr(cps).lower() == symbol.lower():
+                    log('–í –ø–∞—Ä–∞–º–µ—Ç—Ä–∞—Ö –∫–ª–∞—Å—Å–∞', "%.3f" % (time.time() - t))
+                    return [ret_format(rowcol=view.rowcol(cps.begin()))]
+    # –í —Ç–µ–∫—É—â–µ–º –º–∞–∫—Ä–æ
+    if cur_macro:
+        for ms in macro_symbols:
+            if cur_macro[0].contains(ms) and view.substr(ms).lower() == symbol.lower():
+                log('–í —Ç–µ–∫—É—â–µ–º –º–∞–∫—Ä–æ', "%.3f" % (time.time() - t))
+                return [ret_format(rowcol=view.rowcol(ms.begin()))]
+
+    # –í —Ä–æ–¥–∏—Ç–µ–ª—è—Ö
+    if cur_class:
+        find_symbols = symdb.query_parent_symbols_go(view.substr(cur_class[1]), symbol)
+        if find_symbols and len(find_symbols) > 0:
+            log('–í —Ä–æ–¥–∏—Ç–µ–ª—è—Ö', "%.3f" % (time.time() - t))
+            return find_symbols
+
+    # –í –ì–ª–æ–±–∞–ª—å–Ω–æ–º –≥–ª–æ–±–∞–ª–µ
+    ret = symdb.query_globals_in_packages_go(symdb.get_package(view.file_name()), symbol)
+    log('–í –ì–ª–æ–±–∞–ª—å–Ω–æ–º –≥–ª–æ–±–∞–ª–µ', "%.3f" % (time.time() - t))
+    return ret
 
 
-def normalize_to_system_style_path(path):
-    if sublime.platform() == 'windows':
-        path = re.sub(r"/([A-Za-z])/(.+)", r"\1:/\2", path)
-        path = re.sub(r"/", r"\\", path)
-    return path
-
-
-class RebuildCacheCommand(sublime_plugin.WindowCommand):
+class GoToDefinitionCommand(sublime_plugin.WindowCommand):
+    window = sublime.active_window()
 
     def run(self):
-        RSBIDE.rebuild_cache()
+        view = self.window.active_view()
+        self.view = view
+        if not is_RStyle_view(view):
+            return
+        sel = self.view.sel()[0]
+        if sel.empty():
+            sel = view.word(sel)
+        symbol = view.substr(sel).strip()
+        self.old_view = self.window.active_view()
+        self.curr_loc = sel.begin()
+        History.get_jump_history(self.window.id()).push_selection(view)
+        self.search(symbol)
+
+    def search(self, symbol):
+
+        def async_search(databases):
+            update_settings()
+            results = get_result(self.view, symbol)
+            handle_results(results)
+
+        def handle_results(results):
+            if len(results) > 1:
+                self.ask_user_result(results)
+            elif results:  # len(results) == 1
+                self.goto(results[0])
+            else:
+                sublime.status_message('Symbol "{0}" not found'.format(symbol))
+        db = get_db(self.view.window())
+        async_search(db)
+
+    def ask_user_result(self, results):
+        view = self.window.active_view()
+        self.view = view
+        self.last_viewed = None
+
+        def on_select(i, trans=False):
+
+            def add_reg():
+                if results[i]['row'] == 0 and results[i]['col'] == 0:
+                    return
+                p = v.text_point(results[i]['row'], results[i]['col'])
+                dec_reg = v.word(p)
+                v.add_regions('rsbide_declare', [dec_reg], 'string', 'dot', sublime.DRAW_NO_FILL)
+
+            def clear_reg():
+                v.erase_regions('rsbide_declare')
+
+            flags = sublime.ENCODED_POSITION if not trans else sublime.ENCODED_POSITION | sublime.TRANSIENT
+            if self.last_viewed:
+                self.last_viewed.erase_regions('rsbide_declare')
+            if i > -1:
+                v = self.goto(results[i], flags)
+                self.last_viewed = v
+                if trans:
+                    run_after_loading(v, add_reg)
+                else:
+                    run_after_loading(v, clear_reg)
+            else:
+                self.window.focus_view(self.old_view)
+                self.old_view.show_at_center(self.curr_loc)
+
+        self.view.window().show_quick_panel(
+            list(map(self.format_result, results)),
+            on_select,
+            sublime.KEEP_OPEN_ON_FOCUS_LOST,
+            0,
+            lambda x: on_select(x, True)
+        )
+
+    def goto(self, result, flags=sublime.ENCODED_POSITION):
+        return self.view.window().open_file(
+            '{0}:{1}:{2}'.format(
+                result['file'],
+                result['row'] + 1,
+                result['col'] + 1
+            ),
+            flags
+        )
+
+    def format_result(self, result):
+        rel_path = os.path.relpath(result['file'], self.view.window().folders()[0])
+        desc = result['scope']
+        if '.' in result['scope']:
+            desc = '{0} ({1})'.format(*result['scope'].split('.'))
+        return [
+            '{0} ({1})'.format(rel_path, result['row']),
+            desc
+        ]
+
+    def is_visible(self):
+        return is_RStyle_view(self.window.active_view())
+
+    def description(self):
+        return 'RSBIDE: –ü–µ—Ä–µ–π—Ç–∏ –∫ –æ–±—ä—è–≤–ª–µ–Ω–∏—é\talt+g'
 
 
 class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
 
-    """Show declare func in panel"""
-
-    cache = {}
-
     def run(self):
         view = self.window.active_view()
-        sel = view.sel()[0]
-        if sel.begin() == sel.end():
-            sel = view.word(sel)
-        symbol = get_result(view)
-        if len(symbol) == 0:
-            doc_string = self.get_doc(view)
-            if doc_string:
-                print_to_panel(view, doc_string, bDoc=True)
-                return
-            print_to_panel(view, view.substr(sel) + " not found in index")
+        self.view = view
+        self.db_doc = None
+        if not is_RStyle_view(view):
             return
-        file = normalize_to_system_style_path(symbol[0][0])
-        nline = symbol[0][2][0]
-        lnline = 0
-        lines = []
-        for i, line in enumerate(codecs.open(file, encoding='cp1251', errors='replace')):
-            if i >= nline - 10 and i <= nline + 9:
-                lines.append(line.rstrip('\r\n'))
-            if nline == i:
-                lnline = len(lines)
-        print_to_panel(view, "\n".join(lines), showline=lnline, region_mark=symbol[0][2])
+        sel = self.view.sel()[0]
+        if sel.empty():
+            sel = view.word(sel)
+        symbol = view.substr(sel).strip()
+        self.search(symbol)
 
-    def get_doc(self, view):
+    def search(self, symbol):
+
+        def async_search(databases):
+            update_settings()
+            results = get_result(self.view, symbol)
+            handle_results(results)
+
+        def handle_results(results):
+            if results:
+                self.print_symbol(results[0])
+            elif self.find_in_doc(symbol):
+                self.print_symbol_doc(self.get_doc(symbol))
+            else:
+                sublime.status_message('Symbol "{0}" not found'.format(symbol))
+        db = get_db(self.view.window())
+        async_search(db)
+
+    def print_symbol(self, result):
+        if result['file'].lower() == self.view.file_name().lower():
+            source = self.view.substr(sublime.Region(0, self.view.size()))
+        else:
+            source = open(result['file'], encoding='Windows 1251').read()
+        print_to_panel(self.view, source, showline=result['row'], region_mark=(result['row'], result['col']))
+
+    def print_symbol_doc(self, doc_string):
+        if not doc_string:
+            return
+        print_to_panel(self.view, doc_string, bDoc=True)
+
+    def get_db_doc(self, symbol):
         lang = 'mac'
         path_db = os.path.dirname(
             os.path.abspath(__file__)) + "/dbHelp/%s.json" % lang
+        if not self.db_doc:
+            if os.path.exists(path_db):
+                self.db_doc = json.load(open(path_db))
+            else:
+                return
 
-        if os.path.exists(path_db):
-            self.cache[lang] = json.load(open(path_db))
-        else:
-            self.cache[lang] = {}
+        return self.db_doc.get(symbol.lower())
 
-        words = [view.substr(view.word(view.sel()[0]))]
-        completions = self.cache[lang]
-        found = False
-        for word in words:
-            completion = completions.get(word.lower())
-            if completion:
-                found = completion
-                break
+    def find_in_doc(self, symbol):
+        return self.get_db_doc(symbol)
+
+    def get_doc(self, symbol):
+        found = self.get_db_doc(symbol)
         if found:
             menus = []
 
             # Title
-            menus.append("ƒÓÍÛÏÂÌÚ‡ˆËˇ " + found["name"] + "\n" + "=" * max(len("ƒÓÍÛÏÂÌÚ‡ˆËˇ " + found["name"]), 40) + "\n")
+            menus.append("–î–æ–∫—É–º–µ–Ω—Ç–∞—Ü–∏—è " + found["name"] + "\n" + "=" * max(len("–î–æ–∫—É–º–µ–Ω—Ç–∞—Ü–∏—è " + found["name"]), 40) + "\n")
 
             # Syntax
             menus.append(found["syntax"] + "\n")
@@ -317,289 +355,403 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
         else:
             return None
 
-    def is_visible(self, paths=None):
-        view = self.window.active_view()
-        isvis = False
-        if is_RStyle_view(view):
-            isvis = True
-        return isvis
+    def is_visible(self):
+        return is_RStyle_view(self.window.active_view())
 
     def description(self):
-        return 'RSBIDE: œÓÍ‡Á‡Ú¸ Ó·Î‡ÒÚ¸ Ó·˙ˇ‚ÎÂÌËˇ\talt+s'
+        return 'RSBIDE: –ü–æ–∫–∞–∑–∞—Ç—å –æ–±–ª–∞—Å—Ç—å –æ–±—ä—è–≤–ª–µ–Ω–∏—è\talt+s'
 
 
-def get_declare_in_parent(view, classRegs, sel):
-    window = sublime.active_window()
-    select = []
-    pref = 'RSBIDE:Parse_'  # œÂÙËÍÒ ‰Îˇ Ô‡ÌÂÎË Ô‡ÒËÌ„‡
-    project = ProjectManager.get_current_project()
-    project_folder = project.get_directory()
-    regions_parent = [i for i in view.find_by_selector('entity.other.inherited-class.mac') for j in classRegs if j.contains(i)]
-    if len(regions_parent) == 0:
-        return []
-    else:
-        region_parent = regions_parent[0]
-    word = view.substr(region_parent)
-    result = window.lookup_symbol_in_index(word)
-    for item in result:
+class RSBIDEListener(sublime_plugin.EventListener):
+
+    previous_window = None
+    previous_project = None
+
+    def index_view(self, view):
+        if not is_file_index(view.file_name()):
+            return
+        db = get_db(view.window())
+        self.async_index_view(view.file_name(), db, view.window().folders())
+
+    @staticmethod
+    def async_index_view(file_name, databases, project_folders):
+        update_settings()
+
+        for dbi, database in enumerate(databases):
+            symdb.process_file(dbi, file_name)
+            log('Indexed', file_name)
+            symdb.commit()
+
+    def on_post_save_async(self, view):
+        self.index_view(view)
+        if Settings.proj_settings.get("LINT_ON_SAVE", True):
+            lint = Linter(view)
+            lint.start()
+
+    def on_modified_async(self, view):
+        Linter(view).erase_all_regions()
+
+    def on_activated(self, view):
+        window = view.window()
+        db = get_db(view.window())
+        if not window:
+            return False
+
+        if self.previous_project != db:
+            if self.previous_project is not None:
+                update_settings()
+                view.window().run_command('rebuild_cache', {'action': 'update'})
+                self.previous_window = sublime.active_window().id()
+            self.previous_project = db
+        elif self.previous_window is not sublime.active_window().id():
+            self.previous_window = sublime.active_window().id()
+            update_settings()
+            view.window().run_command('rebuild_cache', {'action': 'update'})
+
+    def intelige_end(self, view):
+        result = []
+        scope = view.scope_name(view.sel()[0].begin())
+        if scope.strip().endswith('meta.if.mac') or scope.strip().endswith('meta.for.mac') or scope.strip().endswith('meta.while.mac'):
+            result = [('end\trsl', 'end;')]
+        elif scope.strip().endswith('meta.macro.mac'):
+            result = [('End\trsl', 'End;')]
+        elif scope.strip().endswith('meta.class.mac'):
+            result = [('END\trsl', 'END;')]
+        return result
+
+    def on_query_completions(cls, view, prefix, locations):
+        if len(locations) != 1:
+            return []
+        if not is_file_index(view.file_name()):
+            return []
+
+        update_settings()
+        completions = []
+        sel = view.sel()[0]
         t = time.time()
-        file = Path.posix(Path.get_absolute_path(project_folder, item[1]))
-        filename, extension = os.path.splitext((file))
-        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
-        parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + item[1])
-        position = parse_panel.text_point(item[2][0] - 1, item[2][1])
-        regions_class = [i for i in parse_panel.find_by_selector('meta.class.mac') if i.contains(position)]
-        log('œÓ‰„ÓÚÓ‚Í‡:', basename(filename), str(time.time() - t))
-        if len(regions_class) == 0:
-            continue
-        region_class = regions_class[0]
-        if sel is not None:
-            select += [
-                (item[0], item[1], (parse_panel.rowcol(i.a)[0] + 1, parse_panel.rowcol(i.a)[1] + 1))
-                for i in parse_panel.find_by_selector('meta.class.mac variable.declare.name.mac - meta.macro.mac, meta.class.mac entity.name.function.mac')
-                if region_class.contains(i) and sel.lower() == parse_panel.substr(i).lower()]
-            if len(select) == 0:
-                select += get_declare_in_parent(parse_panel, regions_class, sel)
-        sublime.active_window().destroy_output_panel(pref + item[1])
-    return select
+        cur_class = extent_reg(view, sel)
+        cur_macro = extent_reg(view, sel, 2)
+        log('–¢–µ–∫. –∫–æ–Ω—Ç–µ–∫—Å—Ç', "%.3f" % (time.time() - t))
+        if cur_class:
+            completions = [('this\tclass', 'this')]
+
+        if view.match_selector(
+            sel.begin() - 1,
+            'variable.declare.name.mac, entity.name.class.mac' +
+            ', entity.name.function.mac, variable.parameter.macro.mac, variable.parameter.class.mac' +
+            ', class-param.mac, macro-param.mac'
+        ):
+            return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+
+        t = time.time()
+
+        if 'init' in [view.substr(view.word(sel)).lower(), prefix.lower()] and view.match_selector(sel.begin(), 'source.mac meta.class.mac'):
+            cls_parent = [parent for parent in view.find_by_selector('entity.other.inherited-class.mac') if cur_class[0].contains(parent)]
+            if cls_parent and len(cls_parent) > 0:
+                return (
+                    [('Init' + view.substr(cls_parent[0]) + '\tparent', 'Init' + view.substr(cls_parent[0]))],
+                    sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
+                )
+        # –ü–æ–¥—Å–∫–∞–∑–∫–∞ —Ñ–∞–π–ª–æ–≤
+        elif view.match_selector(sel.begin(), 'source.mac & (meta.import.mac, punctuation.definition.import.mac)'):
+            currImp = [view.substr(s).lower().strip() for s in view.find_by_selector('meta.import.mac import.file.mac')]
+            if view.file_name():
+                currImp += [os.path.splitext(os.path.basename(view.file_name().lower()))[0]]
+            files = [(p + '\tFiles', p) for p in symdb.query_packages(prefix, case=True) if p.lower() not in currImp]
+            log('–ü–æ–¥—Å–∫–∞–∑–∫–∞ —Ñ–∞–π–ª–æ–≤', "%.3f" % (time.time() - t))
+            return (files, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        # –ü–æ–¥—Å–∫–∞–∑–∫–∞ –º–µ—Ç–∞–¥–∞–Ω–Ω—ã—Ö
+        elif view.match_selector(sel.begin(), 'source.mac string.quoted.double.mac'):
+            if view.match_selector(sel.begin(), 'string.quoted.sql.mac'):
+                isbac = True
+            else:
+                isbac = False
+            if view.substr(sel.begin() - 1) == '.':
+                line = view.line(sel.begin())
+                bef_symbols = sublime.Region(line.begin(), sel.begin())
+                il = 3
+                word = ''
+                while bef_symbols.size() >= il:
+                    if view.match_selector(sel.begin() - il, 'constant.other.table-name.mac'):
+                        word = view.extract_scope(sel.begin() - il)
+                        word = re.sub(r'(\\")', '', view.substr(word))
+                        break
+                    il += 1
+                log('–ü–æ–¥—Å–∫–∞–∑–∫–∞ –º–µ—Ç–∞–¥–∞–Ω–Ω—ã—Ö 1', "%.3f" % (time.time() - t))
+                return (symdb.query_metadata_object(word), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+            else:
+                log('–ü–æ–¥—Å–∫–∞–∑–∫–∞ –º–µ—Ç–∞–¥–∞–Ω–Ω—ã—Ö 2', "%.3f" % (time.time() - t))
+                return (symdb.query_metadata(prefix, isbac), sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        # –ü–æ–¥—Å–∫–∞–∑–∫–∞ –∫–ª–∞—Å—Å–æ–≤
+        elif view.match_selector(sel.begin(), 'source.mac inherited-class.mac'):
+            if cur_class:
+                completions = [
+                    (view.substr(s) + '\tclass', view.substr(s))
+                    for s in view.find_by_selector('entity.name.class.mac') if view.substr(cur_class[1]) != view.substr(s)
+                ]
+            else:
+                completions = [(view.substr(s) + '\tclass', view.substr(s)) for s in view.find_by_selector('entity.name.class.mac')]
+            completions += symdb.query_globals_class(symdb.get_package(view.file_name()), prefix)
+            log('–ü–æ–¥—Å–∫–∞–∑–∫–∞ –∫–ª–∞—Å—Å–æ–≤', "%.3f" % (time.time() - t))
+            return (completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+
+        t = time.time()
+        if sel.begin() == sel.end():
+            sel = view.word(sel)
+
+        # –ò–∑ —Ç–µ–∫—É—â–µ–≥–æ —Ñ–∞–π–ª–∞ –ø–æ –∫–æ–Ω—Ç–µ–∫—Å—Ç—É
+        g_all = ast_rsl.generat_scope(
+            view,
+            'variable.declare.name.mac - (meta.class.mac, meta.macro.mac)'
+        )
+        all_g_macros = ast_rsl.generat_scope(view, 'meta.macro.mac - (meta.class.mac)')
+        all_g_name_macros = ast_rsl.generat_scope(view, 'meta.macro.mac entity.name.function.mac - (meta.class.mac)')
+        all_cls_vars = ast_rsl.generat_scope(view, 'meta.class.mac variable.declare.name.mac - (meta.macro.mac, meta.class.mac meta.class.mac)')
+        g_macros = zip(all_g_macros, all_g_name_macros)
+        all_cls_macros = ast_rsl.generat_scope(view, 'meta.class.mac meta.macro.mac')
+        all_cls_macros_names = ast_rsl.generat_scope(view, 'meta.class.mac meta.macro.mac entity.name.function.mac')
+        g_class_names = ast_rsl.generat_scope(view, 'meta.class.mac entity.name.class.mac')
+        all_macro_params = ast_rsl.generat_scope(view, 'meta.macro.mac variable.parameter.macro.mac')
+        all_g_param_macros = view.find_by_selector('variable.parameter.macro.mac - (meta.class.mac)')
+
+        log('–ü–æ–¥–≥–æ—Ç–æ–≤–∫–∞ –≥–µ–Ω–µ—Ä–∞—Ç–æ—Ä–æ–≤', "%.3f" % (time.time() - t))
+        t = time.time()
+        for g in g_all:
+            g_scop = 'global'
+            if view.match_selector(g.begin(), 'meta.const.mac'):
+                g_scop = 'const'
+            elif view.match_selector(g.begin(), 'variable.declare.name.mac'):
+                g_scop = 'var'
+            completions += [(view.substr(g) + '\t' + g_scop, view.substr(g))]
+        log('–ì–ª–æ–±–∞–ª –ø–µ—Ä–µ–º–µ–Ω–Ω—ã–µ', "%.3f" % (time.time() - t))
+
+        t = time.time()
+        for clsn in g_class_names:
+            completions += [(view.substr(clsn) + '\t' + 'class', view.substr(clsn))]
+        log('–ì–ª–æ–±–∞–ª class', "%.3f" % (time.time() - t))
+        t = time.time()
+        for g_m in g_macros:
+            g_param_macros = [gpm for gpm in all_g_param_macros if g_m[0].contains(gpm)]
+            hint = ", ".join(["${%s:%s}" % (k + 1, view.substr(v).strip()) for k, v in enumerate(g_param_macros)])
+            completions += [(view.substr(g_m[1]) + '\tmacro', view.substr(g_m[1]) + '(' + hint + ')')]
+        log('–ì–ª–æ–±–∞–ª macro', "%.3f" % (time.time() - t))
+
+        t = time.time()
+        cls_params = []
+        if cur_class:
+            cls_vars = [cv for cv in all_cls_vars if cur_class[0].contains(cv)]
+            cls_macros = [cl for cl in all_cls_macros if cur_class[0].contains(cl)]
+            cls_macros_names = [cmn for cmn in all_cls_macros_names if cur_class[0].contains(cmn)]
+            gen_mac = zip(cls_macros, cls_macros_names)
+            cls_params = [cp for cp in view.find_by_selector('meta.class.mac class-param.mac variable.parameter.class.mac') if cur_class[0].contains(cp)]
+            log('–ü–æ–¥–≥–æ—Ç–æ–≤–∫–∞ –∫–ª–∞—Å—Å–∞', "%.3f" % (time.time() - t))
+            t = time.time()
+
+            for cls_var in cls_vars:
+                completions += [(view.substr(cls_var) + '\tvar in class', view.substr(cls_var))]
+            log('–ü–µ—Ä–µ–º–µ–Ω–Ω—ã–µ –∫–ª–∞—Å—Å–∞', "%.3f" % (time.time() - t))
+            t = time.time()
+
+            for c_elem in gen_mac:
+                param_macros = [gpm for gpm in view.find_by_selector('meta.class.mac variable.parameter.macro.mac') if c_elem[0].contains(gpm)]
+                hint = ", ".join(["${%s:%s}" % (k + 1, view.substr(v).strip()) for k, v in enumerate(param_macros)])
+                completions += [(view.substr(c_elem[1]) + '\tmacro in class', view.substr(c_elem[1]) + '(' + hint + ')')]
+            log('–§—É–Ω–∫—Ü–∏–∏ –∫–ª–∞—Å—Å–∞', "%.3f" % (time.time() - t))
+            t = time.time()
+
+        if cur_macro:
+            cls_params = []
+            param_macro = [(view.substr(pm) + '\tmacro param', view.substr(pm)) for pm in all_macro_params if cur_macro[0].contains(pm)]
+            completions += param_macro
+            if cur_class and cur_class[0].contains(cur_macro[0]):
+                pass
+            else:
+                pass
+            log('–ü–∞—Ä–∞–º–µ—Ç—Ä—ã —Ç–µ–∫—É—â–µ–≥–æ macro', "%.3f" % (time.time() - t))
+            t = time.time()
+
+        for cls_param in cls_params:
+            completions += [(view.substr(cls_param) + '\tclass param', view.substr(cls_param))]
+        log('–ü–∞—Ä–∞–º–µ—Ç—Ä—ã —Ç–µ–∫—É—â–µ–≥–æ class', "%.3f" % (time.time() - t))
+        t = time.time()
+
+        # –ò–∑ —Ä–æ–¥–∏—Ç–µ–ª—è, –Ω—É–∂–Ω–æ –∏–º–µ–Ω–Ω–æ —Ç—É—Ç —Ç.–∫. —Å–æ—Ä—Ç–∏—Ä–æ–≤–∫–∞
+        if cur_class:
+            completions += symdb.query_parent_symbols(view.substr(cur_class[1]), prefix)
+            log('–ò–∑ —Ä–æ–¥–∏—Ç–µ–ª–µ–π', "%.3f" % (time.time() - t))
+            t = time.time()
+
+        # –£–º–Ω—ã–π End
+        completions += cls.intelige_end(view)
+        log('–£–º–Ω—ã–π End', "%.3f" % (time.time() - t))
+        t = time.time()
+
+        # –ê–≤—Ç–æ–∫–æ–º–ø–ª–∏—Ç
+        completions += cls.get_completions_always(view)
+        log('–ê–≤—Ç–æ–∫–æ–º–ø–ª–∏—Ç', "%.3f" % (time.time() - t))
+        t = time.time()
+
+        # –ò–∑ –≥–ª–æ–±–∞–ª–∞
+        t = time.time()
+        completions += symdb.query_globals_in_packages(symdb.get_package(view.file_name()), prefix)
+        log('–ò–∑ –≥–ª–æ–±–∞–ª–∞', "%.3f" % (time.time() - t))
+        return completions
+
+    def get_completions_always(self, view):
+        collections = sublime.find_resources('RSBIDE*.sublime-completions')
+        sel = view.sel()[0]
+        for collection_file in collections:
+            collection_res = sublime.decode_value(
+                sublime.load_resource(collection_file)
+            )
+            if view.match_selector(sel.begin(), collection_res.get('scope', 'source.mac')):
+                completions = collection_res.get('completions', [])
+            else:
+                continue
+            descr = collection_res.get('descr', 'rsl')
+            for completion in completions:
+                if 'trigger' in completion:
+                    yield (completion['trigger'] + descr, completion['contents'])
+                else:
+                    yield (completion + descr, completion)
 
 
-def get_globals_in_import(view, word, fName):
-    # global variable
-    pref = 'RSBIDE:Parse_'  # œÂÙËÍÒ ‰Îˇ Ô‡ÌÂÎË Ô‡ÒËÌ„‡
-    project = ProjectManager.get_current_project()
-    project_folder = project.get_directory()
-    select = []
-    t = time.time()
-    log('ÕÂ Ì‡¯ÎË ‚ ÚÂÍÛ˘ÂÏ Ë˘ÂÏ ‚ ËÏÔÓÚ‡ı :' + fName, str(time.time() - t))
-    t = time.time()
-    already_im = get_imports(fName)
-    log('œÓÎÛ˜ËÎË ÒÔËÒÓÍ ËÏÔÓÚÓ‚ :', len(already_im), fName, str(time.time() - t))
-    for rfile in already_im:
-        file = Path.posix(Path.get_absolute_path(project_folder, rfile))
-        filename, extension = os.path.splitext((file))
-        lines = [line.rstrip('\r\n') + "\n" for line in codecs.open(file, encoding='cp1251', errors='replace')]
-        parse_panel = get_panel(sublime.active_window().active_view(), "".join(lines), name_panel=pref + rfile)
-        region_name = [
-            i for i in parse_panel.find_by_selector(
-                'variable.declare.name.mac - (meta.class.mac, meta.macro.mac), entity.name.function.mac - meta.class.mac, meta.class.mac entity.name.class.mac')
-            if word.lower() == parse_panel.substr(i).lower()]
-        for region in region_name:
-            select += [(file, rfile, (parse_panel.rowcol(region.a)[0] + 1, parse_panel.rowcol(region.a)[1] + 1))]
-        if len(select) > 0:
-            break
+class RebuildCacheCommand(sublime_plugin.WindowCommand):
+    index_in_progress = False
+    exclude_folders = []
 
-        sublime.active_window().destroy_output_panel(pref + rfile)
-    log(' ÓÌÂˆ Ó·‡·ÓÚÍË Ù‡ÈÎ‡ :' + fName, str(time.time() - t))
-    return select
-
-
-def get_imports(fName):
-    # get all import file
-    if "imports" in CurrentFile.current and len(CurrentFile.current["imports"]) != 0:
-        log('Import from cache')
-        already_im = CurrentFile.current["imports"]
-    else:
-        log('Import from file')
-        project = ProjectManager.get_current_project()
-        already_im = parser.get_import_tree(fName, project)
-    return already_im
-
-
-def get_selectors_context(view):
-    sel = view.sel()[0]
-    classRegs = [clreg for clreg in view.find_by_selector('meta.class.mac') if clreg.contains(sel)]
-    macroRegs = [mcreg for mcreg in view.find_by_selector('meta.macro.mac') if mcreg.contains(sel)]
-    sclass = 'meta.class.mac entity.name.class.mac'
-    smacro = 'meta.macro.mac entity.name.function.mac'
-    svaria = 'variable.declare.name.mac'
-    sismacro = ''
-    sisclass = ''
-    sparammacro = ''
-    sparamclass = ''
-    if len(classRegs) == 0:
-        smacro += ' - meta.class.mac'
-        sisclass += ' - meta.class.mac'
-    else:
-        sparamclass += ', variable.parameter.class.mac'
-    if len(macroRegs) == 0:
-        sismacro += ' - meta.macro.mac'
-    else:
-        sparammacro += ', variable.parameter.macro.mac%s' % (sismacro)
-        sparamclass = ''
-    svaria = 'variable.declare.name.mac%s%s%s%s' % (sisclass, sismacro, sparammacro, sparamclass)
-
-    return classRegs, macroRegs, sclass, smacro, svaria
-
-
-def get_result(view):
-    sel = view.sel()[0]
-    window = sublime.active_window()
-    if sel.begin() == sel.end():
-        sel = view.word(sel)
-
-    project = ProjectManager.get_current_project()
-    project_folder = project.get_directory()
-    if view.file_name():
-        file = Path.posix(Path.get_absolute_path(project_folder, view.file_name()))
-        sfile = Path.posix(os.path.relpath(file, project_folder))
-    else:
-        file = ''
-        sfile = ''
-    word = view.substr(sel)
-
-    if word.lower() == 'end' and (
-        'keyword.macro.end.mac' in view.scope_name(view.sel()[0].a) or
-        'keyword.class.end.mac' in view.scope_name(view.sel()[0].a) or
-        'keyword.if.end.mac' in view.scope_name(view.sel()[0].a) or
-        'keyword.for.end.mac' in view.scope_name(view.sel()[0].a) or
-        'keyword.while.end.mac' in view.scope_name(view.sel()[0].a)
-    ):
-        meta = view.extract_scope(sel.a - 1)
-        row, col = view.rowcol(meta.a)
-        return [(file, sfile, (row + 1, col + 1))]
-
-    if view.scope_name(view.sel()[0].a) == "source.mac meta.import.mac import.file.mac ":  # if scope import go to file rowcol 0 0
-        return [(val[3].get('fullpath'), i, (0, 0)) for i, val in project.find_file(word.lower() + '.mac').items()]
-    elif view.scope_name(view.sel()[0].a) == "source.mac meta.class.mac inherited-class.mac entity.other.inherited-class.mac ":
-        return window.lookup_symbol_in_index(word)
-
-    result = []
-    im_result = []
-    classRegs, macroRegs, sclass, smacro, svaria = get_selectors_context(view)
-    vars = []
-    selections = [i for i in view.find_by_selector(sclass + ', ' + smacro + ', ' + svaria) if word.lower() == view.substr(view.word(i)).lower()]
-    RegionMacroParam = view.find_by_selector('variable.parameter.macro.mac')
-    RegionClassParam = view.find_by_selector('variable.parameter.class.mac')
-
-    if len(classRegs) > 0 and len(selections) > 1:
-        # »˘ÂÏ ‚ ÚÂÍÛ˘ÂÏ ÍÎ‡ÒÒÂ
-        selections = [i for i in selections for j in classRegs if j.contains(i)]
-    if len(macroRegs) > 0 and len(selections) > 0:
-        # Õ‡¯ÎË ‚ ÚÂÍÛ˘ÂÏ ÍÎ‡ÒÒÂ Ë˘ÂÏ  ‚ ÚÂÍÛ˘ÂÏ Ï‡ÍÓ
-        selections_in_macro = [i for i in selections for j in macroRegs if j.contains(i)]
-        for x in selections_in_macro:
-            if 'entity.name.function.mac' in view.scope_name(x.a):
-                selections.remove(x)
-                selections_in_macro.remove(x)
-        selections = selections_in_macro if len(selections_in_macro) > 0 else selections
-    if len(macroRegs) > 0 and len(selections) == 0:
-        # ÚÂÍÛ˘‡ˇ ÔÓÁËˆËˇ ‚ Ï‡ÍÓ ÌÓ ÔÂÂÏÂÌÌÓÈ ‚ ÌÂÈ ÌÂÚ (Ë˘ÂÏ ‚ Ô‡‡ÏÂÚ‡ı ÚÂÍÛ˘Â„Ó Ï‡ÍÓ)
-        MacroParamRegs = [i for i in RegionMacroParam if word.lower() == view.substr(view.word(i)).lower()]
-        selections = [i for i in MacroParamRegs for j in macroRegs if j.contains(i)]
-    elif len(macroRegs) == 0 and len(classRegs) > 0 and len(selections) == 0:
-        # ÚÂÍÛ˘‡ˇ ÔÓÁËˆËˇ ‚ÌÂ Ï‡ÍÓ ÌÓ ‚ ÍÎ‡ÒÒÂ (Ë˘ÂÏ ‚ Ô‡‡ÏÂÚ‡ı ÍÎ‡ÒÒ‡)
-        ClassParamRegion = [i for i in RegionClassParam if word.lower() == view.substr(view.word(i)).lower()]
-        selections = [i for i in ClassParamRegion for j in classRegs if j.contains(i)]
-    for selection in selections:
-        # Ì‡¯ÎË ‚ ÚÂÍÛ˘ÂÏ ÍÎ‡ÒÒÂ, ÛÍ‡Á˚‚‡ÂÏ „‰Â
-        vars.append((file, sfile, (view.rowcol(selection.a)[0] + 1, view.rowcol(selection.a)[1] + 1)))
-    if len(classRegs) > 0 and len(selections) == 0:
-        # ÌÂ Ì‡¯ÎË ‚ ÚÂÍÛ˘ÂÏ ÍÎ‡ÒÒÂ, Ë˘ÂÏ ‚ Ó‰ËÚÂÎ¸ÒÍËı
-        in_parent = get_declare_in_parent(view, classRegs, view.substr(sel))
-        if len(in_parent) > 0:
-            vars = in_parent
-    if len(vars) == 0:
-        # ÌË „‰Â ÌÂ Ì‡¯ÎË, Ë˘ÂÏ ‚ „ÎÓ·‡Î¸Ì˚ı ÔÂÂÏÂÌÌ˚ı
-        var_globals = get_globals_in_import(view, word, sfile)
-        if len(var_globals) > 0:
-            vars = var_globals
-    if len(vars) > 0:
-        result = vars
-    return result
-
-
-class GoToDefinitionCommand(sublime_plugin.WindowCommand):
-    def run(self):
-        view = self.window.active_view()
-        if not is_RStyle_view(view):
+    def run(self, action='update'):
+        log('run')
+        if action == 'cancel':
+            self.__class__.index_in_progress = False
             return
-        self.old_view = self.window.active_view()
-        self.current_file_location = view.sel()[0].begin()
-
-        History.get_jump_history(self.window.id()).push_selection(view)
-        self.result = get_result(view)
-
-        if len(self.result) == 1:
-            self.open_file(0)
-            return
-
-        if len(self.result) == 0:
-            sublime.status_message("RSBIDE: Symbol not found in index")
-            return
-
-        self.window.show_quick_panel(["%s (%s)" % (r[1], r[2][0]) for r in self.result], self.open_file, 0, 0, lambda x: self.open_file(x, True))
-
-    def open_file(self, idx, transient=False):
-        flags = sublime.ENCODED_POSITION
-        if transient:
-            flags |= sublime.TRANSIENT
-
-        if idx > -1:
-            self.window.open_file("%s:%s:%s" % (self.result[idx][0], self.result[idx][2][0], self.result[idx][2][1]), flags)
+        self.view = self.window.active_view()
+        if action == 'update':
+            rebuild = False
+        elif action == 'rebuild':
+            rebuild = True
         else:
-            self.window.focus_view(self.old_view)
-            self.old_view.show_at_center(self.current_file_location)
+            raise ValueError('action must be one of {"cancel", "update", '
+                             '"rebuild"}')
 
-    def is_visible(self, paths=None):
-        view = self.window.active_view()
-        isvis = False
-        if is_RStyle_view(view):
-            isvis = True
-        return isvis
+        self.__class__.index_in_progress = True
+        db = get_db(self.view.window())
 
-    def description(self):
-        return 'RSBIDE: œÂÂÈÚË Í Ó·˙ˇ‚ÎÂÌË˛\talt+g'
+        async_worker.schedule(self.async_process_files,
+                              db,
+                              self.view.window().folders(), rebuild)
+
+    def is_enabled(self, action='update'):
+        self.view = self.window.active_view()
+        if action == 'cancel':
+            return self.index_in_progress
+        else:
+            return not self.index_in_progress
+
+    @classmethod
+    def async_process_files(cls, databases, project_folders, rebuild):
+        try:
+            cls.async_process_files_inner(databases, project_folders, rebuild)
+        finally:
+            cls.index_in_progress = False
+
+    @classmethod
+    def all_files_in_folders(self, folder, base=None):
+        base = base if base is not None else folder
+        for test in self.exclude_folders:
+            if re.search('(?i)' + test, folder) is not None:
+                return
+        for x in os.listdir(folder):
+            current_path = os.path.join(folder, x)
+            if (os.path.isfile(current_path)):
+                if not is_file_index(current_path):
+                    continue
+                yield posix(current_path)
+            elif (not x.startswith('.') and os.path.isdir(current_path)):
+                yield from self.all_files_in_folders(current_path, base)
+
+    @classmethod
+    def async_process_files_inner(cls, databases, project_folders, rebuild):
+        if rebuild:
+            # Helper process should not reference files to be deleted.
+            imp.reload(symdb)
+
+            # Simply remove associated database files if build from scratch is
+            # requested.
+            for database in databases:
+                try:
+                    os.remove(os.path.expandvars(database))
+                except OSError:
+                    # Specified database file may not yet exist or is
+                    # inaccessible.
+                    pass
+        t = time.time()
+        update_settings()
+        cls.exclude_folders = Settings.proj_settings.get('EXCLUDE_FOLDERS', [])
+        for dbi, database in enumerate(databases):
+            symdb.begin_file_processing(dbi)
+            for folder in project_folders:
+                aLL_f = list(cls.all_files_in_folders(folder))
+                lf = len(aLL_f)
+                t1 = time.time()
+                for it, path in enumerate(aLL_f):
+                    if not cls.index_in_progress:
+                        symdb.end_file_processing(dbi)
+                        symdb.commit()
+                        sublime.status_message('Indexing canceled')
+                        return
+                    symdb.process_file(dbi, path)
+                    p = it * 100 / lf
+                    sublime.status_message(' RSL index %03.2f %%' % p)
+                    if it > 0 and it % 1000 == 0:
+                        symdb.commit()
+                    if it > 0 and it % 100 == 0:
+                        log(it, 'of', lf, "%.3f" % (time.time() - t1))
+                        t1 = time.time()
+
+            symdb.end_file_processing(dbi)
+            symdb.commit()
+            sublime.status_message(' RSL index Done %.3f sec' % (time.time() - t))
+        log('Parse_ALL', "%.3f" % (time.time() - t))
+        imp.reload(symdb)
 
 
 class LintThisViewCommand(sublime_plugin.WindowCommand):
+
     def run(self):
         view = self.window.active_view()
         if not is_RStyle_view(view):
             return
-        lint = Linter(view, ProjectManager, force=True)
+        lint = Linter(view, force=True)
         lint.start()
 
     def is_visible(self):
         view = self.window.active_view()
-        project = ProjectManager.get_current_project()
-        isvis = False
-        if is_RStyle_view(view) and project.get_setting("LINT", True):
-            isvis = True
-        return isvis
+        return is_RStyle_view(view) and Settings.proj_settings.get("LINT", True)
 
     def description(self):
-        return 'RSBIDE: œÓ‚ÂËÚ¸ ÔÓ ÒÓ„Î‡¯ÂÌËˇÏ'
+        return 'RSBIDE: –ü—Ä–æ–≤–µ—Ä–∏—Ç—å –ø–æ —Å–æ–≥–ª–∞—à–µ–Ω–∏—è–º'
 
 
 class PrintTreeImportCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
-        project = ProjectManager.get_current_project()
-        project_folder = project.get_directory()
-        file = Path.posix(Path.get_absolute_path(project_folder, view.file_name()))
-        sfile = Path.posix(os.path.relpath(file, project_folder))
-        (_ROOT, _DEPTH, _BREADTH) = range(3)
-        LInFile = []
+        update_settings()
+        imports = symdb.query_imports(symdb.get_package(view.file_name()))
         tree = Tree()
-        bfile = basename(norm_path_string(view.file_name()))
-        LInFile.append(sfile)
-        tree.add_node(sfile)  # root node
-        for file_im in LInFile:
-            for x, val in project.find_file(file_im).items():
-                for i in val[3].get('imports', []):
-                    for rf in project.find_file(i):
-                        if not rf:
-                            continue
-                        if rf in LInFile:
-                            continue
-                        log('add ' + rf)
-                        LInFile.append(rf)
-                        tree.add_node(rf, file_im)
-        log(len(LInFile))
+        package = symdb.get_package(view.file_name(), True)
+        tree.add_node(package)
+        for node in imports:
+            tree.add_node(node[0], node[1])
         v = self.window.new_file()
-        tree.display(sfile, view=v)
+        tree.display(package, view=v)
         v.run_command('append', {'characters': "\n"})
+
+    def is_visible(self):
+        return is_RStyle_view(self.window.active_view())
+
+    def description(self):
+        return 'RSBIDE: –î–µ—Ä–µ–≤–æ –∏–º–ø–æ—Ä—Ç–æ–≤'
 
 
 class StatusBarFunctionCommand(sublime_plugin.TextCommand):
@@ -608,44 +760,58 @@ class StatusBarFunctionCommand(sublime_plugin.TextCommand):
         view = self.view
         if not is_RStyle_view(view):
             return
-        lint = Linter(view, ProjectManager)
+        self.settings = Settings.proj_settings
+        lint = Linter(view)
         region = view.sel()[0]
         mess_list = []
         MessStat = ''
         sep = ';'
+        cur_class = extent_reg(view, region)
+        cur_macro = extent_reg(view, region, 2)
         lint_regions = [(j, lint.get_text_lint(i)) for i in lint.all_lint_regions() for j in view.get_regions(i)]
         if len(lint_regions) > 0:
-            MessStat = '≈ÒÚ¸ Á‡ÏÂ˜‡ÌËˇ: %s ‚ÒÂ„Ó' % (len(lint_regions))
+            MessStat = '–ï—Å—Ç—å –∑–∞–º–µ—á–∞–Ω–∏—è: %s –≤—Å–µ–≥–æ' % (len(lint_regions))
             for x in lint_regions:
                 if x[0].intersects(region):
                     mess_list += [x[1]]
             if len(mess_list) > 0:
                 MessStat = sep.join(mess_list)
-        elif ProjectManager.get_current_project().get_setting("SHOW_CLASS_IN_STATUS", False):
-            classRegs = [i for i in view.find_by_selector('meta.class.mac') if i.contains(region)]
-            classRegsName = [
-                i for i in view.find_by_selector(
-                    'meta.class.mac & (storage.type.class.mac, inherited-class.mac, entity.name.class.mac, variable.parameter.class.mac)')]
-            param = []
-            functionRegs = [n for n in view.find_by_selector('meta.macro.mac') if n.contains(region)]
-            functionRegsName = view.find_by_selector('meta.macro.mac entity.name.function.mac')
-            for crn in [j for j in classRegsName for cr in classRegs if cr.contains(j)]:
-                if view.substr(crn).lower() == 'class':
-                    MessStat += '\nclass'
-                else:
-                    if 'variable.parameter.class.mac' in view.scope_name(crn.a):
-                        param += [view.substr(crn)]
-                    else:
-                        MessStat += ' ' + view.substr(crn)
-            if len(param) > 0:
-                MessStat += '(' + ', '.join(param) + ')'
-                param = []
-            for mrn in [k for k in functionRegsName for mr in functionRegs if mr.contains(k)]:
+        elif self.settings.get("SHOW_CLASS_IN_STATUS", False):
+            if cur_class:
+                parent = [el for el in view.find_by_selector('entity.other.inherited-class.mac') if cur_class[0].contains(el)]
+                param = [p for p in view.find_by_selector('variable.parameter.class.mac') if cur_class[0].contains(p)]
+                sp = '(%s)' % (''.join([view.substr(i) for i in parent])) if len(parent) > 0 else ''
+                MessStat = 'class %s %s (%s)' % (sp, view.substr(cur_class[1]), ', '.join([view.substr(j) for j in param]))
+            if cur_macro:
                 if len(MessStat) > 0:
                     MessStat += ','
-                MessStat += ' macro: ' + view.substr(mrn)
-                break
+                MessStat += ' macro: ' + view.substr(cur_macro[1])
         view.set_status('rsbide_stat', MessStat)
+
+
+class RunRsinitCommand(sublime_plugin.TextCommand):
+
+    currfolder = ""
+
+    def run(self, edit, action='file'):
+        if action != 'file':
+            return
+        os.chdir(self.currfolder)
+        log(call(['RSInit.exe', '-rsldebug', symdb.get_package(self.view.file_name()) + '.mac']))
+
+    def is_visible(self):
+        return os.path.lexists(os.path.join(self.currfolder, 'RSInit.exe'))
+
+    def is_enabled(self):
+        self.currfolder = sublime.expand_variables(
+            "$folder", sublime.active_window().extract_variables())
+        if is_RStyle_view(self.view):
+            return True
+        else:
+            return False
+
+    def description(self):
+        return 'RSBIDE: –ó–∞–ø—É—Å–∫/–û—Ç–ª–∞–¥–∫–∞ —Ñ–∞–π–ª–∞'
 
 
 def plugin_loaded():
@@ -658,7 +824,10 @@ def plugin_loaded():
 def update_settings():
     """ restart projectFiles with new plugin and project settings """
     # update settings
+    db = get_db(sublime.active_window())
+    symdb.set_databases(db)
     if Settings:
         global_settings = Settings.update()
-    # update project settings
-    ProjectManager.initialize(Project, global_settings)
+        settings = Settings.merge(global_settings, Settings.project(sublime.active_window()))
+        Settings.set_settings_project(settings)
+        symdb.set_settings(Settings)

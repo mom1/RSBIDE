@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
-# @Last Modified by:   mom1
-# @Last Modified time: 2016-09-28 13:35:54
-import sublime
+# @Last Modified by:   Maximus
+# @Last Modified time: 2018-03-29 13:23:24
 import re
+import sublime
 import threading
-from RSBIDE.RsbIde_print_panel import get_panel
-from RSBIDE.project.ProjectManager import ProjectManager
-# from RSBIDE.common.verbose import log
-# import Default.symbol as navigate
+import RSBIDE.common.settings as Settings
+from RSBIDE.common.notice import *
+from RSBIDE.common.async import run_after_loading
+from RSBIDE.common.RsbIde_print_panel import get_panel, kill_panel
 
 ID = 'Linter'
 
@@ -19,25 +19,27 @@ class Linter(threading.Thread):
 
     _request_id_lock = threading.Lock()
 
-    def __init__(self, view, ProjectManager=ProjectManager, force=False):
+    def __init__(self, view, force=False):
         threading.Thread.__init__(self)
 
         self.view = view
         self.all_regions = []
-        self.ProjectManager = ProjectManager
-        project = self.ProjectManager.get_current_project()
-        if not project:
+        rsb_settings = Settings.proj_settings
+        self.settings = rsb_settings
+        if not self.settings:
+            log('Init', 'Нет настроек')
             return
-        self.scope = project.get_setting("SCOP_ERROR", "invalid.mac")
+        self.scope = self.settings.get("SCOP_ERROR", "invalid.mac")
         self.flags = sublime.DRAW_NO_FILL
         self.force = force
 
     def run(self):
-        project = self.ProjectManager.get_current_project()
-        if not project:
+        if not self.settings:
+            log('Run', 'Нет настроек')
             return
+        log('Run')
         window = sublime.active_window()
-        islint = project.get_setting("LINT", True)
+        islint = self.settings.get("LINT", True)
         if not islint or not self.is_RStyle_view():
             return
         self.erase_all_regions()
@@ -49,24 +51,38 @@ class Linter(threading.Thread):
         self.many_dept_loop()
         self.cpwin()
         self.unknown_prefix_variable()
-        count_comment = len([j.a for i in self.all_lint_regions() for j in self.view.get_regions(i)])
+        self.all_comment = [(self.get_text_lint(i), j) for i in self.all_lint_regions() for j in self.view.get_regions(i)]
+        count_comment = len(self.all_comment)
         sublime.status_message("Проверка на замечания выполнена: найденно %s" % (count_comment))
-        if project.get_setting("SHOW_SAVE", True) or self.force:
-            self.all_regions = [[self.get_text_lint(i), self.view.rowcol(j.a)] for i in self.all_lint_regions() for j in self.view.get_regions(i)]
+        if self.settings.get("SHOW_SAVE", True) or self.force:
+            self.all_regions = [[i[0], self.view.rowcol(i[1].begin())] for i in self.all_comment]
             self.all_regions = sorted(self.all_regions, key=lambda x: x[1][0])
+            self.all_comment = sorted(self.all_comment, key=lambda x: x[1].begin())
             self.all_regions = [[i[0], str([j + 1 for j in i[1]])] for i in self.all_regions]
-            window.show_quick_panel(self.all_regions, self._on_done, 0, 0, lambda x: self._on_done(x))
+            window.show_quick_panel(self.all_regions, self._on_done, sublime.KEEP_OPEN_ON_FOCUS_LOST, 0, lambda x: self._on_done(x, True))
 
-    def _on_done(self, item):
-        if item == -1:
-            return
+    def _on_done(self, item, hig=False):
+        def add_reg():
+            if row == 0 and 'col' == 0:
+                return
+            dec_reg = self.all_comment[item][1]
+            view.add_regions('rsbide_curlint', [dec_reg], 'string', 'dot', sublime.DRAW_NO_FILL)
+
+        def clear_reg():
+            view.erase_regions('rsbide_curlint')
+
         window = sublime.active_window()
         view = window.active_view()
+        if not hig:
+            run_after_loading(view, clear_reg)
+
+        if item == -1:
+            clear_reg()
+            return
         row = int(self.all_regions[item][1].split(', ')[0].strip('[')) - 1
         col = int(self.all_regions[item][1].split(', ')[1].strip(']')) - 1
         pt = view.text_point(row, col)
-        view.sel().clear()
-        view.sel().add(sublime.Region(pt))
+        add_reg()
         view.show_at_center(pt)
 
     def get_text_lint(self, key):
@@ -100,6 +116,7 @@ class Linter(threading.Thread):
         ''' Очистка всех подсвеченых проверок '''
         for i in self.all_lint_regions():
             self.view.erase_regions(i)
+        self.view.erase_regions('rsbide_curlint')
 
     def is_RStyle_view(self, locations=None):
         view = self.view
@@ -109,11 +126,10 @@ class Linter(threading.Thread):
 
     def LongLines(self):
         ''' Проверка на длинные строки '''
-        project = self.ProjectManager.get_current_project()
-        maxLength = project.get_setting("MAXLENGTH", 160)
+        maxLength = self.settings.get("MAXLENGTH", 160)
         scope = self.scope
         firstCharacter_Only = False
-
+        log('LongLines')
         if 'R-Style' not in self.view.settings().get('syntax'):
             return
         indentationSize = self.view.settings().get("tab_size")
@@ -143,6 +159,7 @@ class Linter(threading.Thread):
     def comment_code(self):
         ''' Проверка на закомментированный код '''
         pref = 'RSBIDE:Lint_'
+        log('comment_code')
         l_comment = [
             (self.view.substr(i).rstrip('\r\n') + "\n", i) for i in self.view.find_by_selector('source.mac comment. - punctuation.definition.comment.mac')]
         scope = self.scope
@@ -159,12 +176,13 @@ class Linter(threading.Thread):
             if len(parse_panel.find_by_selector(
                     'meta.class.mac, meta.macro.mac, meta.variable.mac, meta.if.mac, meta.while.mac, meta.for.mac, meta.const.mac')) > 0:
                 invalidRegions.append(x[1])
-        sublime.active_window().destroy_output_panel(pref + 'comment_code')
+        kill_panel(pref + 'comment_code')
         if len(invalidRegions) > 0:
             self.view.add_regions("comment_code", invalidRegions, scope, flags=self.flags)
 
     def vare_unused(self):
         ''' Проверка на не используемые переменные '''
+        log('vare_unused')
         scope = self.scope
         invalidRegions = []
         l_all_vare_macro = [(
@@ -202,7 +220,8 @@ class Linter(threading.Thread):
 
     def empty_line(self):
         ''' Проверка пустых строк '''
-        max_eline = self.ProjectManager.get_current_project().get_setting("MAX_EMPTY_LINE", 2)
+        log('empty_line')
+        max_eline = self.settings.get("MAX_EMPTY_LINE", 2)
         mr = self.view.find_all(r'^(\s)*$')
         invalidRegions = []
         invalidExpect = []
@@ -221,7 +240,8 @@ class Linter(threading.Thread):
 
     def many_param(self):
         ''' Проверка количества параметров '''
-        max_count_param = self.ProjectManager.get_current_project().get_setting("MAX_COUNT_MACRO_PARAM", 5)
+        log('many_param')
+        max_count_param = self.settings.get("MAX_COUNT_MACRO_PARAM", 5)
         macroRegsName = self.view.find_by_selector('meta.macro.mac & (storage.type.macro.mac, entity.name.function.mac, variable.parameter.macro.mac)')
         invalidRegions = []
         param = []
@@ -238,7 +258,8 @@ class Linter(threading.Thread):
 
     def many_dept_loop(self):
         ''' Проверка уровня вложенности '''
-        max_depth = self.ProjectManager.get_current_project().get_setting("MAX_DEPTH_LOOP", 3)
+        log('many_dept_loop')
+        max_depth = self.settings.get("MAX_DEPTH_LOOP", 3)
         reg_loop = self.view.find_by_selector('source.mac' + ' meta.if.mac' * max_depth)
         reg_loop += self.view.find_by_selector('source.mac' + ' meta.while.mac' * max_depth)
         reg_loop_for = self.view.find_by_selector('source.mac' + ' meta.for.mac' * 2)
@@ -249,6 +270,7 @@ class Linter(threading.Thread):
 
     def cpwin(self):
         ''' Проверка наличия cpwin '''
+        log('cpwin')
         l_cpwin = self.view.find_by_selector('keyword.control.cpwin.mac')
         if len(l_cpwin) == 0:
             invalidRegions = [self.view.line(sublime.Region(0, 0))]
@@ -256,11 +278,11 @@ class Linter(threading.Thread):
 
     def unknown_prefix_variable(self):
         ''' Проверка префиксов переменных '''
-        project = self.ProjectManager.get_current_project()
+        log('unknown_prefix_variable')
 
-        pref_g = project.get_setting("PREFIX_VARIABLE_GLOBAL")
-        pref_visual = project.get_setting("PREFIX_VARIABLE_VISUAL")
-        pref_type = project.get_setting("PREFIX_VARIABLE_TYPE")
+        pref_g = self.settings.get("PREFIX_VARIABLE_GLOBAL")
+        pref_visual = self.settings.get("PREFIX_VARIABLE_VISUAL")
+        pref_type = self.settings.get("PREFIX_VARIABLE_TYPE")
         if len(pref_type) > 0 and len(pref_visual) > 0:
             pref_visual += r'|'
         s_reg_exp = '^%s%s' % (pref_visual, pref_type)

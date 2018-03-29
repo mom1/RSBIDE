@@ -1,8 +1,8 @@
 <snippet>
     <content><![CDATA[
 macro ${1:NameMacro} (${2:Sender:Object})
-   //Comment macro
-   ${0:$TM_SELECTED_TEXT}
+	// ${3:Оставь коммент для макро}
+	${0:$TM_SELECTED_TEXT}
 End;
 ]]></content>
     <tabTrigger>macro</tabTrigger>

@@ -1,8 +1,8 @@
 <snippet>
     <content><![CDATA[
 class T${1:${TM_FILENAME/(.*?)(\..+)/$1/}} (${3:ParamClass})
-//Оставь коммент для класса
-    ${0:$TM_SELECTED_TEXT}
+// ${4:Оставь коммент для класса}
+	${0:$TM_SELECTED_TEXT}
 END;
 ]]></content>
     <tabTrigger>class</tabTrigger>

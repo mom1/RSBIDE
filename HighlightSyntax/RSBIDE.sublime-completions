@@ -26,6 +26,7 @@
         {"trigger": "ToANSI", "contents": "ToANSI(\"${0:string}\")"},
         {"trigger": "ToOEM", "contents": "ToOEM(\"${0:string}\")"},
         {"trigger": "Trim", "contents": "Trim(\"${0:string}\")"},
+        {"trigger": "Fields", "contents": "Fields(\"$0\").Value"},
         "debugbreak;",
         "RSObject",
         "Value",
@@ -34,7 +35,6 @@
         "var",
         "break;",
         "continue;",
-        "this",
         "Destructor",
         "String",
         "Integer",
@@ -53,5 +53,6 @@
         "return",
         "True",
         "False",
+        "Null"
         ],
 }

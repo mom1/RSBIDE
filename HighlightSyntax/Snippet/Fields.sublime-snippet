@@ -1,6 +1,0 @@
-<snippet>
-    <content><![CDATA[Fields("$0").Value]]></content>
-    <tabTrigger>Fields</tabTrigger>
-    <scope>source.mac</scope>
-    <description>Fields("").Value</description>
-</snippet>

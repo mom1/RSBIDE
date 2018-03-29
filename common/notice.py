@@ -8,7 +8,7 @@ def log(*args):
         print("RSB\t", *args)
 
 
-def verbose(*args):
+def debug(*args):
     if config["DEBUG"] is True and not args[0] in IGNORE:
         print("RSB\t", *args)
 

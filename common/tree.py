@@ -1,5 +1,9 @@
-# coding=utf8
-from RSBIDE.node import Node
+# -*- coding: utf-8 -*-
+# @Author: Maximus
+# @Date:   2018-03-29 11:01:13
+# @Last Modified by:   mom1
+# @Last Modified time: 2018-03-29 20:04:06
+from RSBIDE.common.node import Node
 
 (_ROOT, _DEPTH, _BREADTH) = range(3)
 
@@ -27,7 +31,6 @@ class Tree:
 
     def display(self, identifier, depth=_ROOT, view=None, pathfile="C:\myfile"):
         if view is None:
-            print('non view')
             return
         children = self[identifier].children
         if depth == _ROOT:

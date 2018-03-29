@@ -1,0 +1,7 @@
+[
+    { "caption": "-", "id": "RSBIDE" },
+    { "caption": "RSBIDE: Запуск/Отладка файла", "command": "run_rsinit", "args": {
+        "action": "file"
+    }, },
+    { "caption": "-", "id": "end" }
+]

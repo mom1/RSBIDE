@@ -1,4 +1,8 @@
-# coding=utf8
+# -*- coding: utf-8 -*-
+# @Author: Maximus
+# @Date:   2018-03-29 11:01:13
+# @Last Modified by:   Maximus
+# @Last Modified time: 2018-03-29 13:11:15
 
 
 class Node:
