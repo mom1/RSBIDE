@@ -25,7 +25,7 @@ Features
     ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
     * Print Signature `macro` or `class` or `var` To Panel <kbd>Alt + S</kbd>
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
-    * when browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
+    * When browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
 * **Viewing documents**
     * If <kbd>Alt + S</kbd> word under the cursor is not found in the index, then try to find documentation (Beta)
     ![DocPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/DocPanel.jpg)
@@ -40,9 +40,9 @@ Features
     * All the main parameters in settings
     ![Linter](https://raw.github.com/mom1/RSBIDE/master/screenshot/Linter.jpg)
 * **Launch RS-Balance 3**
-    * quickly open the Client with your Reg configuration
-    * to Run Client use <kbd>Ctrl + B</kbd>, <kbd>F7</kbd> or search for it in the command palette.
-    * use <kbd>Ctrl + Shift + B</kbd> to choice:
+    * Quickly open the Client with your Reg configuration
+    * To Run Client use <kbd>Ctrl + B</kbd>, <kbd>F7</kbd> or search for it in the command palette.
+    * Use <kbd>Ctrl + Shift + B</kbd> to choice:
         - RSInit (RSInit.exe)
         - RSInit - client -rsldebug
         - RSInit - $file_name -rsldebug
@@ -52,16 +52,11 @@ Features
         - RSInit - TerminalClient -rsldebug
         - RSInit - TypeInfo
         - RSInit - RSAdmin
+    * Quick start / debug file from the context menu of the Tab
+    ![Tab_Run_File](https://raw.github.com/mom1/RSBIDE/master/screenshot/Tab_Run_File.jpg)
 * **Various useful Snippets**
     * Predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Other commands**
-    * RSBIDE: Вставить как строку - Inserts the copied text as the RSL string. If the target location is not `;` then added.
-      Example: In the copied string buffer
-    ```sql
-    SELECT * FROM dbo.rdAnalyticSign ras
-    WHERE ras.HasChild = 1 AND ras.ID NOT IN (SELECT DISTINCT COALESCE(ParentID,0)FROM rdAnalyticSign)
-    ```
-    ![PasteAsString](https://raw.github.com/mom1/RSBIDE/master/screenshot/PasteAsString.gif)
     * Print Tree Import - It displays the current file tree imports. It opens in a new tab
 
         ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
@@ -88,7 +83,8 @@ Installation
     * Check and highlight syntax errors
  * [RegExLink](https://github.com/mom1/RegExLink)
     * Opening *.lbr files through the context menu of the project designer
-
+ * [PasteAsString](https://github.com/mom1/PasteAsString)
+    * It helps to insert some code as a string
 ST3 only:
   [Sublime Text 3]: http://www.sublimetext.com/3
 

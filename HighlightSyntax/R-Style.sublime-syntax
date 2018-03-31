@@ -8,6 +8,7 @@ variables:
   identifier: '[_$[:alpha:]][_$[:alnum:]]*'
   constant_identifier: '[[:upper:]][_$[:digit:][:upper:]]*\b'
   xml_indicator: (?i)(\s)*(<)(\/|\?)*(?:OBJECT_LIST|OBJECT|FIELD|COMMENT|VERSION|XML|KEY|KEYFIELD)\b
+  path: '({{identifier}} *\. *)*{{identifier}}'
 
 contexts:
   main:
@@ -25,6 +26,7 @@ contexts:
     - include: flow
     - include: string
     - include: language
+    - include: macro-calls
 
 
   comments:
@@ -142,6 +144,7 @@ contexts:
       push: var
     - match: '(?i)(?=\bconst\b)'
       push: const
+    - include: macro-calls
 
   class-inherited:
     - meta_scope: inherited-class.mac
@@ -198,6 +201,7 @@ contexts:
       push: var
     - match: '(?i)(?=\bmacro\b)'
       push: macro
+    - include: macro-calls
 
   macro-declaration:
     - match: '({{identifier}})'
@@ -245,6 +249,89 @@ contexts:
     - match: '(?=\))'
       pop: true
 
+  generic-names:
+    - match: '({{identifier}})'
+      scope: meta.generic-name.mac
+
+  macro-calls:
+    - match: '(?=(\.\s*)?{{path}}\s*\()'
+      push: [macro-calls-block, macro-call-wrapper, qualified-name-until-leaf]
+
+  macro-calls-block:
+    - meta_scope: meta.callmacro.mac
+    - include: simple
+    - match: (?=\)\;?)
+      pop: true
+    - include: macro-calls
+
+  macro-call-wrapper:
+    - include: comments
+    - match: '({{identifier}})'
+      scope: variable.function.mac
+      set:
+        - include: simple
+        - match: '\s*(\()'
+          captures:
+            1: punctuation.section.arguments.begin.mac
+          set: macro-calls-argument
+    - match: (?=\)\;?)
+      pop: true
+    - include: simple
+
+  macro-calls-argument:
+    - meta_scope: macro-argument.mac
+    - include: simple
+    - match: (?=\))
+      scope: punctuation.section.arguments.end.mac
+      pop: true
+    - include: macro-calls
+    - match: '(?i)({{identifier}})'
+      scope: argument.macro.mac
+    - match: (?=,)
+      set: macro-argument-continue
+
+  macro-argument-continue:
+    - include: comments
+    - match: ','
+      scope: meta.delimiter.comma.mac
+      set: macro-calls-argument
+    - match: '(?=\))'
+      pop: true
+
+  qualified-name-until-leaf:
+    # Push this together with another context to match a qualified name
+    # until the last non-special identifier (if any).
+    # This allows the leaf to be scoped individually.
+    - meta_scope: meta.qualified-name.mac
+    - include: comments
+    # If a line continuation follows, this may or may not be the last leaf (most likley not though)
+    - match: '{{identifier}}(?=\s*\\)'
+      scope: meta.generic-name.mac
+    - match: (?={{identifier}}\s*\.)
+      push:
+        - include: comments
+        - include: language
+        - include: generic-names
+        - match: ''
+          pop: true
+    - match: (\.)\s*(?={{identifier}}\s*\.)
+      captures:
+        1: punctuation.accessor.dot.mac
+      push:
+        - include: generic-names
+        - match: ''
+          pop: true
+    - match: (\.)\s*(?={{identifier}})
+      captures:
+        1: punctuation.accessor.dot.mac
+      set:
+        - include: language
+        - include: comments
+        - match: ''
+          pop: true
+    - match: (?=\S|$)
+      pop: true
+
   modifier:
     - match: '(?i)\b(private|local)\b'
       scope: storage.modifier.mac
@@ -266,6 +353,7 @@ contexts:
     - include: type-variable
     - include: comments
     - include: numeric
+    - include: string
     - match: '({{identifier}})'
       scope: variable.declare.name.mac
       push:
@@ -279,11 +367,12 @@ contexts:
         - meta_scope: meta.variable.value.mac
         - include: comments
         - include: numeric
-        - include: callmacro
+        - include: string
         - match: (?=,)
           set: var-continue
         - match: '(?=\;)'
           pop: true
+        - include: macro-calls
         - include: simple
     - match: (?=,)
       set: var-continue
@@ -297,19 +386,6 @@ contexts:
       set: var-declaration
     - match: '(?=\;)'
       pop: true
-
-  callmacro:
-    - meta_scope: meta.callmacro.mac
-    - include: comments
-    - match: '\('
-      scope: punctuation.definition.parameters.begin.mac
-      push:
-        - include: simple
-        - include: callmacro
-          pop: true
-        - match: \)
-          scope: punctuation.definition.parameters.end.mac
-          pop: true
 
   const:
     - include: comments
@@ -341,12 +417,12 @@ contexts:
         - meta_scope: meta.const.value.mac
         - include: comments
         - include: numeric
-        - include: callmacro
         - match: (?=,)
           set: const-continue
         - match: '(?=\;)'
           pop: true
         - include: simple
+        - include: macro-calls
     - match: (?=,)
       set: const-continue
     - match: '(?=\;)'
@@ -379,6 +455,7 @@ contexts:
           push: var
         - match: '(?i)(?=\bconst\b)'
           push: const
+        - include: macro-calls
     - match: '(?i)\b(END)\b\s*(;)?'
       captures:
         1: keyword.if.end.mac
@@ -399,6 +476,7 @@ contexts:
           push: for
         - match: '(?i)(?=\bEND\b)'
           pop: true
+        - include: macro-calls
     - match: '(?i)\b(END)\b\s*(;)?'
       captures:
         1: keyword.while.end.mac
@@ -431,6 +509,7 @@ contexts:
                   pop: true
             - match: '\)'
               pop: true
+        - include: macro-calls
     - match: '(?i)\b(END)\b\s*(;)?'
       captures:
         1: keyword.for.end.mac
@@ -456,7 +535,7 @@ contexts:
           pop: true
         - match: '(?i)([{|\(]?[0-9A-F]{8}[-]?([0-9A-F]{4}[-]?){3}[0-9A-F]{12}[\)|}]?)'
           scope: string.guid.mac
-        - match: '(\s|(?:(?<=\"))|(?:(?<=\())|(?:(?<=\,)))(\\\")([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")(?:(?=\W))'
+        - match: '(\s|(?:(?<=\"))|(?:(?<=\())|(?:(?<=\,)))(\\\")\S([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")(?:(?=\W))'
           scope: constant.other.table-name.mac
         - match: '(`)'
           scope: string.quoted.double.single-line.raw.mac
@@ -499,7 +578,7 @@ contexts:
               pop: true
             - match: '([{|\(]?[0-9A-F]{8}[-]?([0-9A-F]{4}[-]?){3}[0-9A-F]{12}[\)|}]?)'
               scope: string.guid.mac
-            - match: '(\s|(?:(?<=\"))|(?:(?<=\())|(?:(?<=\,)))(\\\")([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")(?:(?=\W))'
+            - match: '(\s|(?:(?<=\"))|(?:(?<=\())|(?:(?<=\,)))(\\\")\S([\s\w\#]*\.?[\w\s\#]*)([^\.])(\\\")(?:(?=\W))'
               scope: constant.other.table-name.mac
             - match: '(`)'
               scope: string.quoted.double.single-line.raw.mac
@@ -520,7 +599,7 @@ contexts:
     - match: (?i)\b(false)\b
       scope: constant.language.boolean.false.mac
     - match: (?i)\b(this)\b
-      scope: constant.language.mac
+      scope: variable.language.mac
     # - comment: keyword operators that evaluate to True or False
     - match: (?i)\b(and|not|or)\b
       scope: keyword.operator.logical.mac
@@ -531,8 +610,6 @@ contexts:
       scope: keyword.control.cpwin.mac
     - match: (?i)\*|\-|\+|==|=|!=|<=|>=|<>|<|>
       scope: keyword.operator.mac
-    - match: \.
-      scope: meta.delimiter.method.period.mac
     # - comment: "ключевые слова, которые формируют или прерывают цикл"
     - match: (?i)\b(elif|else|break|continue|return)\b
       scope: keyword.control.flow.mac
@@ -557,10 +634,6 @@ contexts:
     # - comment: "Процедуры управления файлами и каталогами"
     - match: (?i)\b(CopyFile|GetCurDir|GetFileInfo|GetIniFileValue|MakeDir|RemoveDir|RemoveFile|RenameFile)\b
       scope: support.function.file.mac
-    # - comment: "Процедура запуска внешних программ Run"
-    - match: (?i)\b(Run)\b
-      scope: support.function.run.mac
-    # - comment: "Процедура удаленного запуска макропрограмм CallRemoteRsl"
     - match: (?i)\b(CallRemoteRsl)\b
       scope: support.function.remoterun.mac
     # - comment: "Процедуры для работы с классами и объектами"

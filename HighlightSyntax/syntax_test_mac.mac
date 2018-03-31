@@ -55,7 +55,8 @@ macro /**/ name (asd, asd) /**/
   ""
 // ^ meta.macro.mac string.quoted.double.mac punctuation.definition.string.end.mac
   name1();
-//^ meta.macro.mac - entity.name.function.mac
+//^ meta.macro.mac meta.callmacro.mac variable.function.mac - entity.name.function.mac
+//
   var i=0;
 //^ meta.macro.mac meta.variable.mac storage.type.var.mac
 End;
@@ -69,8 +70,13 @@ macro NameMacro (Sender:Object, www)
 //    ^ meta.macro.mac comment.line.double-slash.mac
     var i=0;
 //      ^ meta.macro.mac meta.variable.mac variable.declare.name.mac
-    asd(asd, asd)
-//  ^ meta.macro.mac
+    asd(asd, asd);
+//  ^ meta.macro.mac meta.callmacro.mac variable.function.mac
+//     ^ meta.macro.mac meta.callmacro.mac macro-argument.mac punctuation.section.arguments.begin.mac
+//      ^ meta.macro.mac macro-argument.mac argument.macro.mac
+//         ^ meta.macro.mac macro-argument.mac meta.delimiter.comma.mac
+//           ^ meta.macro.mac macro-argument.mac argument.macro.mac
+//              ^ meta.macro.mac
     macro /* */ name1 (sad)
 //  ^ meta.macro.mac meta.macro.mac storage.type.macro.mac
 //          ^ meta.macro.mac meta.macro.mac comment.block.mac
@@ -79,14 +85,15 @@ macro NameMacro (Sender:Object, www)
         var qwe;
 //          ^ meta.macro.mac meta.macro.mac meta.variable.mac variable.declare.name.mac
         name1();
-//      ^ meta.macro.mac meta.macro.mac
+//      ^ meta.macro.mac meta.macro.mac meta.callmacro.mac variable.function.mac
         if (true)
-
+//      ^ meta.macro.mac meta.macro.mac meta.if.mac keyword.control.if.mac
         end;
+//      ^ meta.macro.mac meta.macro.mac meta.if.mac keyword.if.end.mac
         for (var a, arr)
-            //list instruction
-
+//               ^ meta.macro.mac meta.macro.mac meta.for.mac variable.declare.name.mac
         end;
+//      ^ meta.macro.mac meta.macro.mac meta.for.mac keyword.for.end.mac
     End;
 //  ^ meta.macro.mac meta.macro.mac keyword.macro.end.mac
     name1;
@@ -117,7 +124,7 @@ class Ttest1 (ParamClass)
 //^ meta.class.mac meta.macro.mac keyword.macro.end.mac
 
   NameMacro();
-// ^ meta.class.mac
+// ^ meta.class.mac meta.callmacro.mac variable.function.mac
 
   class Ttest23 (ParamClass)
 //^ meta.class.mac meta.class.mac storage.type.class.mac
@@ -126,7 +133,7 @@ class Ttest1 (ParamClass)
   //Оставь коммент для класса
 //   ^ meta.class.mac meta.class.mac comment.line.double-slash.mac
     NameMacro();
-//  ^ meta.class.mac meta.class.mac
+//  ^ meta.class.mac meta.class.mac meta.callmacro.mac variable.function.mac
   END;
 //^ meta.class.mac meta.class.mac keyword.class.end.mac
 END;
@@ -149,11 +156,15 @@ class (Ttest23) Ttest (фывб,
      //Comment macro
 //     ^ meta.class.mac meta.macro.mac comment.line.double-slash.mac
      NameMacro();
-//   ^ meta.class.mac meta.macro.mac
+//   ^ meta.class.mac meta.macro.mac meta.callmacro.mac variable.function.mac
   End;
 //^ meta.class.mac meta.macro.mac keyword.macro.end.mac
-  NameMacro();
-//^ meta.class.mac
+  NameMacro (/**/a, Ttest1(s) )/**/ ;
+//^ meta.class.mac meta.callmacro.mac variable.function.mac
+//          ^ meta.class.mac meta.callmacro.mac macro-argument.mac punctuation.section.arguments.begin.mac
+//               ^ meta.class.mac meta.callmacro.mac macro-argument.mac argument.macro.mac
+//                  ^ meta.class.mac meta.callmacro.mac macro-argument.mac meta.callmacro.mac variable.function.mac
+//                         ^ meta.class.mac meta.callmacro.mac macro-argument.mac meta.callmacro.mac macro-argument.mac argument.macro.mac
 
   macro NameMacro1 (Sender:Object) : Variant
 //^ meta.class.mac meta.macro.mac storage.type.macro.mac
@@ -162,8 +173,12 @@ class (Ttest23) Ttest (фывб,
 //                         ^ meta.class.mac meta.macro.mac macro-param.mac storage.type.variable.mac
      //Comment macro
 //     ^ meta.class.mac meta.macro.mac comment.line.double-slash.mac
-     NameMacro();
-//   ^ meta.class.mac meta.macro.mac
+     if(NameMacro(a, b))
+//      ^ meta.class.mac meta.macro.mac meta.if.mac meta.callmacro.mac variable.function.mac
+//                ^ meta.class.mac meta.macro.mac meta.if.mac meta.callmacro.mac macro-argument.mac argument.macro.mac
+     end;
+//   ^ meta.class.mac meta.macro.mac meta.if.mac keyword.if.end.mac
+
   End;
 //^ meta.class.mac meta.macro.mac keyword.macro.end.mac
 
@@ -180,6 +195,8 @@ END;
 //                   ^ meta.macro.mac meta.variable.mac meta.variable.value.mac
     return ObjPlaces.DoModal();
 //  ^ meta.macro.mac keyword.control.flow.mac
-//         ^ meta.macro.mac
+//         ^ meta.macro.mac meta.callmacro.mac meta.qualified-name.mac meta.generic-name.mac
+//                  ^ meta.macro.mac meta.callmacro.mac meta.qualified-name.mac punctuation.accessor.dot.mac
+//                   ^ meta.macro.mac meta.callmacro.mac variable.function.mac
   end;
 //^ meta.macro.mac keyword.macro.end.mac

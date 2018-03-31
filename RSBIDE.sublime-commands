@@ -22,8 +22,8 @@
         }
     },
     {
-        "caption": "RSBIDE2: Cancel Cache",
-        "command": "rebuild2_cache",
+        "caption": "RSBIDE: Cancel Cache",
+        "command": "rebuild_cache",
         "args": {
             "action": "cancel"
         }

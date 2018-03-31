@@ -2,7 +2,7 @@
 # @Author: Maximus
 # @Date:   2018-03-19 19:08:39
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-03-29 20:08:03
+# @Last Modified time: 2018-03-30 10:53:24
 import sublime
 import sublime_plugin
 import os
@@ -58,6 +58,8 @@ def is_RStyle_view(view):
 
 
 def get_db(window):
+    if len(window.folders()) == 0:
+        return []
     fold = window.folders()[0]
     sublime_cache_path = sublime.cache_path()
     tmp_folder = sublime_cache_path + "/RSBIDE/"
@@ -195,7 +197,8 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
     def search(self, symbol):
 
         def async_search(databases):
-            update_settings()
+            if not update_settings():
+                return
             results = get_result(self.view, symbol)
             handle_results(results)
 
@@ -292,7 +295,8 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
     def search(self, symbol):
 
         def async_search(databases):
-            update_settings()
+            if not update_settings():
+                return
             results = get_result(self.view, symbol)
             handle_results(results)
 
@@ -375,7 +379,9 @@ class RSBIDEListener(sublime_plugin.EventListener):
 
     @staticmethod
     def async_index_view(file_name, databases, project_folders):
-        update_settings()
+
+        if not update_settings():
+            return
 
         for dbi, database in enumerate(databases):
             symdb.process_file(dbi, file_name)
@@ -399,13 +405,15 @@ class RSBIDEListener(sublime_plugin.EventListener):
 
         if self.previous_project != db:
             if self.previous_project is not None:
-                update_settings()
+                if not update_settings():
+                    return
                 view.window().run_command('rebuild_cache', {'action': 'update'})
                 self.previous_window = sublime.active_window().id()
             self.previous_project = db
         elif self.previous_window is not sublime.active_window().id():
             self.previous_window = sublime.active_window().id()
-            update_settings()
+            if not update_settings():
+                return
             view.window().run_command('rebuild_cache', {'action': 'update'})
 
     def intelige_end(self, view):
@@ -425,7 +433,8 @@ class RSBIDEListener(sublime_plugin.EventListener):
         if not is_file_index(view.file_name()):
             return []
 
-        update_settings()
+        if not update_settings():
+            return
         completions = []
         sel = view.sel()[0]
         t = time.time()
@@ -686,7 +695,8 @@ class RebuildCacheCommand(sublime_plugin.WindowCommand):
                     # inaccessible.
                     pass
         t = time.time()
-        update_settings()
+        if not update_settings():
+            return
         cls.exclude_folders = Settings.proj_settings.get('EXCLUDE_FOLDERS', [])
         for dbi, database in enumerate(databases):
             symdb.begin_file_processing(dbi)
@@ -736,7 +746,8 @@ class LintThisViewCommand(sublime_plugin.WindowCommand):
 class PrintTreeImportCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
-        update_settings()
+        if not update_settings():
+            return
         imports = symdb.query_imports(symdb.get_package(view.file_name()))
         tree = Tree()
         package = symdb.get_package(view.file_name(), True)
@@ -815,7 +826,8 @@ class RunRsinitCommand(sublime_plugin.TextCommand):
 
 
 def plugin_loaded():
-    update_settings()
+    if not update_settings():
+        return
     global_settings = sublime.load_settings(config["RSB_SETTINGS_FILE"])
     global_settings.clear_on_change('RSBIDE_settings')
     global_settings.add_on_change("RSBIDE_settings", update_settings)
@@ -825,9 +837,13 @@ def update_settings():
     """ restart projectFiles with new plugin and project settings """
     # update settings
     db = get_db(sublime.active_window())
+    if len(db) == 0:
+        debug('Не задана БД')
+        return False
     symdb.set_databases(db)
     if Settings:
         global_settings = Settings.update()
         settings = Settings.merge(global_settings, Settings.project(sublime.active_window()))
         Settings.set_settings_project(settings)
         symdb.set_settings(Settings)
+    return True

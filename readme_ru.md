@@ -52,16 +52,11 @@
         - RSInit - TerminalClient -rsldebug
         - RSInit - TypeInfo
         - RSInit - RSAdmin
+    * Быстрый запуск/отладка файла из контекстного меню закладки
+    ![Tab_Run_File](https://raw.github.com/mom1/RSBIDE/master/screenshot/Tab_Run_File.jpg)
 * **Различные полезные Snippets**
     * Предопределенные языковые конструкции. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Другие команды**
-    * RSBIDE: Вставить как строку - Вставляет скопированный текст как строку RSL. Если в целевом месте нет `;` то добавляет.
-      Пример: В буфер скопированна строка
-    ```sql
-    SELECT * FROM dbo.rdAnalyticSign ras
-    WHERE ras.HasChild = 1 AND ras.ID NOT IN (SELECT DISTINCT COALESCE(ParentID,0)FROM rdAnalyticSign)
-    ```
-    ![PasteAsString](https://raw.github.com/mom1/RSBIDE/master/screenshot/PasteAsString.gif)
     * RSBIDE: Print Tree Import - Выводит дерево импортов текущего файла. Открывает в новой закладке
 
         ![PrintTreeImport](https://raw.github.com/mom1/RSBIDE/master/screenshot/PrintTreeImport.jpg)
@@ -86,6 +81,8 @@
     * Проверка и подсветка синтаксических ошибок (с использованием rsl интерпретатора)
  * [RegExLink](https://github.com/mom1/RegExLink)
     * Открытие *.lbr файлов через контекстное меню дизайнером из проекта
+ * [PasteAsString](https://github.com/mom1/PasteAsString)
+    * Это помогает вставить некоторый код (Например TSQL) в виде строки RSL
 
 Отличная [картинка](https://raw.github.com/mom1/RSBIDE/master/screenshot/ST_Key.png) для изучения основных комбинаций http://www.sublimetext.com/
 
