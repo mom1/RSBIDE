@@ -260,7 +260,7 @@ contexts:
   macro-calls-block:
     - meta_scope: meta.callmacro.mac
     - include: simple
-    - match: (?=\)\;?)
+    - match: (\))
       pop: true
     - include: macro-calls
 
@@ -325,7 +325,6 @@ contexts:
       captures:
         1: punctuation.accessor.dot.mac
       set:
-        - include: language
         - include: comments
         - match: ''
           pop: true

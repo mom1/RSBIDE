@@ -200,3 +200,8 @@ END;
 //                   ^ meta.macro.mac meta.callmacro.mac variable.function.mac
   end;
 //^ meta.macro.mac keyword.macro.end.mac
+var line = substr(x.err.message(1), separator_index + 1, 1);
+//  ^ meta.variable.mac variable.declare.name.mac
+//         ^ meta.variable.mac meta.variable.value.mac meta.callmacro.mac variable.function.mac
+//                      ^ meta.variable.mac meta.variable.value.mac meta.callmacro.mac macro-argument.mac meta.callmacro.mac variable.function.mac
+//                                  ^ meta.variable.mac meta.variable.value.mac meta.callmacro.mac macro-argument.mac argument.macro.mac
