@@ -55,6 +55,7 @@
         - RSInit - TypeInfo
         - RSInit - RSAdmin
     * Быстрый запуск/отладка файла из контекстного меню закладки
+
         ![Tab_Run_File](https://raw.github.com/mom1/RSBIDE/master/screenshot/Tab_Run_File.jpg)
 * **Различные полезные Snippets**
     * Предопределенные языковые конструкции. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
