@@ -54,6 +54,7 @@ Features
         - RSInit - TypeInfo
         - RSInit - RSAdmin
     * Quick start / debug file from the context menu of the Tab
+
         ![Tab_Run_File](https://raw.github.com/mom1/RSBIDE/master/screenshot/Tab_Run_File.jpg)
 * **Various useful Snippets**
     * Predefined Snippets language features such as defaultproperties [RSL](http://wiki.rs-balance.ru/index.php/RSL)
