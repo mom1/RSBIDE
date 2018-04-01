@@ -33,7 +33,7 @@ Features
     * Folder context menu "DllRegister RS-Balance 3"
     * Disable if not folder RS-Balance 3
     * Show result registration in status line
-    ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
+        ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
 * **Syntax highlighting**
     * For .mac files
 * **Highlighting comments on the development of the agreement**
