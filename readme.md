@@ -22,7 +22,8 @@ Features
     * Go to the definition of the selected functions by <kbd>Alt + G</kbd>
     * Go to the file from the import <kbd>Alt + G</kbd>
     * Go to the parent class <kbd>Alt + G</kbd>
-    ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
+
+        ![GotoMenu](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoMenu.jpg)
     * Print Signature `macro` or `class` or `var` To Panel <kbd>Alt + S</kbd>
     ![GotoPanel](https://raw.github.com/mom1/RSBIDE/master/screenshot/GotoPanel.jpg)
     * When browsing in the declarations you can always return to your starting position by using one of the above keys when nothing is under your cursor
