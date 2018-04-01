@@ -85,8 +85,9 @@ Installation
     * Opening *.lbr files through the context menu of the project designer
  * [PasteAsString](https://github.com/mom1/PasteAsString)
     * It helps to insert some code as a string
+
 ST3 only:
-  [Sublime Text 3]: http://www.sublimetext.com/3
+  [Sublime Text 3](http://www.sublimetext.com/3)
 
 Credits
 -----
