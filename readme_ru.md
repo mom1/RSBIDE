@@ -33,7 +33,8 @@
     * Пункт контекстного меню "DllRegister RS-Balance 3" на папке, регистрирует dll
     * Выключена если в папке нет dll для регистрации RS-Balance 3
     * Отображает результат попытки регистрации в строке статуса
-    ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
+
+        ![DllRegister](https://raw.github.com/mom1/RSBIDE/master/screenshot/DllRegister_RS-Balance_3.jpg)
 * **Подсветка синтаксиса**
     * Для .mac файлов
 * **Подсветка замечаний из соглашения по разработке**
@@ -53,7 +54,8 @@
         - RSInit - TypeInfo
         - RSInit - RSAdmin
     * Быстрый запуск/отладка файла из контекстного меню закладки
-    ![Tab_Run_File](https://raw.github.com/mom1/RSBIDE/master/screenshot/Tab_Run_File.jpg)
+
+        ![Tab_Run_File](https://raw.github.com/mom1/RSBIDE/master/screenshot/Tab_Run_File.jpg)
 * **Различные полезные Snippets**
     * Предопределенные языковые конструкции. Список будет пополняться конструкциями из [RSL](http://wiki.rs-balance.ru/index.php/RSL)
 * **Другие команды**
