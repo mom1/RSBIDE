@@ -28,6 +28,7 @@
         {"trigger": "Trim", "contents": "Trim(\"${0:string}\")"},
         {"trigger": "Fields", "contents": "Fields(\"$0\").Value"},
         {"trigger": "setTemplate", "contents": "setTemplate(\"${1:File.lbr}\", \"${2:ResName}\")"},
+        {"trigger": "SubObjects", "contents": "SubObjects(\"$0\")"},
         "debugbreak;",
         "RSObject",
         "Value",
