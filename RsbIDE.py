@@ -2,7 +2,7 @@
 # @Author: Maximus
 # @Date:   2018-03-19 19:08:39
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-03-30 10:53:24
+# @Last Modified time: 2018-04-02 13:08:57
 import sublime
 import sublime_plugin
 import os
@@ -196,7 +196,7 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
 
     def search(self, symbol):
 
-        def async_search(databases):
+        def async_search():
             if not update_settings():
                 return
             results = get_result(self.view, symbol)
@@ -209,8 +209,7 @@ class GoToDefinitionCommand(sublime_plugin.WindowCommand):
                 self.goto(results[0])
             else:
                 sublime.status_message('Symbol "{0}" not found'.format(symbol))
-        db = get_db(self.view.window())
-        async_search(db)
+        sublime.set_timeout_async(async_search, 10)
 
     def ask_user_result(self, results):
         view = self.window.active_view()
@@ -294,7 +293,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
 
     def search(self, symbol):
 
-        def async_search(databases):
+        def async_search():
             if not update_settings():
                 return
             results = get_result(self.view, symbol)
@@ -307,8 +306,7 @@ class PrintSignToPanelCommand(sublime_plugin.WindowCommand):
                 self.print_symbol_doc(self.get_doc(symbol))
             else:
                 sublime.status_message('Symbol "{0}" not found'.format(symbol))
-        db = get_db(self.view.window())
-        async_search(db)
+        sublime.set_timeout_async(async_search, 10)
 
     def print_symbol(self, result):
         if result['file'].lower() == self.view.file_name().lower():
@@ -521,6 +519,7 @@ class RSBIDEListener(sublime_plugin.EventListener):
         all_cls_macros_names = ast_rsl.generat_scope(view, 'meta.class.mac meta.macro.mac entity.name.function.mac')
         g_class_names = ast_rsl.generat_scope(view, 'meta.class.mac entity.name.class.mac')
         all_macro_params = ast_rsl.generat_scope(view, 'meta.macro.mac variable.parameter.macro.mac')
+        all_macro_vars = ast_rsl.generat_scope(view, 'meta.macro.mac variable.declare.name.mac')
         all_g_param_macros = view.find_by_selector('variable.parameter.macro.mac - (meta.class.mac)')
 
         log('Подготовка генераторов', "%.3f" % (time.time() - t))
@@ -571,7 +570,9 @@ class RSBIDEListener(sublime_plugin.EventListener):
         if cur_macro:
             cls_params = []
             param_macro = [(view.substr(pm) + '\tmacro param', view.substr(pm)) for pm in all_macro_params if cur_macro[0].contains(pm)]
+            vars_macro = [(view.substr(vm) + '\tvar in macro', view.substr(vm)) for vm in all_macro_vars if cur_macro[0].contains(vm)]
             completions += param_macro
+            completions += vars_macro
             if cur_class and cur_class[0].contains(cur_macro[0]):
                 pass
             else:

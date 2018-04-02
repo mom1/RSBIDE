@@ -27,6 +27,7 @@
         {"trigger": "ToOEM", "contents": "ToOEM(\"${0:string}\")"},
         {"trigger": "Trim", "contents": "Trim(\"${0:string}\")"},
         {"trigger": "Fields", "contents": "Fields(\"$0\").Value"},
+        {"trigger": "setTemplate", "contents": "setTemplate(\"${1:File.lbr}\", \"${2:ResName}\")"},
         "debugbreak;",
         "RSObject",
         "Value",
