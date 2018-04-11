@@ -55,6 +55,7 @@
         "return",
         "True",
         "False",
-        "Null"
+        "Null",
+        "cpwin;"
         ],
 }

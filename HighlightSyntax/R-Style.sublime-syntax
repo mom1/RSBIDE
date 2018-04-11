@@ -75,6 +75,10 @@ contexts:
     - match: (\$)
       scope: invalid.mac
 
+  color:
+    - match: '(\#)\b([0-9A-Z]{6})\b'
+      scope: constant.other.mac
+
   import:
     - match: '(?i)\b(import)\b'
       scope: keyword.control.import.mac
@@ -508,6 +512,7 @@ contexts:
                   pop: true
             - match: '\)'
               pop: true
+            - include: macro-calls
         - include: macro-calls
     - match: '(?i)\b(END)\b\s*(;)?'
       captures:
@@ -653,6 +658,7 @@ contexts:
 
   simple:
     - include: comments
+    - include: color
     - include: numeric
     - include: string
     - include: language

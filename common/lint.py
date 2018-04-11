@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
-# @Last Modified by:   Maximus
-# @Last Modified time: 2018-03-29 13:23:24
+# @Last Modified by:   mom1
+# @Last Modified time: 2018-04-06 19:02:32
 import re
 import sublime
 import threading
@@ -83,6 +83,8 @@ class Linter(threading.Thread):
         col = int(self.all_regions[item][1].split(', ')[1].strip(']')) - 1
         pt = view.text_point(row, col)
         add_reg()
+        view.sel().clear()
+        view.sel().add(sublime.Region(pt))
         view.show_at_center(pt)
 
     def get_text_lint(self, key):
