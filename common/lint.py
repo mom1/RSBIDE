@@ -2,7 +2,7 @@
 # @Author: mom1
 # @Date:   2016-08-09 13:11:25
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-04-06 19:02:32
+# @Last Modified time: 2018-04-13 17:19:49
 import re
 import sublime
 import threading
@@ -264,9 +264,6 @@ class Linter(threading.Thread):
         max_depth = self.settings.get("MAX_DEPTH_LOOP", 3)
         reg_loop = self.view.find_by_selector('source.mac' + ' meta.if.mac' * max_depth)
         reg_loop += self.view.find_by_selector('source.mac' + ' meta.while.mac' * max_depth)
-        reg_loop_for = self.view.find_by_selector('source.mac' + ' meta.for.mac' * 2)
-        if len(reg_loop_for) > 0:
-            self.view.add_regions("reg_loop_for", reg_loop_for, self.scope, flags=self.flags)
         if len(reg_loop) > 0:
             self.view.add_regions("reg_loop", reg_loop, self.scope, flags=self.flags)
 
