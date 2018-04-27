@@ -2,7 +2,7 @@
 # @Author: Maximus
 # @Date:   2018-03-19 19:08:39
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-04-27 10:59:44
+# @Last Modified time: 2018-04-27 11:19:28
 import sublime
 import sublime_plugin
 import os
@@ -806,10 +806,12 @@ class RunRsinitCommand(sublime_plugin.TextCommand):
     currfolder = ""
 
     def run(self, edit, action='file'):
+        def call_a():
+            log(call(['RSInit.exe', '-rsldebug', symdb.get_package(self.view.file_name()) + '.mac']))
         if action != 'file':
             return
         os.chdir(self.currfolder)
-        log(call(['RSInit.exe', '-rsldebug', symdb.get_package(self.view.file_name()) + '.mac']))
+        sublime.set_timeout_async(call_a, 5)
 
     def is_visible(self):
         return os.path.lexists(os.path.join(self.currfolder, 'RSInit.exe'))
