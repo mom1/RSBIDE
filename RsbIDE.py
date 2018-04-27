@@ -2,7 +2,7 @@
 # @Author: Maximus
 # @Date:   2018-03-19 19:08:39
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-04-02 18:54:22
+# @Last Modified time: 2018-04-27 10:38:11
 import sublime
 import sublime_plugin
 import os
@@ -102,7 +102,6 @@ def get_result(view, symbol):
         symbol = view.substr(sel).strip()
 
     t = time.time()
-
     if symbol.lower() == 'end' and view.match_selector(
         sel.begin(),
         'keyword.macro.end.mac, keyword.class.end.mac, keyword.if.end.mac, keyword.for.end.mac, keyword.while.end.mac'
@@ -464,7 +463,7 @@ class RSBIDEListener(sublime_plugin.EventListener):
             currImp = [view.substr(s).lower().strip() for s in view.find_by_selector('meta.import.mac import.file.mac')]
             if view.file_name():
                 currImp += [os.path.splitext(os.path.basename(view.file_name().lower()))[0]]
-            files = [(p + '\tFiles', p) for p in symdb.query_packages(prefix, case=True) if p.lower() not in currImp]
+            files = [(p + '\tFiles', p) for p in symdb.query_packages(prefix.lower(), case=True) if p.lower() not in currImp]
             log('Подсказка файлов', "%.3f" % (time.time() - t))
             return (files, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
         # Подсказка метаданных
