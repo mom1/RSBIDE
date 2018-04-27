@@ -2,7 +2,7 @@
 # @Author: Maximus
 # @Date:   2018-03-19 19:08:39
 # @Last Modified by:   mom1
-# @Last Modified time: 2018-04-27 10:38:11
+# @Last Modified time: 2018-04-27 10:59:44
 import sublime
 import sublime_plugin
 import os
@@ -444,10 +444,11 @@ class RSBIDEListener(sublime_plugin.EventListener):
         if view.match_selector(
             sel.begin() - 1,
             'variable.declare.name.mac, entity.name.class.mac' +
-            ', entity.name.function.mac, variable.parameter.macro.mac, variable.parameter.class.mac' +
-            ', class-param.mac, macro-param.mac'
+            ', entity.name.function.mac, variable.parameter.macro.mac, variable.parameter.class.mac'
         ):
             return ([], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        elif view.match_selector(sel.begin() - 1, 'macro-param.mac, class-param.mac'):
+            return list(cls.get_completions_always(view))
 
         t = time.time()
 
@@ -617,7 +618,7 @@ class RSBIDEListener(sublime_plugin.EventListener):
                 completions = collection_res.get('completions', [])
             else:
                 continue
-            descr = collection_res.get('descr', 'rsl')
+            descr = collection_res.get('descr', '\trsl')
             for completion in completions:
                 if 'trigger' in completion:
                     yield (completion['trigger'] + descr, completion['contents'])
